@@ -1,91 +1,105 @@
-# ICT2112-P2 — Developer Onboarding Guide
+# ICT2112 – Pro Rental Order Processing System
 
-> **Read this fully before writing a single line of code.**  
-> This guide covers everything you need to get your local environment running and understand how the team works together.
+## Module 1 – Order Processing System
+
+This repository contains the implementation for **Module 1: Order Processing System** of the ICT2112 team project.
+
+The system allows customers and staff to:
+
+- Place rental orders
+- Track order status
+- Process checkout and delivery
+- Handle rental returns
+- Manage deposit refunds
+
+**Technology Stack:**
+
+- ASP.NET Core MVC
+- PostgreSQL
+- Entity Framework Core
 
 ---
 
-## 📋 Table of Contents
-
-1. [Project Overview](#1-project-overview)
-2. [Prerequisites](#2-prerequisites)
-3. [First-Time Setup](#3-first-time-setup)
-4. [Daily Development Workflow](#4-daily-development-workflow)
-5. [Project Structure](#5-project-structure)
-6. [Database & Schema Rules](#6-database--schema-rules)
-7. [Git & Branching Strategy](#7-git--branching-strategy)
-8. [Demo Day Checklist](#8-demo-day-checklist)
-9. [FAQ & Troubleshooting](#9-faq--troubleshooting)
-
----
-
-## 1. Project Overview
-
-This is a **C# ASP.NET Core** application backed by **PostgreSQL 17**.
-
-There are **multiple teams** working on this project. Each team:
-- Shares the **same base data layer and database schema**
-- Implements **one feature module** unique to their team
-- Runs the app **independently on their own machine** for demo day
-
-The base repo is maintained by the Leaders. Your team works on a **fork** of it.
-
-### Architecture at a Glance
+## Project Structure
 
 ```
-[Presentation Layer]   → Controllers + Razor Views (.cshtml)
-    ↓
-[Domain Layer]         → Domain models, business logic & services
-    ↓
-[Data Source Layer]    → EF Core DbContext + Entity classes + Repositories
-    ↓
-[PostgreSQL 17]        → Your local database (schema defined in schema.sql)
+Repository
+│
+├── Module1/                  # Main ASP.NET MVC project
+│   ├── Controllers/          # MVC controllers
+│   ├── Models/               # Domain models
+│   ├── Views/                # Razor views
+│   ├── wwwroot/              # Static files
+│   ├── Properties/
+│   ├── Program.cs            # Application entry point
+│   ├── Module1.csproj
+│   └── appsettings.json
+│
+├── src/                      # Base repository files
+│
+├── schema.sql                # Database schema
+├── appsettings.json
+├── appsettings.Development.json
+├── ICT2112-P2.sln            # Base repo solution file (not used for Module1)
+└── README.md
 ```
 
-> **Rule:** Business logic belongs in the Service/Domain layer — never in Controllers or Views.
+> [!WARNING]
+> The runnable MVC project is located in `Module1/`. Do **NOT** run the base solution (`ICT2112-P2.sln`).
 
 ---
 
-## 2. Prerequisites
+## Prerequisites
 
-Install these **before** running the project. Everyone must use the **same versions** to avoid issues.
+Ensure the following tools are installed:
 
-| Tool | Version | Download |
-|------|---------|----------|
-| .NET SDK | 10.0 | https://dotnet.microsoft.com/download |
-| PostgreSQL | 17 | https://www.postgresql.org/download/ (install everything except Stack Builder) |
-| pgAdmin | Latest | https://www.pgadmin.org/download/ |
-| EF Core CLI | Latest | `dotnet tool install --global dotnet-ef` |
-| Git | Latest | https://git-scm.com/downloads |
-| VS Code | Latest | https://code.visualstudio.com/ |
-
-> ✅ Verify .NET: `dotnet --version` → should print `10.x.x`  
-> ✅ Verify PostgreSQL: `psql --version` → should print `17.x`  
-> ✅ Verify EF CLI: `dotnet ef --version`
-
----
-
-## 3. First-Time Setup
-
-Follow these steps **in order**, once when you first join the project.
-
-### Step 1 — Clone the Team Repo
+### .NET SDK
 
 ```bash
-git clone <your-team-repo-url>
-cd <repo-folder>
+dotnet --version
+# Expected: 10.0.101
 ```
 
-### Step 2 — Add the Base Repo as Upstream
+### PostgreSQL
 
 ```bash
-git remote add upstream <base-repo-url>
-git remote -v   # should show both origin and upstream
+psql --version
+# Expected: psql (PostgreSQL) 17.9
 ```
 
-### Step 3 — Create Your Local Database
+### Entity Framework CLI
 
-Open **pgAdmin** → Query Tool, or run `psql -U postgres`, then execute:
+```bash
+dotnet ef --version
+# Expected: Entity Framework Core .NET Command-line Tools 10.0.3
+```
+
+If not installed:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+---
+
+## First-Time Setup
+
+### 1. Clone Repository
+
+```bash
+git clone <repo-url>
+cd ICT2112-P2-MOD1
+```
+
+### 2. Create Database
+
+Open the PostgreSQL terminal:
+
+```bash
+psql -U postgres
+```
+
+Run the following commands:
 
 ```sql
 CREATE DATABASE pro_rental;
@@ -93,216 +107,266 @@ CREATE USER devuser WITH PASSWORD 'devpassword';
 GRANT ALL PRIVILEGES ON DATABASE pro_rental TO devuser;
 ```
 
-> 💡 You can use any name/password — just keep it consistent with Step 4.
+Connect to the database:
 
-### Step 4 — Configure Your Local Settings
-
-```bash
-cp appsettings.Development.json.example appsettings.Development.json
+```sql
+\c pro_rental
 ```
 
-Edit `appsettings.Development.json` with your credentials:
+Grant schema permissions:
 
-```json
-{
-  "ConnectionStrings": {
-    "Default": "Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword"
-  }
-}
+```sql
+GRANT ALL ON SCHEMA public TO devuser;
+ALTER SCHEMA public OWNER TO devuser;
 ```
 
-> ⚠️ `appsettings.Development.json` is **gitignored** and will never be committed. Never put credentials in `appsettings.json`.
+Exit:
 
-### Step 5 — Create the Database Tables
-
-The full schema is defined in `schema.sql`. Run it against your empty database to create all tables:
-
-**Option A — pgAdmin:**
-1. In the left panel, right-click `pro_rental` → **Query Tool**
-2. Open `schema.sql` (File → Open) and click **Run (▶)**
-
-**Option B — psql terminal:**
-```bash
-psql -U postgres -d pro_rental -f schema.sql
-```
-
-You should see a series of `CREATE TYPE` and `CREATE TABLE` statements with no errors.
-
-### Step 6 — Apply the EF Core Baseline Migration
-
-This registers the existing tables with EF Core's migration history tracker without touching the database:
-
-```bash
-dotnet ef database update --project src/BaseApp.Data
-```
-
-You should see output ending in `Done.` — your local environment is fully set up.
-
----
-
-## 4. Daily Development Workflow
-
-Do this **at the start of every work session**:
-
-```bash
-# 1. Get your teammates' latest changes
-git pull origin main
-
-# 2. Apply any new migrations (safe to run even if nothing changed)
-dotnet ef database update --project src/BaseApp.Data
-
-# 3. Restore packages if needed
-dotnet restore
-```
-
-### Pulling Updates from the Base Repo
-
-If the project lead announces an update:
-
-```bash
-git fetch upstream
-git merge upstream/main
-dotnet restore
-dotnet ef database update --project src/BaseApp.Data
+```sql
+\q
 ```
 
 ---
 
-## 5. Project Structure
+## Running the Project
 
-```
-repo-root/
-├── src/
-│   └── BaseApp.Data/              ← Data Source Layer (EF Core class library)
-│       ├── AppDbContext.cs         ← EF Core DbContext — all DbSet<T> properties
-│       ├── DesignTimeDbContextFactory.cs  ← Lets dotnet ef commands work without a web host
-│       ├── Entities/               ← Auto-generated entity classes (one per DB table)
-│       ├── Migrations/             ← EF Core migration history
-│       └── Repositories/          ← Data access classes (add yours here)
-│
-├── schema.sql                      ← Authoritative DB schema — all teams share this
-├── appsettings.json                ← Committed — connection string placeholder only
-├── appsettings.Development.json    ← GITIGNORED — your local credentials
-└── appsettings.Development.json.example  ← Committed — copy this to get started
+Navigate to the MVC project:
+
+```bash
+cd Module1
 ```
 
-> The `Entities/` folder is **auto-generated** by `dotnet ef dbcontext scaffold` — do not hand-edit those files. If you need to extend an entity, create a separate partial class file.
+Run the application:
+
+```bash
+dotnet run
+```
+
+The application will start at:
+
+```
+http://localhost:xxxx
+```
 
 ---
 
-## 6. Database & Schema Rules
+## Git Branch Workflow
 
-### The Schema is Frozen
+> [!WARNING]
+> Do **NOT** push directly to `main`. All development must be done using feature branches.
 
-The database schema (`schema.sql`) was designed upfront and agreed upon by all teams:
+### Create a New Branch
 
-- ✅ Write code that reads from and writes to the existing tables
-- ✅ Run `dotnet ef database update` once during setup, then after every pull
-- ❌ Do **not** create new migrations unless approved
-- ❌ Do **not** modify `schema.sql` without approval from the project lead
-
-### If You Think You Need a Schema Change
-
-1. Raise it with your **team lead**
-2. If approved, the project lead updates `schema.sql` in the base repo
-3. All teams pull the update and re-run: `psql -U postgres -d pro_rental -f schema.sql` and `dotnet ef database update --project src/BaseApp.Data`
-
-### Migration Owner Rule
-
-If a migration must be created:
-- Only the **designated migration owner** runs `dotnet ef migrations add`
-- Announce it in the team channel **before** running it
-- Never two people adding migrations simultaneously
-- The migration must be reviewed and merged before anyone else pulls
-
----
-
-## 7. Git & Branching Strategy
-
-### Branch Structure
-
-```
-main                            ← Always stable, always demo-ready
-├── feature/your-feature-name   ← Your work goes here
-├── feature/another-feature     ← Another sub-team's work
-└── fix/bug-description         ← Bug fixes
-```
-
-### Rules
-
-- ❌ **Never commit directly to `main`**
-- ✅ Always create a feature branch: `git checkout -b feature/your-feature-name`
-- ✅ Open a **Pull Request** when ready; at least one teammate must review before merging
-- ✅ Delete your branch after merging
-- ✅ Announce in the team channel before merging anything into `main`
-
-### Typical Branch Workflow
+Before starting work:
 
 ```bash
 git checkout main
 git pull origin main
-git checkout -b feature/my-feature
+git checkout -b feature/<feature-name>
+```
 
-# develop, then commit regularly
+Example:
+
+```bash
+git checkout -b feature/cart-page
+```
+
+### Push Your Branch
+
+```bash
+git push origin feature/<feature-name>
+```
+
+Then open a **Pull Request**.
+
+### Daily Workflow
+
+Before starting work each day:
+
+```bash
+# Pull latest changes
+git checkout main
+git pull origin main
+
+# Switch to your feature branch
+git checkout feature/<your-feature>
+
+# Merge latest main
+git merge main
+
+# Commit your changes
 git add .
-git commit -m "feat: add order processing repository"
-
-git push origin feature/my-feature
-# → open a Pull Request on GitHub/GitLab
-```
-
-### Commit Message Convention
-
-| Prefix | Use for |
-|--------|---------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
-| `refactor:` | Code restructure, no behaviour change |
-| `docs:` | README or comment updates |
-| `chore:` | Config, setup, dependency changes |
-
----
-
-## 8. Demo Day Checklist
-
-```
-☐ git pull origin main
-☐ dotnet restore
-☐ dotnet ef database update --project src/BaseApp.Data
-☐ Database has all expected tables (verify in pgAdmin)
-☐ appsettings.Development.json is configured with your credentials
-☐ Your team's feature works end-to-end
-☐ No unhandled exceptions or error pages visible
+git commit -m "feat: implemented checkout page"
+git push
 ```
 
 ---
 
-## 9. FAQ & Troubleshooting
+## EF Core Migrations
 
-**Q: I get "relation does not exist" errors.**  
-A: You skipped Step 5. Run `schema.sql` against your database first, then `dotnet ef database update --project src/BaseApp.Data`.
+The baseline migration has already been applied. You do **not** need to run migrations during setup.
 
-**Q: `dotnet ef database update` says "No migrations were applied."**  
-A: That is normal — it means the baseline is already recorded and the database is up to date.
+Only run this if the database schema changes:
 
-**Q: `dotnet ef` is not recognised as a command.**  
-A: Install the EF Core CLI: `dotnet tool install --global dotnet-ef`
-
-**Q: The build fails with "connection refused" or a config error.**  
-A: PostgreSQL is not running, or your `appsettings.Development.json` credentials are wrong. Check with pgAdmin that the `pro_rental` database exists and the service is running.
-
-**Q: I pulled from main and now the project won't build.**  
-A: Run `dotnet restore` first — a teammate likely added a new NuGet package.
-
-**Q: `appsettings.Development.json` keeps getting overwritten.**  
-A: It should be listed in `.gitignore`. If it isn't, add it. Never commit this file.
-
-**Q: I accidentally committed to main.**  
-A: Do not push. Run `git reset HEAD~1` to undo, then tell your team lead.
-
-**Q: Two people edited the same file and there's a merge conflict.**  
-A: Open the file, look for `<<<<<<<` markers, resolve manually, then `git add . && git commit`.
+```bash
+dotnet ef database update
+```
 
 ---
 
-*Last updated: March 2026*  
+## Team Development Rules
+
+Follow these rules to avoid Git conflicts.
+
+### 1. Never Push Directly to `main`
+
+Always create a feature branch:
+
+```
+feature/<feature-name>
+```
+
+Examples: `feature/cart`, `feature/checkout`, `feature/order-status`
+
+### 2. Always Pull Latest `main` Before Starting Work
+
+```bash
+git checkout main
+git pull origin main
+```
+
+### 3. Work on One Feature Per Branch
+
+**Good:**
+```
+feature/cart
+feature/checkout
+```
+
+**Bad:**
+```
+feature/cart-and-checkout
+```
+
+### 4. Do Not Edit the Same Files Simultaneously
+
+Communicate with teammates before modifying shared files such as:
+
+- Controllers
+- Database models
+- `Program.cs`
+- `appsettings.json`
+
+### 5. Use Clear Commit Messages
+
+```
+feat: implemented checkout page
+fix: corrected order status bug
+refactor: cleaned cart service logic
+```
+
+---
+
+## Common Troubleshooting
+
+### Database Connection Error
+
+**Error:**
+```
+Npgsql: Failed to connect to database
+```
+
+**Check:**
+- PostgreSQL is running
+- Database `pro_rental` exists
+- User `devuser` exists with the correct password
+
+**Verify connection:**
+```bash
+psql -U devuser -d pro_rental
+```
+
+---
+
+### EF Command Not Found
+
+**Error:**
+```
+dotnet ef command not found
+```
+
+**Fix:**
+```bash
+dotnet tool install --global dotnet-ef
+dotnet ef --version
+```
+
+---
+
+### Port Already in Use
+
+**Error:**
+```
+Address already in use
+```
+
+**Fix:** Stop the existing process or restart the application.
+
+---
+
+### PostgreSQL Not Recognized
+
+**Error:**
+```
+psql is not recognized
+```
+
+**Fix:** Add the PostgreSQL `bin` folder to your system `PATH`.
+
+Example path:
+```
+C:\Program Files\PostgreSQL\17\bin
+```
+
+---
+
+## Maintainer Notes
+
+Initial setup already completed:
+
+- [x] PostgreSQL database configuration
+- [x] EF Core baseline migration
+- [x] Database schema initialization
+
+Team members only need to:
+
+1. Clone the repository
+2. Create a local database
+3. Run the `Module1` project
+4. Develop features using feature branches
+
+---
+
+## Contributors
+
+### Team 4
+
+| Name | Role |
+|------|------|
+| Min Wei | Walk-in Process |
+| Yu Sheng | Order Tracking |
+| Raffael | Shipping Agent Management |
+| Ye Kai | Staff Dashboard |
+| YeZi | Customer Dashboard |
+| Eugene | Internal Notification System |
+
+### Team 6
+
+| Name | Role |
+|------|------|
+| Daffa | Order CRUD & Order Management |
+| Valerie | Authentication & Session Management |
+| Yu Chen | Order Pricing & Deposit Calculation |
+| Tharshini | Online Catalogue Browsing |
+| Belle | Cart & Checkout Management |
+| Beatrice | Payment Processing & Gateway Integration |
