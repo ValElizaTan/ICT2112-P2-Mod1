@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using ProRental.Domain.Entities;
+using Route = ProRental.Domain.Entities.Route;
 
 namespace ProRental.Data.UnitOfWork;
 

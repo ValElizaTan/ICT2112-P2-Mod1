@@ -36,8 +36,9 @@ The project follows a **3-layer architecture** with **ECB (Entity-Control-Bounda
 [Domain Layer]         Domain/Entities/ + Domain/Control/
         ↓               Entity — data holders | Control — business logic
 [Data Source Layer]    Data/UnitOfWork/ + Data/Gateways/
-        ↓               Manages database access via EF Core
-[PostgreSQL 17]        Your local database
+        ↓               Your Data pattern 
+                        AppDbContext acts as the Unit of Work (EF Core)
+[PostgreSQL 17]        Your local database — the single source of truth
 ```
 
 **ECB roles:**
@@ -46,9 +47,11 @@ The project follows a **3-layer architecture** with **ECB (Entity-Control-Bounda
 |------|--------|----------------|
 | Boundary | `Controllers/`, `Views/` | HTTP interface — receive requests, return responses |
 | Control | `Domain/Control/` | Business logic — coordinates entities, enforces rules |
-| Entity | `Domain/Entities/` | Data holders — represent domain objects |
+| Entity | `Domain/Entities/` | Data holders — auto-generated from DB schema via scaffolding |
 
 > **Rule:** Business logic belongs in `Domain/Control/` — never in Controllers or Views. Controllers call Control classes through service interfaces; they do not contain logic themselves.
+
+> **Database-first:** This project uses **EF Core Reverse Engineering (Scaffolding)**. The database schema in `initial_schema.sql` is always the source of truth. Entity classes in `Domain/Entities/` and `AppDbContext` are **auto-generated** — never edit them by hand.
 
 ---
 
@@ -58,12 +61,12 @@ Everyone must use the **same versions**.
 
 | Tool | Version | Install |
 |------|---------|---------|
-| .NET SDK | 9.0 | https://dotnet.microsoft.com/download |
-| PostgreSQL | 17 | https://www.postgresql.org/download/ (install everything except Stack Builder) |
-| pgAdmin | Latest | https://www.pgadmin.org/download/ |
+| .NET SDK | 9.0 | [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download) |
+| PostgreSQL | 17 | [https://www.postgresql.org/download/](https://www.postgresql.org/download/) (install everything except Stack Builder) |
+| pgAdmin | Latest | [https://www.pgadmin.org/download/](https://www.pgadmin.org/download/) |
 | EF Core CLI | Latest | `dotnet tool install --global dotnet-ef` |
-| Git | Latest | https://git-scm.com/downloads |
-| VS Code | Latest | https://code.visualstudio.com/ |
+| Git | Latest | [https://git-scm.com/downloads](https://git-scm.com/downloads) |
+| VS Code | Latest | [https://code.visualstudio.com/](https://code.visualstudio.com/) |
 
 Verify installs:
 ```bash
@@ -129,13 +132,30 @@ psql -U postgres -d pro_rental -f initial_schema.sql
 
 You should see `CREATE TYPE` and `CREATE TABLE` statements with no errors.
 
-### Step 6 — Apply the EF Core Baseline Migration
+### Step 6 — Scaffold the Entity Classes and DbContext
+
+Run the scaffold command to generate `Domain/Entities/` and `AppDbContext` from the database:
 
 ```bash
-dotnet ef database update
+dotnet ef dbcontext scaffold \
+  "Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword" \
+  Npgsql.EntityFrameworkCore.PostgreSQL \
+  --output-dir Domain/Entities \
+  --context-dir Data/UnitOfWork \
+  --context AppDbContext \
+  --force
 ```
 
-Output ending in `Done.` means your local environment is ready.
+The `--force` flag overwrites existing generated files. This is expected and correct.
+
+### Step 7 — Restore Packages and Build
+
+```bash
+dotnet restore
+dotnet build
+```
+
+Output ending with `Build succeeded` means your local environment is ready.
 
 ---
 
@@ -144,18 +164,35 @@ Output ending in `Done.` means your local environment is ready.
 Do this at the start of every work session:
 
 ```bash
-git pull origin main          # get teammates' latest changes
-dotnet ef database update     # apply any new migrations
-dotnet restore                # restore packages if needed
+git pull origin main     # get teammates' latest changes
+dotnet restore           # restore packages if needed
+dotnet build             # verify the project compiles
 ```
 
-### Pulling Updates from the Base Repo
+### If the Schema Has Been Updated
+
+When a teammate announces that `initial_schema.sql` has changed in the base repo:
 
 ```bash
+# 1. Pull the updated schema
 git fetch upstream
 git merge upstream/main
+
+# 2. Re-apply the schema to your local database
+psql -U postgres -d pro_rental -f initial_schema.sql
+
+# 3. Re-scaffold to regenerate entity classes and DbContext
+dotnet ef dbcontext scaffold \
+  "Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword" \
+  Npgsql.EntityFrameworkCore.PostgreSQL \
+  --output-dir Domain/Entities \
+  --context-dir Data/UnitOfWork \
+  --context AppDbContext \
+  --force
+
+# 4. Restore and build
 dotnet restore
-dotnet ef database update
+dotnet build
 ```
 
 ---
@@ -172,16 +209,18 @@ ProRental/
 │   └── PageController.cs           ← Base class for all feature controllers (add manually)
 │
 ├── Domain/                         ← Domain Layer
-│   ├── Entities/                   ← Entity (ECB) — one class per domain object
+│   ├── Entities/                   ← Entity (ECB) — AUTO-GENERATED by scaffolding
 │   │   ├── User.cs                 │  namespace: ProRental.Domain.Entities
-│   │   ├── Order.cs                │
+│   │   ├── Order.cs                │  ⚠️ Do not edit these files manually
 │   │   └── ...
 │   └── Control/                    ← Control (ECB) — business logic managers
 │       └── (your Control classes)  │  namespace: ProRental.Domain.Control
 │
 ├── Data/                           ← Data Source Layer
 │   ├── UnitOfWork/
-│   │   └── AppDbContext.cs         ← EF Core DbContext   namespace: ProRental.Data.UnitOfWork
+│   │   └── AppDbContext.cs         ← Unit of Work (EF Core) — AUTO-GENERATED by scaffolding
+│   │                                  namespace: ProRental.Data.UnitOfWork
+│   │                                  ⚠️ Do not edit this file manually
 │   ├── Gateways/                   ← Table Data Gateway classes (one per DB table)
 │   │   └── (your Gateway classes)  │  namespace: ProRental.Data.Gateways
 │   └── Interfaces/                 ← Gateway interfaces (e.g. IOrderGateway)
@@ -190,8 +229,6 @@ ProRental/
 ├── Interfaces/                     ← Cross-layer service interfaces
 │   └── (e.g. IOrderService)        ← Controllers depend on these, not on Control classes directly
 │                                      namespace: ProRental.Interfaces
-│
-├── Migrations/                     ← EF Core migration files (auto-generated, do not edit)
 │
 ├── Views/                          ← Presentation Layer — Boundary (ECB)
 │   ├── Home/
@@ -211,7 +248,7 @@ ProRental/
 
 | What you're building | Where it goes | Namespace |
 |----------------------|---------------|-----------|
-| Domain object (data holder) | `Domain/Entities/` | `ProRental.Domain.Entities` |
+| Domain object (data holder) | `Domain/Entities/` — **auto-generated, do not edit** | `ProRental.Domain.Entities` |
 | Business logic class | `Domain/Control/` | `ProRental.Domain.Control` |
 | Database access class | `Data/Gateways/` | `ProRental.Data.Gateways` |
 | Gateway interface | `Data/Interfaces/` | `ProRental.Data.Interfaces` |
@@ -219,50 +256,50 @@ ProRental/
 | Controller | `Controllers/<Feature>/` | `ProRental.Controllers` |
 | Razor view | `Views/<Feature>/` | — |
 
+> **Why two interface folders?**
+> - `Data/Interfaces/` — contracts for **gateway/mapper classes** (data access layer). Only `Domain/Control/` classes consume these.
+> - `Interfaces/` — contracts for **service/control classes** (domain layer). Only `Controllers/` consume these.
+>
+> This enforces strict layer direction: `Controller` → `IService` → `Control` → `IGateway` → `Gateway`
+
 **Flow when adding a feature:**
-1. Add entity class(es) in `Domain/Entities/`
+1. Confirm the relevant tables exist in `initial_schema.sql` — entity classes come from the DB, not the other way around
 2. Add gateway interface in `Data/Interfaces/` and implementation in `Data/Gateways/`
 3. Add service interface in `Interfaces/` and Control class in `Domain/Control/`
 4. Add controller in `Controllers/<Feature>/` — inject the service interface, never the Control class directly
-5. Add views in `Views/<Feature>/` — pass entity objects directly from the controller; no ViewModel wrappers
+5. Add views in `Views/<Feature>/`
 
 ---
 
 ## 7. Database & Schema Rules
 
-### The Schema is Frozen
+### This Project is Database-First
 
-- ✅ Read from and write to existing tables
-- ✅ Run `dotnet ef database update` after every pull
-- ❌ Do not create migrations without approval
+Entity classes in `Domain/Entities/` and `AppDbContext` are **auto-generated by EF Core Scaffolding**. The database schema defined in `initial_schema.sql` is always the source of truth.
+
+- ✅ Read from and write to existing tables via your Gateway classes
+- ✅ Re-scaffold after every schema update (see [Daily Development Workflow](#4-daily-development-workflow))
+- ❌ **Never edit files in `Domain/Entities/` or `AppDbContext` by hand** — they will be overwritten on the next scaffold
+- ❌ **Never run `dotnet ef migrations add`** — this project does not use code-first migrations
 - ❌ Do not modify `initial_schema.sql` without approval from the project lead
 
 ### If You Think You Need a Schema Change
 
 1. Raise it with your team lead
 2. If approved, the project lead updates `initial_schema.sql` in the base repo
-3. All teams pull and re-run:
+3. All teams pull, re-apply the schema, and re-scaffold:
+
 ```bash
 psql -U postgres -d pro_rental -f initial_schema.sql
-dotnet ef database update
+
+dotnet ef dbcontext scaffold \
+  "Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword" \
+  Npgsql.EntityFrameworkCore.PostgreSQL \
+  --output-dir Domain/Entities \
+  --context-dir Data/UnitOfWork \
+  --context AppDbContext \
+  --force
 ```
-
-### Migration Owner Rule
-
-If a migration must be created:
-- Only the **designated migration owner** runs `dotnet ef migrations add <Name>`
-- Announce in the team channel **before** running it
-- Never two people adding migrations simultaneously
-- Migration must be reviewed and merged before anyone else pulls
-
-### Changing a schema-affecting entity
-Every time you change a schema-affecting entity:
-
-# Step 1 — Create the migration
-dotnet ef migrations add DescribeWhatYouChanged
-
-# Step 2 — Apply it to the database
-dotnet ef database update
 
 ---
 
@@ -315,7 +352,9 @@ git push origin feature/my-feature
 ```
 ☐ git pull origin main
 ☐ dotnet restore
-☐ dotnet ef database update
+☐ dotnet build
+☐ initial_schema.sql has been applied to your local database
+☐ Scaffold has been re-run if schema was updated
 ☐ Database has all expected tables (verify in pgAdmin)
 ☐ appsettings.Development.json is configured with your credentials
 ☐ Your team's feature works end-to-end
@@ -327,19 +366,19 @@ git push origin feature/my-feature
 ## 10. FAQ & Troubleshooting
 
 **Q: I get "relation does not exist" errors.**  
-A: Run `initial_schema.sql` against your database first, then `dotnet ef database update`.
+A: Run `initial_schema.sql` against your database first, then re-run the scaffold command.
 
-**Q: `dotnet ef database update` says "No migrations were applied."**  
-A: Normal — the baseline is already recorded and the database is up to date.
+**Q: My entity classes or `AppDbContext` look outdated or are missing new columns.**  
+A: Re-run the scaffold command with `--force`. The schema has likely been updated.
 
 **Q: `dotnet ef` is not recognised.**  
-A: `dotnet tool install --global dotnet-ef`
+A: Run `dotnet tool install --global dotnet-ef`
 
 **Q: Build fails with "connection refused" or a config error.**  
 A: PostgreSQL is not running, or `appsettings.Development.json` credentials are wrong.
 
 **Q: I pulled from main and the project won't build.**  
-A: Run `dotnet restore` first — a teammate likely added a new NuGet package.
+A: Run `dotnet restore` first — a teammate likely added a new NuGet package. If entity classes look wrong, re-run the scaffold command.
 
 **Q: `appsettings.Development.json` keeps getting overwritten.**  
 A: It should be listed in `.gitignore`. If it isn't, add it. Never commit this file.
@@ -348,31 +387,31 @@ A: It should be listed in `.gitignore`. If it isn't, add it. Never commit this f
 A: Do not push. Run `git reset HEAD~1`, then tell your team lead.
 
 **Q: Two people edited the same file and there's a merge conflict.**  
-A: Open the file, resolve the `<<<<<<<` markers manually, then `git add . && git commit`.
+A: Open the file, resolve the `<<<<<<<` markers manually, then `git add . && git commit`.  
+If the conflict is inside `Domain/Entities/` or `AppDbContext.cs`, **do not resolve it manually** — re-run the scaffold command to regenerate them cleanly instead.
 
-**Q: When should i create a migration?**  
-A: The Rule
-You need a new migration every time you change anything that affects the database schema. If your change only affects business logic inside the class and not the table structure, no migration is needed.
+**Q: Should I ever run `dotnet ef migrations add`?**  
+A: No. This project is database-first. All schema changes go through `initial_schema.sql` → re-scaffold. Never create migrations manually.
 
-When You DO Need a Migration
-Change	Example	Migration Needed?
-- Add a new entity class	| Create DeliveryBatch.cs + add DbSet<DeliveryBatch>	✅ Yes
-- Add a new property	| Add CarbonSurcharge decimal to ShippingOption	✅ Yes
-- Remove a property	| Delete OldField from an entity	✅ Yes
-- Rename a property	| Cost → RentalCost	✅ Yes
-- Change a property type	| int → double	✅ Yes
-- Add a relationship	| Add List<RouteLeg> navigation property to Route	✅ Yes
-
-When You Do NOT Need a Migration
-Change	Example	Migration Needed?
-- Add/edit a method	| Add IsFasterThan() to ShippingOption	❌ No
-- Add business logic	| Edit CalculateTotalCost()	❌ No
-- Change a controller	| Edit ShippingOptionsController	❌ No
-- Change a view	        | Edit Index.cshtml	❌ No
-- Change a gateway	| Edit ShippingOptionGateway.cs	❌ No
-- Change an interface	| Edit IShippingOptionService	❌ No
-
+**Q: Can I add methods or logic to entity classes in `Domain/Entities/`?**  
+A: No. Those files are auto-generated and will be overwritten on the next scaffold. Put all business logic in `Domain/Control/` classes instead.
 
 ---
 
-*Last updated: March 2026*  
+## Scaffolding Reference
+
+Run this command any time the schema changes or you need to regenerate entity classes:
+
+```bash
+dotnet ef dbcontext scaffold \
+  "Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword" \
+  Npgsql.EntityFrameworkCore.PostgreSQL \
+  --output-dir Domain/Entities \
+  --context-dir Data/UnitOfWork \
+  --context AppDbContext \
+  --force
+```
+
+> Replace the connection string credentials with your own if they differ from the defaults above.
+
+*Last updated: March 2026*

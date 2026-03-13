@@ -348,8 +348,9 @@ public partial class <#= Options.ContextName #> : DbContext
 using <#= ns #>;
 <#
     }
+#>
+using Route = ProRental.Domain.Entities.Route;
 
-    WriteLine("");
-
+<#
     GenerationEnvironment.Append(mainEnvironment);
 #>
