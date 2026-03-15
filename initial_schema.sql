@@ -17,10 +17,6 @@ CREATE TYPE transport_mode AS ENUM (
     'TRUCK', 'SHIP', 'PLANE', 'TRAIN'
 );
 
-CREATE TYPE transport_mode_combination AS ENUM (
-    'TRUCK_ONLY', 'SHIP_TRUCK', 'AIR_TRUCK', 'RAIL_TRUCK', 'MULTIMODAL'
-);
-
 CREATE TYPE preference_type AS ENUM (
     'FAST', 'CHEAP', 'GREEN'
 );
@@ -187,7 +183,6 @@ CREATE TABLE delivery_route (
     destination_address VARCHAR(255)               NOT NULL,
     total_distance_km   DOUBLE PRECISION,
     is_valid            BOOLEAN                    DEFAULT TRUE,
-    mode_combination    transport_mode_combination,
     origin_hub_id       INT,
     destination_hub_id  INT,
     CONSTRAINT fk_route_origin_hub      FOREIGN KEY (origin_hub_id)
@@ -619,7 +614,7 @@ CREATE TABLE IF NOT EXISTS "User" (
 
 CREATE TABLE IF NOT EXISTS Customer (
     customerId   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    userId       INT          NOT NULL,
+    userId       INT          NOT NULL UNIQUE, --customer is also a user, so userId is unique and not null
     address      VARCHAR(255) NOT NULL,
     customerType INT          NOT NULL,
     CONSTRAINT fk_customer_user FOREIGN KEY (userId) REFERENCES "User"(userId) ON UPDATE CASCADE ON DELETE CASCADE
@@ -627,7 +622,7 @@ CREATE TABLE IF NOT EXISTS Customer (
 
 CREATE TABLE IF NOT EXISTS Staff (
     staffId    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    userId     INT         NOT NULL,
+    userId     INT         NOT NULL UNIQUE, --staff is also a user, so userId is unique and not null
     department VARCHAR(50) NOT NULL,
     CONSTRAINT fk_staff_user FOREIGN KEY (userId) REFERENCES "User"(userId) ON UPDATE CASCADE ON DELETE CASCADE
   );
