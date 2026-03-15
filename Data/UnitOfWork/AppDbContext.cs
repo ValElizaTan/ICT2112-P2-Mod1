@@ -177,7 +177,7 @@ public partial class AppDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=postgres;Password=password");
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -506,9 +506,7 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
             entity.Property(e => e.Customerid).HasColumnName("customerid");
-            entity.Property(e => e.Deliverymethodid)
-                .HasMaxLength(50)
-                .HasColumnName("deliverymethodid");
+            entity.Property(e => e.Deliveryid).HasColumnName("deliveryid");
             entity.Property(e => e.Notifyoptin)
                 .HasDefaultValue(false)
                 .HasColumnName("notifyoptin");
@@ -521,6 +519,11 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.Customerid)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_customer");
+
+            entity.HasOne(d => d.Delivery).WithMany(p => p.Checkouts)
+                .HasForeignKey(d => d.Deliveryid)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_checkout_delivery");
         });
 
         modelBuilder.Entity<Clearancebatch>(entity =>
@@ -1045,6 +1048,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Totalamount)
                 .HasPrecision(10, 2)
                 .HasColumnName("totalamount");
+            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Checkout).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.Checkoutid)
@@ -1054,6 +1058,11 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.Customerid)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_order_customer");
+
+            entity.HasOne(d => d.Transaction).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.Transactionid)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_order_transaction");
         });
 
         modelBuilder.Entity<Ordercarbondatum>(entity =>
@@ -1506,6 +1515,8 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Returnmethod)
                 .HasMaxLength(50)
                 .HasColumnName("returnmethod");
+            entity.Property(e => e.Returnrequestid).HasColumnName("returnrequestid");
+            entity.Property(e => e.Transactionid).HasColumnName("transactionid");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Refunds)
                 .HasForeignKey(d => d.Customerid)
@@ -1516,6 +1527,16 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.Orderid)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_refund_order");
+
+            entity.HasOne(d => d.Returnrequest).WithMany(p => p.Refunds)
+                .HasForeignKey(d => d.Returnrequestid)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_refund_return");
+
+            entity.HasOne(d => d.Transaction).WithMany(p => p.Refunds)
+                .HasForeignKey(d => d.Transactionid)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("fk_refund_transaction");
         });
 
         modelBuilder.Entity<Reliabilityrating>(entity =>
@@ -2096,14 +2117,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Createdat)
                 .HasColumnType("timestamp without time zone")
                 .HasColumnName("createdat");
-            entity.Property(e => e.Orderid).HasColumnName("orderid");
             entity.Property(e => e.Providertransactionid)
                 .HasMaxLength(100)
                 .HasColumnName("providertransactionid");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Transactions)
-                .HasForeignKey(d => d.Orderid)
-                .HasConstraintName("fk_transaction_order");
         });
 
         modelBuilder.Entity<Transactionlog>(entity =>

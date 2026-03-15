@@ -786,7 +786,7 @@ CREATE TABLE IF NOT EXISTS Checkout (
     checkoutId        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customerId        INT          NOT NULL,
     cartId            INT          NOT NULL,
-    deliveryMethodId  VARCHAR(50),
+    deliveryId        INT,
     paymentMethodType payment_method_enum,
     status            checkout_status_enum DEFAULT 'IN_PROGRESS',
     notifyOptIn       BOOLEAN DEFAULT FALSE,
@@ -803,15 +803,27 @@ CREATE TABLE IF NOT EXISTS Checkout (
         ON DELETE CASCADE
 );
 
+-- TRANSACTION
+CREATE TABLE IF NOT EXISTS Transaction (
+    transactionId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    amount DECIMAL(10,2) NOT NULL,
+    type transaction_type_enum NOT NULL,
+    purpose transaction_purpose_enum NOT NULL,
+    status transaction_status_enum DEFAULT 'PENDING',
+    providerTransactionId VARCHAR(100),
+    createdAt TIMESTAMP NOT NULL
+);
+
 -- ORDER
 CREATE TABLE IF NOT EXISTS "Order" (
-    orderId    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    customerId INT             NOT NULL,
-    checkoutId INT             NOT NULL,
-    orderDate  TIMESTAMP       NOT NULL,
-    status     order_status_enum DEFAULT 'PENDING',
-    deliveryType delivery_type_enum,
-    totalAmount DECIMAL(10,2) NOT NULL,
+    orderId       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    customerId    INT             NOT NULL,
+    checkoutId    INT             NOT NULL,
+    transactionId INT,                                         
+    orderDate     TIMESTAMP       NOT NULL,
+    status        order_status_enum DEFAULT 'PENDING',
+    deliveryType  delivery_duration_enum,
+    totalAmount   DECIMAL(10,2)   NOT NULL,
 
     CONSTRAINT fk_order_customer
         FOREIGN KEY (customerId)
@@ -821,7 +833,12 @@ CREATE TABLE IF NOT EXISTS "Order" (
     CONSTRAINT fk_order_checkout
         FOREIGN KEY (checkoutId)
         REFERENCES Checkout(checkoutId)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_order_transaction
+        FOREIGN KEY (transactionId)
+        REFERENCES Transaction(transactionId)
+        ON DELETE SET NULL
 );
 
 -- ORDER ITEM
@@ -843,23 +860,6 @@ CREATE TABLE IF NOT EXISTS OrderItem (
         FOREIGN KEY (productId)
         REFERENCES Product(ProductId)
         ON DELETE RESTRICT
-);
-
--- TRANSACTION
-CREATE TABLE IF NOT EXISTS Transaction (
-    transactionId INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    orderId INT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    type transaction_type_enum NOT NULL,
-    purpose transaction_purpose_enum NOT NULL,
-    status transaction_status_enum DEFAULT 'PENDING',
-    providerTransactionId VARCHAR(100),
-    createdAt TIMESTAMP NOT NULL,
-
-    CONSTRAINT fk_transaction_order
-        FOREIGN KEY (orderId)
-        REFERENCES "Order"(orderId)
-        ON DELETE CASCADE
 );
 
 -- PAYMENT
@@ -1089,12 +1089,16 @@ CREATE TABLE IF NOT EXISTS Refund (
     refundId            INT           GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     orderId             INT           NOT NULL,
     customerId          INT           NOT NULL,
+    transactionId       INT, 
+    ReturnRequestId     INT           NOT NULL,
     depositRefundAmount DECIMAL(10,2) NOT NULL,
     returnDate          TIMESTAMP     NOT NULL,
     penaltyAmount       DECIMAL(10,2) DEFAULT 0.00,
     returnMethod        VARCHAR(50)   NOT NULL,
+    CONSTRAINT fk_refund_transaction FOREIGN KEY (transactionId)   REFERENCES Transaction(transactionId)             ON DELETE SET NULL,
     CONSTRAINT fk_refund_order    FOREIGN KEY (orderId)    REFERENCES "Order"(orderId)       ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT fk_refund_customer FOREIGN KEY (customerId) REFERENCES Customer(customerId)   ON UPDATE CASCADE ON DELETE RESTRICT
+    CONSTRAINT fk_refund_customer FOREIGN KEY (customerId) REFERENCES Customer(customerId)   ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_refund_return   FOREIGN KEY (ReturnRequestId) REFERENCES ReturnRequest(ReturnRequestId) ON UPDATE CASCADE ON DELETE RESTRICT
   );
 
 -- NOTE: batchId references delivery_batch (Team 1). Column renamed to delivery_batch_id
@@ -1276,3 +1280,8 @@ ALTER TABLE customer_choice
 ALTER TABLE batch_order
     ADD CONSTRAINT fk_batch_order_order
         FOREIGN KEY (order_id) REFERENCES "Order"(orderId) ON DELETE CASCADE;
+
+-- Team 6 → Team 4: Checkout.deliveryId
+ALTER TABLE Checkout
+ADD CONSTRAINT fk_checkout_delivery
+    FOREIGN KEY (deliveryId) REFERENCES DeliveryMethod(deliveryId) ON DELETE RESTRICT; 

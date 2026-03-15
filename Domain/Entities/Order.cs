@@ -11,6 +11,8 @@ public partial class Order
 
     public int Checkoutid { get; private set; }
 
+    public int? Transactionid { get; private set; }
+
     public DateTime Orderdate { get; private set; }
 
     public decimal Totalamount { get; private set; }
@@ -47,5 +49,5 @@ public partial class Order
 
     public virtual ICollection<Shipment> Shipments { get; private set; } = new List<Shipment>();
 
-    public virtual ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
+    public virtual Transaction? Transaction { get; private set; }
 }
