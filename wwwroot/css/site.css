@@ -167,13 +167,13 @@ html {
       Footer markup lives in Views/Shared/_Layout.cshtml.
    ============================================================================= */
 
-html {
+/*html {
     position: relative;
     min-height: 100%;
 }
 
 body {
-    margin-bottom: 60px; /* Reserve space equal to footer height */
+    margin-bottom: 60px; // Reserve space for the footer height (60px)
 }
 
 .footer {
@@ -182,4 +182,8 @@ body {
     width: 100%;
     white-space: nowrap;
     line-height: 60px;
+}*/
+
+body {
+    margin-bottom: 0;
 }
