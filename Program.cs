@@ -1,5 +1,9 @@
 using ProRental.Data.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
+using ProRental.Interfaces.Data;
+using ProRental.Data;
+using ProRental.Interfaces.Domain;
+using ProRental.Domain.Controls;
 
 // uncomment when ready to code
 // using ProRental.Data;
@@ -59,8 +63,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-6
 // Data source
+builder.Services.AddScoped<ISessionMapper, SessionMapper>();
 
 // Domain
+builder.Services.AddScoped<ISessionService, SessionControl>();
+
 
 // Presentation/Controllers
 
