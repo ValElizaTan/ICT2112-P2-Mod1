@@ -65,6 +65,7 @@ dataSourceBuilder.MapEnum<TransactionPurpose>("transaction_purpose_enum", new Np
 dataSourceBuilder.MapEnum<TransactionStatus>("transaction_status_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<TransactionType>("transaction_type_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<TransportMode>("transport_mode", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
+dataSourceBuilder.MapEnum<UserRole>("user_role_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<VettingDecision>("vetting_decision_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<VettingResult>("vetting_result_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
 dataSourceBuilder.MapEnum<VisualType>("visual_type_enum", new Npgsql.NameTranslation.NpgsqlNullNameTranslator());
@@ -118,6 +119,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         o.MapEnum<TransactionStatus>("transaction_status_enum");
         o.MapEnum<TransactionType>("transaction_type_enum");
         o.MapEnum<TransportMode>("transport_mode");
+        o.MapEnum<UserRole>("user_role_enum");
         o.MapEnum<VettingDecision>("vetting_decision_enum");
         o.MapEnum<VettingResult>("vetting_result_enum");
         o.MapEnum<VisualType>("visual_type_enum");

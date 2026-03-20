@@ -57,8 +57,6 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<DeliveryRoute> DeliveryRoutes { get; set; }
 
-    public virtual DbSet<Deliverymethod> Deliverymethods { get; set; }
-
     public virtual DbSet<Deposit> Deposits { get; set; }
 
     public virtual DbSet<Ecobadge> Ecobadges { get; set; }
@@ -225,6 +223,7 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("transaction_status_enum", new[] { "PENDING", "COMPLETED", "FAILED", "CANCELLED" })
             .HasPostgresEnum("transaction_type_enum", new[] { "PAYMENT", "REFUND" })
             .HasPostgresEnum("transport_mode", new[] { "TRUCK", "SHIP", "PLANE", "TRAIN" })
+            .HasPostgresEnum("user_role_enum", new[] { "CUSTOMER", "STAFF", "ADMIN" })
             .HasPostgresEnum("vetting_decision_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("vetting_result_enum", new[] { "APPROVED", "REJECTED", "PENDING" })
             .HasPostgresEnum("visual_type_enum", new[] { "TABLE", "BAR", "COLUMN", "LINE", "PIE", "AREA" });
@@ -600,14 +599,14 @@ public partial class AppDbContext : DbContext
             entity.Property("Customerid")
                 .HasField("_customerid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("customerid");
-            entity.Property("Deliveryid")
-                .HasField("_deliveryid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("deliveryid");
             entity.Property("Notifyoptin")
                 .HasField("_notifyoptin")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasDefaultValue(false)
                 .HasColumnName("notifyoptin");
+            entity.Property("OptionId")
+                .HasField("_optionId")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("option_id");
 
             entity.HasOne(d => d.Cart).WithMany(p => p.Checkouts)
                 .HasForeignKey("Cartid")
@@ -618,8 +617,8 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_customer");
 
-            entity.HasOne(d => d.Delivery).WithMany(p => p.Checkouts)
-                .HasForeignKey("Deliveryid")
+            entity.HasOne(d => d.Option).WithMany(p => p.Checkouts)
+                .HasForeignKey("OptionId")
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_checkout_delivery");
         });
@@ -946,40 +945,6 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.OriginHub).WithMany(p => p.DeliveryRouteOriginHubs)
                 .HasForeignKey("OriginHubId")
                 .HasConstraintName("fk_route_origin_hub");
-        });
-
-        modelBuilder.Entity<Deliverymethod>(entity =>
-        {
-            entity.HasKey("Deliveryid").HasName("deliverymethod_pkey");
-
-            entity.ToTable("deliverymethod");
-
-            entity.Property("Deliveryid")
-                .HasField("_deliveryid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("deliveryid");
-            entity.Property("Carrierid")
-                .HasField("_carrierid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasMaxLength(50)
-                .HasColumnName("carrierid");
-            entity.Property("Deliverycost")
-                .HasField("_deliverycost")
-                .UsePropertyAccessMode(PropertyAccessMode.Field)
-                .HasPrecision(10, 2)
-                .HasColumnName("deliverycost");
-            entity.Property("Durationdays")
-                .HasField("_durationdays")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("durationdays");
-            entity.Property("Orderid")
-                .HasField("_orderid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Deliverymethods)
-                .HasForeignKey("Orderid")
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_deliverymethod_order");
         });
 
         modelBuilder.Entity<Deposit>(entity =>

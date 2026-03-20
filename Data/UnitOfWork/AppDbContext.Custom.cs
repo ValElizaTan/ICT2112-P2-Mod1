@@ -52,6 +52,7 @@ public partial class AppDbContext
 		modelBuilder.HasPostgresEnum<TransactionStatus>("transaction_status_enum");
 		modelBuilder.HasPostgresEnum<TransactionType>("transaction_type_enum");
 		modelBuilder.HasPostgresEnum<TransportMode>("transport_mode");
+            modelBuilder.HasPostgresEnum<UserRole>("user_role_enum");
 		modelBuilder.HasPostgresEnum<VettingDecision>("vetting_decision_enum");
 		modelBuilder.HasPostgresEnum<VettingResult>("vetting_result_enum");
 		modelBuilder.HasPostgresEnum<VisualType>("visual_type_enum");
@@ -299,6 +300,12 @@ public partial class AppDbContext
             entity.Property("HubType").HasField("_hubType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("hubtype").HasColumnType("hub_type");
         });
+
+        modelBuilder.Entity<User>(entity =>
+      {
+            entity.Property<UserRole>("UserRole").HasField("_userRole").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("userrole").HasColumnType("user_role_enum");
+      });
 
         modelBuilder.Entity<Vettingrecord>(entity =>
         {

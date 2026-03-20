@@ -26,6 +26,8 @@ public partial class ShippingOption
     private int? _routeId;
     private int? RouteId { get => _routeId; set => _routeId = value; }
 
+    public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
+
     public virtual Order? Order { get; private set; }
 
     public virtual DeliveryRoute? Route { get; private set; }
