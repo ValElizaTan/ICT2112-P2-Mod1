@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Select Products";
+}
+
+<h2>Step 2: Select Products</h2>
+
+<form asp-action="ReviewOrder" method="get">
+    <p class="text-muted">Product selection will be populated from the inventory service.</p>
+
+    <div id="product-list">
+        <!-- Products rendered here from IInventoryService -->
+    </div>
+
+    <button type="submit" class="btn btn-primary">Next: Review Order</button>
+    <a asp-action="EnterCustomerDetails" class="btn btn-secondary">Back</a>
+</form>

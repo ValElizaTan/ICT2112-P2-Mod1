@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Order Status";
+    var status = ViewData["OrderStatus"];
+}
+
+<h2>Order Confirmed</h2>
+
+<div class="alert alert-success">
+    <p>Your order has been placed successfully.</p>
+    <p><strong>Status:</strong> @status</p>
+</div>
+
+<a asp-action="Index" class="btn btn-primary">Start New Order</a>
+<a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
