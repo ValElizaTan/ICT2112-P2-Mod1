@@ -1,0 +1,96 @@
+@using ProRental.Domain.Entities
+@{
+    ViewData["Title"] = "Staff Dashboard";
+    var orders = ViewData["Orders"] as List<Order> ?? new List<Order>();
+    var inventoryItems = ViewData["InventoryItems"] as List<Inventoryitem> ?? new List<Inventoryitem>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Staff Dashboard</h2>
+    <a asp-action="OnLogout" class="btn btn-outline-danger btn-sm">Logout</a>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Walk-In Order</h5>
+                <p class="card-text">Create an order for a walk-in customer.</p>
+                <a asp-action="OnNavigateToWalkIn" class="btn btn-primary">Start Walk-In Order</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Shipping</h5>
+                <p class="card-text">Manage shipments and dispatch status.</p>
+                <a asp-action="OnNavigateToShipping" class="btn btn-secondary">Go to Shipping</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order List -->
+<div class="mb-4">
+    <h4>Active Orders</h4>
+    @if (!orders.Any())
+    {
+        <p class="text-muted">No active orders at this time.</p>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Order</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < orders.Count; i++)
+                {
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>Order @(i + 1)</td>
+                        <td>
+                            <a asp-controller="OrderTracking" asp-action="Index"
+                               class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<!-- Inventory Status -->
+<div>
+    <h4>Inventory (Available)</h4>
+    @if (!inventoryItems.Any())
+    {
+        <p class="text-muted">No inventory items to display.</p>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < inventoryItems.Count; i++)
+                {
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>Inventory Item @(i + 1)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

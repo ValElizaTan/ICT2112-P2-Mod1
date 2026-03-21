@@ -1,0 +1,28 @@
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Review Order";
+}
+
+<h2>Step 3: Review Order</h2>
+
+<div class="order-summary">
+    <h4>Customer</h4>
+    <p><strong>Name:</strong> @TempData["CustomerName"]</p>
+    <p><strong>Email:</strong> @TempData["CustomerEmail"]</p>
+    <p><strong>Address:</strong> @TempData["CustomerAddress"]</p>
+</div>
+
+<form asp-action="ConfirmOrder" method="post">
+    <div class="form-group">
+        <label for="deliveryMethod">Delivery Method</label>
+        <select id="deliveryMethod" name="deliveryMethod" class="form-control">
+            @foreach (var method in Enum.GetValues<DeliveryType>())
+            {
+                <option value="@method">@method</option>
+            }
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-success">Confirm Order</button>
+    <a asp-action="SelectProducts" class="btn btn-secondary">Back</a>
+</form>

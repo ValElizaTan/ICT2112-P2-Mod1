@@ -151,8 +151,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-4
 // Data source
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.ICustomerGateway, ProRental.Data.Module1.Gateways.CustomerGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IStaffGateway, ProRental.Data.Module1.Gateways.StaffGateway>();
 
 // Domain
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.ICustomerService, ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService, ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardControl>();
 
 // Presentation/Controllers
 
