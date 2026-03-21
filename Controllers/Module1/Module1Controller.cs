@@ -48,6 +48,13 @@ public class Module1Controller : Controller
     public IActionResult StaffLogin(string staffEmail, string staffPassword)
     {
         // TODO: add staff authentication logic here
-        return RedirectToAction("Index", "Home");
+        // return RedirectToAction("Index", "Home");
+        return RedirectToAction("StaffDashboard");
+    }
+
+    // GET /Module1/StaffDashboard
+    public IActionResult StaffDashboard()
+    {
+        return View("P2-4/StaffDashboard");
     }
 }

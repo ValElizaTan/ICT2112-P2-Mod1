@@ -1,0 +1,80 @@
+<div id="loans-clearance" class="row g-4 mb-4">
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-box-arrow-up-right me-2 text-info"></i>Outgoing Loans</h6>
+                <small class="text-muted">Current items out on loan by batch</small>
+            </div>
+            <div class="card-body p-0">
+                @if (ViewBag.LoanBatches != null && ((IEnumerable<dynamic>)ViewBag.LoanBatches).Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var batch in ViewBag.LoanBatches)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                <div>
+                                    <p class="mb-0 small fw-semibold">Batch #@batch.BatchId</p>
+                                    <p class="mb-0 small text-muted">@batch.CustomerName &mdash; @batch.ItemCount item(s)</p>
+                                    <p class="mb-0 small text-muted">Due: @batch.DueDate.ToString("d MMM yy")</p>
+                                </div>
+                                <a asp-controller="Loans" asp-action="BatchDetail" asp-route-id="@batch.BatchId" class="btn btn-outline-secondary btn-sm py-0"><i class="bi bi-eye"></i></a>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-4 small"><i class="bi bi-box fs-4 d-block mb-1"></i>No active loan batches.</div>
+                }
+            </div>
+            <div class="card-footer bg-white border-top py-2 d-flex justify-content-end">
+                <a asp-controller="Loans" asp-action="Index" class="btn btn-sm btn-outline-secondary">All Loans <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3">
+                <h6 class="fw-bold mb-0"><i class="bi bi-tags me-2 text-warning"></i>Clearance Hub</h6>
+                <small class="text-muted">Active batches and candidates awaiting selection</small>
+            </div>
+            <div class="card-body">
+                <div class="d-flex gap-3 mb-3">
+                    <div class="text-center flex-fill border rounded p-2">
+                        <p class="fs-4 fw-bold mb-0 text-warning">@(ViewBag.ActiveClearanceBatchCount ?? 0)</p>
+                        <small class="text-muted" style="font-size:.72rem;">Active Batches</small>
+                    </div>
+                    <div class="text-center flex-fill border rounded p-2">
+                        <p class="fs-4 fw-bold mb-0" style="color:#856404;">@(ViewBag.ClearanceCandidateCount ?? 0)</p>
+                        <small class="text-muted" style="font-size:.72rem;">Candidates Pending</small>
+                    </div>
+                    <div class="text-center flex-fill border rounded p-2">
+                        <p class="fs-4 fw-bold mb-0 text-danger">@(ViewBag.ClearanceOverrideCount ?? 0)</p>
+                        <small class="text-muted" style="font-size:.72rem;">Awaiting Override</small>
+                    </div>
+                </div>
+                @if (ViewBag.RecentClearanceBatches != null && ((IEnumerable<dynamic>)ViewBag.RecentClearanceBatches).Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var cb in ViewBag.RecentClearanceBatches)
+                        {
+                            <li class="list-group-item px-0 py-2 border-0 border-bottom d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="small fw-semibold">Batch #@cb.BatchId</span>
+                                    <span class="small text-muted ms-2">@cb.ItemCount item(s)</span>
+                                </div>
+                                <span class="badge clearance-tag rounded-pill">@cb.Status</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+            <div class="card-footer bg-white border-top py-2 d-flex justify-content-end">
+                <a asp-controller="Clearance" asp-action="Index" class="btn btn-sm btn-outline-warning">Manage Clearance <i class="bi bi-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+</div>
