@@ -1,0 +1,401 @@
+@{
+    ViewData["Title"] = ViewData["Title"] ?? "Track Your Shipment";
+    var shipment = ViewData["Shipment"] as ProRental.Domain.Module1.P24.Entities.Shipment;
+    var carrier = ViewData["Carrier"] as ProRental.Domain.Module1.P24.Entities.CarrierAgent;
+    var timeline = ViewData["Timeline"] as List<ProRental.Domain.Module1.P24.Entities.ShipmentStatusHistory> ?? new();
+    var lastUpdated = ViewData["LastUpdated"] as DateTime? ?? DateTime.UtcNow;
+}
+
+@if (shipment != null)
+{
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-1">
+                <i class="bi bi-box-seam me-2" style="color: #2d7a4f;"></i>Track Your Shipment
+            </h1>
+        </div>
+    </div>
+
+        <!-- Shipment Status Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Current Status</h6>
+                                @{
+                                    var statusBadgeClass = shipment.GetStatus() switch
+                                    {
+                                        ProRental.Domain.Enums.ShipmentStatus.PENDING => "bg-warning",
+                                        ProRental.Domain.Enums.ShipmentStatus.IN_TRANSIT => "bg-info",
+                                        ProRental.Domain.Enums.ShipmentStatus.DELIVERED => "bg-success",
+                                        ProRental.Domain.Enums.ShipmentStatus.CANCELLED => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <h3>
+                                    <span class="badge @statusBadgeClass" style="font-size: 1.1rem;">
+                                        @shipment?.GetStatus()
+                                    </span>
+                                </h3>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-2">Estimated Delivery</h6>
+                                <h3 class="text-primary">
+                                    @shipment?.GetEstimatedArrival().ToString("MMM dd, yyyy")
+                                </h3>
+                                <p class="text-muted mb-0">
+                                    <i class="bi bi-clock me-1"></i>
+                                    @{
+                                        var daysRemaining = (shipment?.GetEstimatedArrival() - DateTime.Now)?.Days ?? 0;
+                                        if (daysRemaining > 0)
+                                        {
+                                            @($"{daysRemaining} day(s) remaining")
+                                        }
+                                        else if (daysRemaining == 0)
+                                        {
+                                            @("Arriving today")
+                                        }
+                                        else
+                                        {
+                                            @("Delivery date passed")
+                                        }
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Details -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2" style="color: #2d7a4f;"></i>Shipment Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="text-muted small">Order ID</label>
+                            <p class="mb-2"><strong>#@shipment?.GetOrderId()</strong></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Weight</label>
+                            <p class="mb-2"><strong>@shipment?.GetWeight().ToString("F2") kg</strong></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="text-muted small">Destination</label>
+                            <p class="mb-0"><strong>@shipment?.GetDestinationAddress()</strong></p>
+                        </div>
+                        <div>
+                            <label class="text-muted small">Priority</label>
+                            <p class="mb-0">
+                                <span class="badge bg-secondary">@shipment?.GetPriority()</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Carrier Information -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Carrier Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (carrier != null)
+                        {
+                            <div class="mb-3">
+                                <label class="text-muted small">Carrier Name</label>
+                                <p class="mb-2"><strong>@carrier.GetName()</strong></p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Status</label>
+                                <p class="mb-2">
+                                    @if (carrier.IsActive())
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Active
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-x-circle me-1"></i>Inactive
+                                        </span>
+                                    }
+                                </p>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary w-100" 
+                                    data-bs-toggle="modal" data-bs-target="#contactModal">
+                                <i class="bi bi-telephone me-1"></i>Contact Carrier
+                            </button>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Carrier information not available</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipment Timeline -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-clock-history me-2" style="color: #2d7a4f;"></i>Delivery Timeline
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (timeline.Any())
+                        {
+                            <div class="timeline">
+                                @foreach (var historyItem in timeline.OrderByDescending(h => h.GetTimestamp()))
+                                {
+                                    <div class="timeline-item mb-3">
+                                        <div class="timeline-marker">
+                                            <i class="bi bi-check-circle-fill" style="color: #2d7a4f;"></i>
+                                        </div>
+                                        <div class="timeline-content ms-3">
+                                            <h6 class="mb-1">@historyItem.GetStatus()</h6>
+                                            <p class="text-muted small mb-1">
+                                                <i class="bi bi-calendar me-1"></i>
+                                                @historyItem.GetTimestamp().ToString("MMM dd, yyyy HH:mm")
+                                            </p>
+                                            @if (!string.IsNullOrEmpty(historyItem.GetRemark()))
+                                            {
+                                                <p class="mb-0">@historyItem.GetRemark()</p>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">No timeline updates yet</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i class="bi bi-gear me-2" style="color: #2d7a4f;"></i>Actions
+                        </h5>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#contactModal">
+                                <i class="bi bi-telephone me-1"></i>Contact Carrier
+                            </button>
+                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
+                                <i class="bi bi-arrow-return-left me-1"></i>Initiate Return
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="downloadTracking()">
+                                <i class="bi bi-download me-1"></i>Download Tracking
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Last Updated Info -->
+        <div class="row">
+            <div class="col-12">
+                <p class="text-muted text-center small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Last updated: @lastUpdated.ToString("MMM dd, yyyy HH:mm:ss") UTC
+                </p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Shipment not found. Please check the tracking ID and try again.
+        </div>
+    }
+
+<!-- Contact Carrier Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">Contact Carrier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (carrier != null)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Carrier</label>
+                        <p>@carrier.GetName()</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <p><a href="tel:+18001234567">1-800-CARRIER</a></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <p><a href="mailto:support@carrier.com">support@carrier.com</a></p>
+                    </div>
+                    <div>
+                        <label class="form-label">Website</label>
+                        <p><a href="https://www.carrier.com" target="_blank">https://www.carrier.com</a></p>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Carrier contact information not available</p>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="returnModalLabel">Initiate Return</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="returnForm">
+                    <div class="mb-3">
+                        <label for="returnReason" class="form-label">Reason for Return</label>
+                        <select class="form-control" id="returnReason" name="reason" required>
+                            <option value="">-- Select a reason --</option>
+                            <option value="defective">Defective/Damaged</option>
+                            <option value="wrong_item">Wrong Item Received</option>
+                            <option value="not_satisfied">Not Satisfied</option>
+                            <option value="changed_mind">Changed My Mind</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="returnDetails" class="form-label">Additional Details</label>
+                        <textarea class="form-control" id="returnDetails" name="details" rows="3" placeholder="Please provide more details..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="submitReturn(@shipment?.GetTrackingId())" @(shipment != null ? "" : "disabled")>
+                    <i class="bi bi-arrow-return-left me-1"></i>Submit Return
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline-item {
+        display: flex;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    .timeline-marker {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #f0f0f0;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 10;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 32px;
+        bottom: -1rem;
+        width: 2px;
+        background-color: #ddd;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function refreshShipment(trackingId) {
+            fetch(`/Module1/CustomerShipping/Shipment/${trackingId}/Refresh`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error refreshing shipment');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function submitReturn(trackingId) {
+            const reason = document.getElementById('returnReason').value;
+            const details = document.getElementById('returnDetails').value;
+
+            if (!reason) {
+                alert('Please select a reason for return');
+                return;
+            }
+
+            const data = {
+                itemId: null,
+                reason: reason + (details ? ': ' + details : '')
+            };
+
+            fetch(`/Module1/CustomerShipping/Shipment/${trackingId}/InitiateReturn`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error initiating return: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function downloadTracking() {
+            alert('Download functionality coming soon!');
+        }
+    </script>
+}
