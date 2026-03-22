@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Controls;
 
@@ -27,16 +28,27 @@ public class StaffProfileController : Controller
 
     public IActionResult ViewProfile(int staffId)
     {
-        // var staffInfo = _control.GetStaffInformation(staffId); // uncomment when ready
-        ViewData["StaffInfo"] = new
+        Staff staff = _control.GetStaffInformation(staffId);
+        var info = staff.GetStaffInfo();
+        ViewBag.StaffInfo = new
         {
-            StaffId = staffId,
-            Role = UserRole.STAFF,
-            Name = "John Doe",
-            Email = "john.doe@example.com",
-            PhoneCountry = 65,
-            PhoneNumber = "912345d67"
+            StaffId = info.StaffId,
+            Role = info.User.UserRole,
+            Name = info.User.Name,
+            Email = info.User.Email,
+            PhoneCountry = info.User.PhoneCountry,
+            PhoneNumber = info.User.PhoneNumber
         };
+    return View("Index");
+        // ViewData["StaffInfo"] = new
+        // {
+        //     StaffId = staffId,
+        //     Role = UserRole.STAFF,
+        //     Name = "John Doe",
+        //     Email = "john.doe@example.com",
+        //     PhoneCountry = 65,
+        //     PhoneNumber = "912345d67"
+        // };
         return View("Index");
     }
 }
