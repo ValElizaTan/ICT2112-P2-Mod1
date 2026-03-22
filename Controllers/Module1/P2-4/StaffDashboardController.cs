@@ -27,9 +27,12 @@ public class StaffDashboardController : Controller
 
     
 
-    public IActionResult OnNavigateToWalkIn()
+    public IActionResult OnNavigateToWalkIn(string type = "new")
     {
-        return RedirectToAction("Index", "WalkInOrder");
+        if (type == "existing")
+            return RedirectToAction("Index", "WalkInOrder");
+
+        return RedirectToAction("EnterCustomerDetails", "WalkInOrder");
     }
 
     public IActionResult OnNavigateToShipping()
