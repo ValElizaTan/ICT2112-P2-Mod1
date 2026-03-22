@@ -1,0 +1,57 @@
+@{
+    var customer = ViewBag.CustomerInfo;
+    string initials = customer != null
+        ? string.Concat(((string)customer.Name).Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+        : "?";
+}
+
+<div class="card shadow-sm border-0 h-100">
+    <div class="card-body p-4">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="profile-avatar">@initials</div>
+            <div>
+                <p class="fw-bold mb-0">@(customer?.Name ?? "—")</p>
+                <span class="badge rounded-pill" style="background:#d1e7dd;color:#0a3622;font-size:.7rem;">
+                    <i class="bi bi-person-check me-1"></i>Customer
+                </span>
+            </div>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="d-flex flex-column gap-3">
+            <div>
+                <p class="info-label mb-1">Customer ID</p>
+                <p class="info-value mb-0 text-muted">#@(customer?.CustomerId ?? "—")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Email</p>
+                <p class="info-value mb-0">@(customer?.Email ?? "—")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Phone</p>
+                <p class="info-value mb-0">
+                    @if (customer?.PhoneCountry != null && customer?.PhoneNumber != null)
+                    {
+                        <span>+@customer.PhoneCountry &nbsp;@customer.PhoneNumber</span>
+                    }
+                    else
+                    {
+
+                        <span class="text-muted">—</span>
+                    }
+                </p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Account Type</p>
+                <p class="info-value mb-0">@(customer?.CustomerType == 1 ? "Regular" : "Premium")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Address</p>
+                <p class="info-value mb-0">@(customer?.Address ?? "—")</p>
+            </div>
+        </div>
+
+    </div>
+</div>

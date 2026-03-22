@@ -169,7 +169,7 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardC
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl>();
 
 // Presentation/Controllers
-
+builder.Services.AddScoped<ProRental.Controllers.Module1.P24.CustomerProfileController>();
 
 //Team P2-5
 // Data source

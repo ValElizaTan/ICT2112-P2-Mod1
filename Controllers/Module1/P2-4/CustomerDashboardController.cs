@@ -135,4 +135,8 @@ public class CustomerDashboardController : Controller
         TempData["SuccessMessage"] = "Notification preferences updated.";
         return RedirectToAction(nameof(Notifications), new { customerId });
     }
+    public IActionResult OnNavigateToCustomerProfile(int customerId)
+    {
+        return RedirectToAction("Index", "CustomerProfile", new { customerId });
+    }
 }
