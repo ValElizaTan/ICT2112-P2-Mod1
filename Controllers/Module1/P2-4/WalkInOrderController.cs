@@ -65,7 +65,7 @@ public class WalkInOrderController : Controller
             var items = productIds.Select(pid => new Orderitem()).ToList();
 
             var order = _control.CreateOrder(customerId, items, deliveryMethod);
-            return DisplayOrderStatus(OrderStatus.CONFIRMED);
+            return DisplayOrderStatus(OrderStatus.PLACED);
         }
         catch (Exception ex)
         {

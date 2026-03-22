@@ -1,0 +1,202 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+@using ProRental.Domain.Module1.P24.Controls
+
+@{
+    ViewData["Title"] = "Customer Order Tracking";
+
+    var customer = ViewBag.Customer as Customer;
+    var customerOrders = ViewBag.CustomerOrders as List<Order> ?? new List<Order>();
+    var selectedOrder = ViewBag.SelectedOrder as Order;
+    var orderItems = ViewBag.OrderItems as List<Orderitem> ?? new List<Orderitem>();
+    var timeline = ViewBag.Timeline as List<OrderStatusHistory> ?? new List<OrderStatusHistory>();
+    var currentOrderStatus = ViewBag.CurrentOrderStatus != null
+        ? (OrderStatus)ViewBag.CurrentOrderStatus
+        : OrderStatus.PLACED;
+
+    int selectedItemId = ViewBag.SelectedItemId ?? 0;
+
+    string? tempMessage = TempData["Message"]?.ToString();
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Customer Order Tracking</h2>
+            <p class="text-muted mb-0">
+                Logged in as:
+                <strong>@(customer?.Name ?? "Customer")</strong>
+            </p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(tempMessage))
+    {
+        <div class="alert alert-info">@tempMessage</div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white">
+            Your Orders
+        </div>
+        <div class="card-body">
+            @if (!customerOrders.Any())
+            {
+                <p class="mb-0 text-muted">No orders found.</p>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var order in customerOrders)
+                    {
+                        <div class="col-md-4">
+                            <a asp-controller="OrderTracking"
+                               asp-action="CustomerOrderTracking"
+                               asp-route-orderId="@order.OrderId"
+                               class="text-decoration-none">
+                                <div class="card h-100 @(selectedOrder?.OrderId == order.OrderId ? "border-primary" : "")">
+                                    <div class="card-body">
+                                        <h5 class="card-title mb-2">@order.OrderNumber</h5>
+                                        <div class="small text-muted">Order ID: @order.OrderId</div>
+                                        <div class="small text-muted">Created: @order.CreatedAt.ToString("dd MMM yyyy")</div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (selectedOrder != null)
+    {
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        Order Summary
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Order Number:</strong> @selectedOrder.OrderNumber</p>
+                        <p><strong>Order ID:</strong> @selectedOrder.OrderId</p>
+                        <p><strong>Current Order Status:</strong>
+                            <span class="badge bg-primary">@currentOrderStatus</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        Order Items
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!orderItems.Any())
+                        {
+                            <div class="p-3 text-muted">No order items found.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Item ID</th>
+                                            <th>Product</th>
+                                            <th>Qty</th>
+                                            <th>Rental Period</th>
+                                            <th>Current Status</th>
+                                            <th>Timeline</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var item in orderItems)
+                                    {
+                                        <tr class="@(selectedItemId == item.OrderItemId ? "table-primary" : "")">
+                                            <td>@item.OrderItemId</td>
+                                            <td>@item.ProductName</td>
+                                            <td>@item.Quantity</td>
+                                            <td>
+                                                @item.RentalStartDate.ToString("dd MMM yyyy")
+                                                -
+                                                @item.RentalEndDate.ToString("dd MMM yyyy")
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-dark">@item.CurrentStatus</span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="OrderTracking"
+                                                   asp-action="CustomerOrderTracking"
+                                                   asp-route-orderId="@selectedOrder.OrderId"
+                                                   asp-route-selectedItemId="@item.OrderItemId"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    View Timeline
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-dark">
+                        Item Timeline
+                    </div>
+                    <div class="card-body">
+                        @if (selectedItemId == 0)
+                        {
+                            <p class="text-muted mb-0">Select an item to view timeline.</p>
+                        }
+                        else if (!timeline.Any())
+                        {
+                            <p class="text-muted mb-0">No timeline records found.</p>
+                        }
+                        else
+                        {
+                            <h6 class="mb-3">Showing timeline for Item ID: @selectedItemId</h6>
+
+                            <ul class="list-group">
+                                @for (int i = 0; i < timeline.Count; i++)
+                                {
+                                    var entry = timeline[i];
+                                    bool isLatest = i == timeline.Count - 1;
+
+                                    <li class="list-group-item @(isLatest ? "border-primary border-2" : "")">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold">
+                                                    @entry.Status
+                                                    @if (isLatest)
+                                                    {
+                                                        <span class="badge bg-primary ms-2">Latest</span>
+                                                    }
+                                                </div>
+                                                <div class="small text-muted">
+                                                    @entry.Timestamp.ToString("dd MMM yyyy hh:mm tt")
+                                                </div>
+                                                <div class="small">
+                                                    Updated By Staff ID: @entry.UpdatedBy
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <strong>Remark:</strong>
+                                            @(string.IsNullOrWhiteSpace(entry.Remark) ? "—" : entry.Remark)
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

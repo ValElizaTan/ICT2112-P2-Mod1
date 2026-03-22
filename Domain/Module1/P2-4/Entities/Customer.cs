@@ -18,7 +18,8 @@ public partial class Customer
         User = user;
     }
 
-    protected Customer() { }
+    //protected Customer() { }
+    public Customer() { }
 
     private int GetCustomerId() => _customerid;
     private string GetAddress() => _address;
@@ -40,4 +41,11 @@ public partial class Customer
         SetCustomerType(info.CustomerType);
         User.SetUserInfo(info.User);
     }
+
+    // MINIMAL PLACEHOLDER ENTITY
+    public int CustomerId { get; set; }
+    public string Name { get; set; } = string.Empty;
+
+    public int GetCustomerIdd() => CustomerId;
+    public string GetName() => Name;
 }

@@ -14,7 +14,8 @@ public partial class Staff
         Department = department;
     }
 
-    protected Staff() { }
+    //protected Staff() { }
+    public Staff() { }
 
     private int GetStaffId() => _staffid;
     private string GetDepartment() => _department;
@@ -32,4 +33,13 @@ public partial class Staff
         SetDepartment(info.Department);
         User.SetUserInfo(info.User);
     }
+
+    // MINIMAL PLACEHOLDER ENTITY
+    public int StaffId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+
+    public int GetStaffIdd() => StaffId;
+    public string GetName() => Name;
+    public string GetRole() => Role;
 }

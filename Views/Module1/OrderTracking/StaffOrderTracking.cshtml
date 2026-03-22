@@ -1,0 +1,295 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+@using ProRental.Domain.Module1.P24.Controls
+
+@{
+    ViewData["Title"] = "Staff Order Tracking";
+
+    var staff = ViewBag.Staff as Staff;
+    var selectedOrder = ViewBag.SelectedOrder as Order;
+    var orderItems = ViewBag.OrderItems as List<Orderitem> ?? new List<Orderitem>();
+    var timeline = ViewBag.Timeline as List<OrderStatusHistory> ?? new List<OrderStatusHistory>();
+    var statusOptions = ViewBag.StatusOptions as List<OrderStatus> ?? new List<OrderStatus>();
+    string selectedFilterStatus = ViewBag.SelectedFilterStatus as string ?? string.Empty;
+
+    int selectedItemId = ViewBag.SelectedItemId ?? 0;
+    var currentOrderStatus = ViewBag.CurrentOrderStatus != null
+        ? (OrderStatus)ViewBag.CurrentOrderStatus
+        : OrderStatus.PLACED;
+
+    var currentItemStatus = ViewBag.CurrentItemStatus != null
+        ? (OrderStatus)ViewBag.CurrentItemStatus
+        : OrderStatus.PLACED;
+
+    string? tempMessage = TempData["Message"]?.ToString();
+    string? rawBulkResults = TempData["BulkResults"]?.ToString();
+    var bulkResults = string.IsNullOrWhiteSpace(rawBulkResults)
+        ? new List<string>()
+        : rawBulkResults.Split("||", StringSplitOptions.RemoveEmptyEntries).ToList();
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Staff Order Tracking</h2>
+            <p class="text-muted mb-0">
+                Logged in as:
+                <strong>@(staff?.Name ?? "Staff")</strong>
+                (@(staff?.Role ?? "Role"))
+            </p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(tempMessage))
+    {
+        <div class="alert alert-info">@tempMessage</div>
+    }
+
+    @if (bulkResults.Any())
+    {
+        <div class="alert alert-secondary">
+            <h6 class="mb-2">Bulk Update Results</h6>
+            <ul class="mb-0">
+                @foreach (var result in bulkResults)
+                {
+                    <li>@result</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (selectedOrder != null)
+    {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-dark text-white">
+                Order Summary
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Order Number:</strong> @selectedOrder.OrderNumber</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Order ID:</strong> @selectedOrder.OrderId</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p>
+                            <strong>Current Order Status:</strong>
+                            <span class="badge bg-primary">@currentOrderStatus</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    Filter Items by Status
+                </div>
+                <div class="card-body">
+                    <form method="get" asp-controller="OrderTracking" asp-action="StaffOrderTracking" class="row g-3">
+                        <input type="hidden" name="orderId" value="@(selectedOrder?.OrderId ?? 0)" />
+                        <div class="col-md-8">
+                            <select name="filterStatus" class="form-select">
+                                <option value="">-- Show All --</option>
+                                @foreach (var status in statusOptions)
+                                {
+                                    <option value="@status" selected="@(selectedFilterStatus == status.ToString())">@status</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <form method="post" asp-controller="OrderTracking" asp-action="BulkUpdate">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderId" value="@(selectedOrder?.OrderId ?? 0)" />
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        Order Items
+                    </div>
+                    <div class="card-body p-0">
+                        @if (!orderItems.Any())
+                        {
+                            <div class="p-3 text-muted">No order items found.</div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mb-0 align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Select</th>
+                                            <th>Item ID</th>
+                                            <th>Product</th>
+                                            <th>Qty</th>
+                                            <th>Status</th>
+                                            <th>Timeline</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var item in orderItems)
+                                    {
+                                        <tr class="@(selectedItemId == item.OrderItemId ? "table-primary" : "")">
+                                            <td>
+                                                <input type="checkbox"
+                                                       class="bulk-item-checkbox form-check-input"
+                                                       value="@item.OrderItemId" />
+                                            </td>
+                                            <td>@item.OrderItemId</td>
+                                            <td>@item.ProductName</td>
+                                            <td>@item.Quantity</td>
+                                            <td>
+                                                <span class="badge bg-dark">@item.CurrentStatus</span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="OrderTracking"
+                                                   asp-action="StaffOrderTracking"
+                                                   asp-route-orderId="@item.OrderId"
+                                                   asp-route-selectedItemId="@item.OrderItemId"
+                                                   asp-route-filterStatus="@selectedFilterStatus"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    View Timeline
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="card-footer">
+                        <input type="hidden" name="selectedOrderItemIds" id="selectedOrderItemIds" />
+
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Bulk New Status</label>
+                                <select name="newStatus" class="form-select" required>
+                                    <option value="">-- Select Status --</option>
+                                    @foreach (var status in statusOptions)
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Bulk Remark</label>
+                                <input type="text" name="remark" class="form-control" placeholder="Required for some statuses" />
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-warning w-100" onclick="prepareBulkSelection()">
+                                    Bulk Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-dark">
+                    Update Selected Item
+                </div>
+                <div class="card-body">
+                    @if (selectedItemId == 0)
+                    {
+                        <p class="text-muted mb-0">Select an item first to update status.</p>
+                    }
+                    else
+                    {
+                        <p><strong>Selected Item ID:</strong> @selectedItemId</p>
+                        <p><strong>Current Item Status:</strong> <span class="badge bg-dark">@currentItemStatus</span></p>
+
+                        <form method="post" asp-controller="OrderTracking" asp-action="UpdateStatus">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="orderId" value="@(selectedOrder?.OrderId ?? 0)" />
+                            <input type="hidden" name="orderItemId" value="@selectedItemId" />
+
+                            <div class="mb-3">
+                                <label class="form-label">New Status</label>
+                                <select name="newStatus" class="form-select" required>
+                                    <option value="">-- Select Status --</option>
+                                    @foreach (var status in statusOptions)
+                                    {
+                                        <option value="@status">@status</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Remark</label>
+                                <textarea name="remark" class="form-control" rows="3" placeholder="Required for CANCELLED, REFUND_PROCESSING, RETURN_PICKUP, INSPECTION"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100">
+                                Update Status
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    Selected Item Timeline
+                </div>
+                <div class="card-body">
+                    @if (selectedItemId == 0)
+                    {
+                        <p class="text-muted mb-0">Select an item to view timeline.</p>
+                    }
+                    else if (!timeline.Any())
+                    {
+                        <p class="text-muted mb-0">No timeline records found.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group">
+                            @for (int i = 0; i < timeline.Count; i++)
+                            {
+                                var entry = timeline[i];
+                                bool isLatest = i == timeline.Count - 1;
+
+                                <li class="list-group-item @(isLatest ? "border-primary border-2" : "")">
+                                    <div class="fw-bold">
+                                        @entry.Status
+                                        @if (isLatest)
+                                        {
+                                            <span class="badge bg-primary ms-2">Latest</span>
+                                        }
+                                    </div>
+                                    <div class="small text-muted">@entry.Timestamp.ToString("dd MMM yyyy hh:mm tt")</div>
+                                    <div class="small">Updated By Staff ID: @entry.UpdatedBy</div>
+                                    <div class="mt-2">
+                                        <strong>Remark:</strong>
+                                        @(string.IsNullOrWhiteSpace(entry.Remark) ? "—" : entry.Remark)
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function prepareBulkSelection() {
+        const checked = document.querySelectorAll('.bulk-item-checkbox:checked');
+        const ids = Array.from(checked).map(x => x.value);
+        document.getElementById('selectedOrderItemIds').value = ids.join(',');
+    }
+</script>

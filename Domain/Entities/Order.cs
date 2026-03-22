@@ -56,4 +56,10 @@ public partial class Order
     public virtual ICollection<ShippingOption> ShippingOptions { get; private set; } = new List<ShippingOption>();
 
     public virtual Transaction? Transaction { get; private set; }
+
+    // MINIMAL PLACEHOLDER ENTITY
+    public int OrderId { get; set; }
+    public int CustomerId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
 }
