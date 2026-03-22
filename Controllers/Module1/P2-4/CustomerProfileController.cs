@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Enums;
+using ProRental.Domain.Entities;
 using ProRental.Domain.Module1.P24.Controls;
 
 namespace ProRental.Controllers.Module1.P24;
@@ -16,77 +16,61 @@ public class CustomerProfileController : Controller
     [HttpGet]
     public IActionResult Index(int customerId = 1)
     {
-        return ViewProfile(customerId);
-    }
+        // Debug output to console
+        Console.WriteLine($"CustomerProfileController.Index called with customerId: {customerId}");
+        Console.WriteLine($"_control is null? {_control == null}");
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult UpdateCustomerDetails(int customerId, string name, string email, int phoneCountry, int phoneNumber, string passwordHash, string address, int customerType)
-    {
         try
         {
-            // Only update password if provided
-            var finalPasswordHash = string.IsNullOrEmpty(passwordHash) ? null : passwordHash;
+            // Safely get customer info
+            Customer? customer = null;
+            try
+            {
+                customer = _control.GetCustomerInformation(customerId);
+                Console.WriteLine($"Customer found: {customer != null}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting customer: {ex.Message}");
+            }
 
-            _control.UpdateCustomerDetails(
-                customerId,
-                name,
-                email,
-                phoneCountry,
-                phoneNumber,
-                finalPasswordHash ?? "",
-                address,
-                customerType);
-
-            TempData["SuccessMessage"] = "Profile updated successfully!";
-        }
-        catch (Exception ex)
-        {
-            TempData["ErrorMessage"] = $"Error updating profile: {ex.Message}";
-        }
-
-        return RedirectToAction("Index", new { customerId });
-    }
-
-    [HttpGet]
-    public IActionResult ViewProfile(int customerId)
-    {
-        try
-        {
-            var customer = _control.GetCustomerInformation(customerId);
+            // Get customer info safely
             var customerInfo = customer?.GetCustomerInfo();
 
-            // Pass customer data to view
+            // Always provide fallback data
             ViewData["CustomerInfo"] = new
             {
                 CustomerId = customerInfo?.CustomerId ?? customerId,
                 CustomerType = customerInfo?.CustomerType ?? 1,
-                Address = customerInfo?.Address ?? "",
-                Name = customerInfo?.User.Name ?? "Customer",
-                Email = customerInfo?.User.Email ?? "",
+                Address = customerInfo?.Address ?? "123 Customer Street, Singapore",
+                Name = customerInfo?.User.Name ?? "Test Customer",
+                Email = customerInfo?.User.Email ?? "customer@example.com",
                 PhoneCountry = customerInfo?.User.PhoneCountry ?? 65,
-                PhoneNumber = customerInfo?.User.PhoneNumber ?? "",
+                PhoneNumber = customerInfo?.User.PhoneNumber ?? "91234567",
                 Role = "Customer"
             };
 
-            // Placeholder data for activity summary
             ViewData["OrdersPlaced"] = 0;
             ViewData["ActiveRentals"] = 0;
             ViewData["CompletedReturns"] = 0;
             ViewData["PendingRefunds"] = 0;
-
-            // Placeholder recent activities
             ViewData["RecentActivities"] = new List<dynamic>();
+
+            return View();
         }
         catch (Exception ex)
         {
-            // Fallback to placeholder data if customer not found
+            // Log the error
+            Console.WriteLine($"ERROR in CustomerProfileController: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+
+            // Return with placeholder data
             ViewData["CustomerInfo"] = new
             {
                 CustomerId = customerId,
                 CustomerType = 1,
                 Address = "123 Customer Street, Singapore",
-                Name = "Customer Name",
+                Name = "Test Customer",
                 Email = "customer@example.com",
                 PhoneCountry = 65,
                 PhoneNumber = "91234567",
@@ -99,9 +83,30 @@ public class CustomerProfileController : Controller
             ViewData["PendingRefunds"] = 0;
             ViewData["RecentActivities"] = new List<dynamic>();
 
-            TempData["InfoMessage"] = "Customer profile loaded with placeholder data. Please update with real data when available.";
+            ViewData["ErrorMessage"] = ex.Message;
+
+            return View();
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult UpdateCustomerDetails(int customerId, string name, string email, int phoneCountry, int phoneNumber, string passwordHash, string address, int customerType)
+    {
+        try
+        {
+            var finalPasswordHash = string.IsNullOrEmpty(passwordHash) ? "" : passwordHash;
+
+            _control.UpdateCustomerDetails(
+                customerId, name, email, phoneCountry, phoneNumber, finalPasswordHash, address, customerType);
+
+            TempData["SuccessMessage"] = "Profile updated successfully!";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error updating profile: {ex.Message}";
         }
 
-        return View("Index");
+        return RedirectToAction("Index", new { customerId });
     }
 }

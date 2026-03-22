@@ -14,20 +14,20 @@
         <div class="card-body p-4">
             <form asp-action="UpdateCustomerDetails" method="post">
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="customerId" value="@customer?.CustomerId" />
-                <input type="hidden" name="customerType" value="@customer?.CustomerType" />
+                <input type="hidden" name="customerId" value="@(customer?.CustomerId ?? 0)" />
+                <input type="hidden" name="customerType" value="@(customer?.CustomerType ?? 1)" />
 
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="info-label mb-1">Full Name</label>
-                        <input type="text" name="name" class="form-control form-control-sm" value="@customer?.Name"
-                               placeholder="Full name" required />
+                        <input type="text" name="name" class="form-control form-control-sm"
+                               value="@(customer?.Name ?? "")" placeholder="Full name" required />
                     </div>
 
                     <div class="col-12">
                         <label class="info-label mb-1">Email Address</label>
-                        <input type="email" name="email" class="form-control form-control-sm" value="@customer?.Email"
-                               placeholder="email@example.com" required />
+                        <input type="email" name="email" class="form-control form-control-sm"
+                               value="@(customer?.Email ?? "")" placeholder="email@example.com" required />
                     </div>
 
                     <div class="col-4">
@@ -35,20 +35,20 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">+</span>
                             <input type="number" name="phoneCountry" class="form-control form-control-sm"
-                                   value="@customer?.PhoneCountry" placeholder="65" />
+                                   value="@(customer?.PhoneCountry ?? 65)" placeholder="65" />
                         </div>
                     </div>
 
                     <div class="col-8">
                         <label class="info-label mb-1">Phone Number</label>
                         <input type="text" name="phoneNumber" class="form-control form-control-sm"
-                               value="@customer?.PhoneNumber" placeholder="8123 4567" />
+                               value="@(customer?.PhoneNumber ?? "")" placeholder="8123 4567" />
                     </div>
 
                     <div class="col-12">
                         <label class="info-label mb-1">Address</label>
                         <textarea name="address" class="form-control form-control-sm" rows="2"
-                                  placeholder="Your address">@customer?.Address</textarea>
+                                  placeholder="Your address">@(customer?.Address ?? "")</textarea>
                     </div>
 
                     <div class="col-12">
@@ -70,3 +70,8 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .section-divider { border-left: 3px solid #2d7a4f; }
+        .info-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; font-weight: 600; }
+    </style>

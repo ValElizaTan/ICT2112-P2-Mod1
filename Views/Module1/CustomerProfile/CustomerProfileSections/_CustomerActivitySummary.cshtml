@@ -1,5 +1,10 @@
 @{
     var customer = ViewBag.CustomerInfo;
+    var ordersPlaced = ViewBag.OrdersPlaced ?? 0;
+    var activeRentals = ViewBag.ActiveRentals ?? 0;
+    var completedReturns = ViewBag.CompletedReturns ?? 0;
+    var pendingRefunds = ViewBag.PendingRefunds ?? 0;
+    var recentActivities = ViewBag.RecentActivities as List<dynamic> ?? new List<dynamic>();
 }
 
 <div class="card shadow-sm border-0">
@@ -11,40 +16,40 @@
             <div class="col-6">
                 <div class="border rounded p-3 text-center h-100">
                     <p class="info-label mb-1">Orders Placed</p>
-                    <p class="fs-4 fw-bold mb-0" style="color:#2d7a4f;">@(ViewBag.OrdersPlaced ?? 0)</p>
+                    <p class="fs-4 fw-bold mb-0" style="color:#2d7a4f;">@ordersPlaced</p>
                 </div>
             </div>
             <div class="col-6">
                 <div class="border rounded p-3 text-center h-100">
                     <p class="info-label mb-1">Active Rentals</p>
-                    <p class="fs-4 fw-bold mb-0" style="color:#0d6efd;">@(ViewBag.ActiveRentals ?? 0)</p>
+                    <p class="fs-4 fw-bold mb-0" style="color:#0d6efd;">@activeRentals</p>
                 </div>
             </div>
             <div class="col-6">
                 <div class="border rounded p-3 text-center h-100">
                     <p class="info-label mb-1">Completed Returns</p>
-                    <p class="fs-4 fw-bold mb-0 text-warning">@(ViewBag.CompletedReturns ?? 0)</p>
+                    <p class="fs-4 fw-bold mb-0 text-warning">@completedReturns</p>
                 </div>
             </div>
             <div class="col-6">
                 <div class="border rounded p-3 text-center h-100">
                     <p class="info-label mb-1">Pending Refunds</p>
-                    <p class="fs-4 fw-bold mb-0 text-danger">@(ViewBag.PendingRefunds ?? 0)</p>
+                    <p class="fs-4 fw-bold mb-0 text-danger">@pendingRefunds</p>
                 </div>
             </div>
         </div>
 
-        @if (ViewBag.RecentActivities != null && ((IEnumerable<dynamic>)ViewBag.RecentActivities).Any())
+        @if (recentActivities != null && recentActivities.Any())
         {
             <hr class="my-3">
             <p class="info-label mb-2">Recent Activities</p>
             <ul class="list-unstyled mb-0">
-                @foreach (var activity in ((IEnumerable<dynamic>)ViewBag.RecentActivities).Take(5))
+                @foreach (var activity in recentActivities.Take(5))
                 {
                     <li class="d-flex align-items-start gap-2 mb-2">
                         <i class="bi bi-dot fs-5" style="color:#2d7a4f; margin-top:-3px;"></i>
                         <span class="small text-muted">@activity.Description <span style="font-size:.7rem;"
-                                                                                       class="ms-1">@activity.Timestamp.ToString("d MMM HH:mm")</span></span>
+                                                                                       class="ms-1">@activity.Timestamp</span></span>
                         </li>
                     }
                 </ul>
@@ -57,3 +62,7 @@
             }
         </div>
     </div>
+
+    <style>
+        .info-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; font-weight: 600; }
+    </style>
