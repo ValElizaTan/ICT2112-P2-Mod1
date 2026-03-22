@@ -49,7 +49,7 @@ public class Module1Controller : Controller
     {
         // TODO: add staff authentication logic here
         // return RedirectToAction("Index", "Home");
-        return RedirectToAction("StaffDashboard");
+        return RedirectToAction("Index","StaffDashboard");
     }
 
     // GET /Module1/StaffDashboard
