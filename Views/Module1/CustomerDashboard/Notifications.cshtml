@@ -1,0 +1,120 @@
+@using System.Reflection
+@{
+    ViewData["Title"] = "Notification Settings";
+    var notifications = ViewData["Notifications"] as List<ProRental.Domain.Entities.Notification>;
+    var preferences = ViewData["Preferences"] as ProRental.Domain.Entities.Notificationpreference;
+    var customerId = ViewData["CustomerId"] as int? ?? 0;
+
+    // Helper function to get private field value
+    T? GetFieldValue<T>(object obj, string fieldName)
+    {
+        var field = obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+        if (field == null) return default;
+        return (T?)field.GetValue(obj);
+    }
+
+    // Helper to get private property value
+    T? GetPropertyValue<T>(object obj, string propertyName)
+    {
+        var prop = obj.GetType().GetProperty(propertyName, BindingFlags.NonPublic | BindingFlags.Instance);
+        if (prop == null) return default;
+        return (T?)prop.GetValue(obj);
+    }
+
+    var emailEnabled = false;
+    var smsEnabled = false;
+    if (preferences != null)
+    {
+        emailEnabled = GetPropertyValue<bool>(preferences, "Emailenabled");
+        smsEnabled = GetPropertyValue<bool>(preferences, "Smsenabled");
+    }
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Notification Settings</h2>
+        <a asp-action="Index" asp-route-customerId="@customerId" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Notification Preferences -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">Notification Preferences</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="UpdatePreferences" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="customerId" value="@customerId" />
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="emailEnabled" id="emailEnabled"
+                                   value="true" @(emailEnabled ? "checked" : "") />
+                            <label class="form-check-label" for="emailEnabled">
+                                <i class="bi bi-envelope me-2"></i>Email Notifications
+                            </label>
+                            <div class="small text-muted mt-1">Receive order updates and promotions via email</div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="smsEnabled" id="smsEnabled"
+                                   value="true" @(smsEnabled ? "checked" : "") />
+                            <label class="form-check-label" for="smsEnabled">
+                                <i class="bi bi-phone me-2"></i>SMS Notifications
+                            </label>
+                            <div class="small text-muted mt-1">Receive order updates via text message</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-3">
+                            <i class="bi bi-save me-1"></i>Save Preferences
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">Recent Notifications</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (notifications != null && notifications.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var notif in notifications.Take(5))
+                            {
+                                var message = GetFieldValue<string>(notif, "_message");
+                                var dateSent = GetFieldValue<DateTime>(notif, "_datesent");
+                                var isRead = GetFieldValue<bool>(notif, "_isread");
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <p class="mb-1 small">@message</p>
+                                            <small class="text-muted">@dateSent.ToString("dd MMM yyyy HH:mm")</small>
+                                        </div>
+                                        @if (!isRead)
+                                        {
+                                            <span class="badge bg-primary rounded-pill">New</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-bell fs-1 d-block mb-2"></i>
+                            No notifications yet.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
