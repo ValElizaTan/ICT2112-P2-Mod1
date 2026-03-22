@@ -1,7 +1,23 @@
 @{
-    var staff = ViewBag.Staff;
+    var staff = ViewBag.StaffInfo; // was ViewBag.Staff
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>@TempData["SuccessMessage"]</span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>@TempData["ErrorMessage"]</span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
 <div class="card shadow-sm border-0 mb-4 section-divider">
     <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
         <h6 class="fw-bold mb-0"><i class="bi bi-pencil me-2 text-primary"></i>Edit Details</h6>
@@ -9,7 +25,7 @@
             <i class="bi bi-chevron-down"></i>
         </button>
     </div>
-    <div class="collapse show" id="staffEditCollapse">
+    <div class="collapse" id="staffEditCollapse">
         <div class="card-body p-4">
             <form asp-action="UpdateStaffDetails" method="post">
                 @Html.AntiForgeryToken()

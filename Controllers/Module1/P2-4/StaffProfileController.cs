@@ -16,14 +16,8 @@ public class StaffProfileController : Controller
 
     [HttpGet]
     public IActionResult Index()
-{
-    return ViewProfile(1);
-}
-
-    public IActionResult UpdateStaffDetails(int staffId, string name, string email, int phoneCountry, int phoneNumber, string passwordHash)
     {
-        // _control.UpdateStaff(staffId, name, email, phoneCountry, phoneNumber, passwordHash);
-        return RedirectToAction("Index");
+        return ViewProfile(1);
     }
 
     public IActionResult ViewProfile(int staffId)
@@ -39,16 +33,36 @@ public class StaffProfileController : Controller
             PhoneCountry = info.User.PhoneCountry,
             PhoneNumber = info.User.PhoneNumber
         };
-    return View("Index");
-        // ViewData["StaffInfo"] = new
-        // {
-        //     StaffId = staffId,
-        //     Role = UserRole.STAFF,
-        //     Name = "John Doe",
-        //     Email = "john.doe@example.com",
-        //     PhoneCountry = 65,
-        //     PhoneNumber = "912345d67"
-        // };
         return View("Index");
+
+    }
+    [HttpPost]
+    public IActionResult UpdateStaffDetails(int staffId, string name, string email,
+    int phoneCountry, string phoneNumber, string? passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            TempData["ErrorMessage"] = "Name cannot be empty.";
+        else if (string.IsNullOrWhiteSpace(email))
+            TempData["ErrorMessage"] = "Email cannot be empty.";
+        else if (!email.Contains("@"))
+            TempData["ErrorMessage"] = "Email is not valid.";
+        else if (phoneCountry <= 0)
+            TempData["ErrorMessage"] = "Phone country code is not valid.";
+        else if (string.IsNullOrWhiteSpace(phoneNumber))
+            TempData["ErrorMessage"] = "Phone number cannot be empty.";
+        else
+        {
+            try
+            {
+                _control.UpdateStaff(staffId, name, email, phoneCountry, phoneNumber, passwordHash);
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Failed to update profile: {ex.Message}";
+            }
+        }
+
+        return ViewProfile(staffId);
     }
 }
