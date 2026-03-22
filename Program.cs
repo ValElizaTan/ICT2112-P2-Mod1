@@ -5,13 +5,14 @@ using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
 
+
 // uncomment when ready to code
-// using ProRental.Data;
-// using ProRental.Domain.Controls;
-// using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
-// using ProRental.Controllers;
+using ProRental.Data;
+using ProRental.Domain.Controls;
+//using ProRental.Domain.Entities;
+using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Data;
+using ProRental.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -167,10 +168,11 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-6
 // Data source
-
+builder.Services.AddScoped<IOrderMapper, OrderMapper>();
 // Domain
 
 // Presentation/Controllers
+builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 
 
 var app = builder.Build();
