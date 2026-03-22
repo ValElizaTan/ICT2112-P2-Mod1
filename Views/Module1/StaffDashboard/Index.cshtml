@@ -68,6 +68,12 @@
                 }
             </button>
         </div>
+        <a asp-controller="NotificationSettings" asp-action="Index" asp-route-role="staff" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-gear me-1"></i>Notification Settings
+        </a>
+        <a href="/QueueNotification" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-bell-plus me-1"></i>Queue Notification
+        </a>
         <a asp-action="OnLogout" class="btn btn-outline-danger btn-sm">Logout</a>
     </div>
 </div>

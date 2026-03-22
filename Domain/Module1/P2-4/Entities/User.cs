@@ -15,6 +15,8 @@ public partial class User
 {
     private UserRole _userRole;
 
+    public User() { }
+
     public User(int userId, UserRole userRole, string name, string email, string passwordHash, int phoneCountry, string phoneNumber)
     {
         _userid = userId;
