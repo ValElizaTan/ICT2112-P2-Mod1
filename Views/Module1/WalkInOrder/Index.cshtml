@@ -2,15 +2,33 @@
     ViewData["Title"] = "Walk-In Order";
 }
 
-<h2>Walk-In Order</h2>
+<div class="d-flex align-items-center gap-2 mt-4 mb-3">
+    <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+    <h4 class="mb-0 fw-bold"><i class="bi bi-person-walking me-2" style="color:#2d7a4f;"></i>Walk-In Order</h4>
+</div>
 
-<div class="walk-in-order">
-    <ul class="steps">
-        <li>Enter Customer Details</li>
-        <li>Select Products</li>
-        <li>Review Order</li>
-        <li>Confirm Order</li>
-    </ul>
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h5 class="fw-semibold mb-1">Existing Customer</h5>
+                <p class="text-muted small mb-4">Look up a customer or enter their details to begin a walk-in order.</p>
 
-    <a asp-action="EnterCustomerDetails" class="btn btn-primary">Start Walk-In Order</a>
+                <ol class="list-group list-group-numbered list-group-flush mb-4">
+                    <li class="list-group-item px-0 border-0 py-1 small">Enter customer details</li>
+                    <li class="list-group-item px-0 border-0 py-1 small">Select products to rent</li>
+                    <li class="list-group-item px-0 border-0 py-1 small">Review and confirm the order</li>
+                </ol>
+
+                <div class="d-flex gap-2">
+                    <a asp-action="EnterCustomerDetails" class="btn btn-primary">
+                        <i class="bi bi-play-fill me-1"></i>Start Order
+                    </a>
+                    <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
