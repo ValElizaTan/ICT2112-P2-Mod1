@@ -7,13 +7,21 @@ namespace ProRental.Domain.Module1.P24.Controls;
 
 public class StaffDashboardControl
 {
-    private readonly IOrderService? _orderService;
-    private readonly IInventoryService? _inventoryService;
+    private readonly IOrderService?          _orderService;
+    private readonly IInventoryService?      _inventoryService;
+    // private readonly IAuthenticationService? _authService;
+    // private readonly ISessionService?        _sessionService;
 
-    public StaffDashboardControl(IOrderService? orderService = null, IInventoryService? inventoryService = null)
+    public StaffDashboardControl(
+        IOrderService?          orderService         = null,
+        IInventoryService?      inventoryService     = null)
+        // IAuthenticationService? authService          = null
+        // ISessionService?        sessionService       = null)
     {
-        _orderService = orderService;
+        _orderService     = orderService;
         _inventoryService = inventoryService;
+        // _authService      = authService;
+        // _sessionService   = sessionService;
     }
 
     public List<Inventoryitem> GetInventoryItemsByStatus(InventoryStatus status)

@@ -1,0 +1,77 @@
+<div id="inventory" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h6 class="fw-bold mb-0"><i class="bi bi-boxes me-2 text-primary"></i>Inventory Status</h6>
+        <form asp-controller="StaffDashboard" asp-action="FilterInventory" method="get" class="d-flex gap-2 align-items-center">
+            <select name="status" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Statuses</option>
+                <option value="Available" selected="@(ViewBag.InventoryFilter == "Available")">Available</option>
+                <option value="Rented"    selected="@(ViewBag.InventoryFilter == "Rented")">Rented</option>
+                <option value="Ready"     selected="@(ViewBag.InventoryFilter == "Ready")">Ready</option>
+                <option value="Repair"    selected="@(ViewBag.InventoryFilter == "Repair")">Under Repair</option>
+                <option value="Cleaning"  selected="@(ViewBag.InventoryFilter == "Cleaning")">Cleaning</option>
+                <option value="Damaged"   selected="@(ViewBag.InventoryFilter == "Damaged")">Damaged</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tbl">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Item ID</th>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Location</th>
+                        <th>Last Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.InventoryItems != null && ((IEnumerable<dynamic>)ViewBag.InventoryItems).Any())
+                    {
+                        foreach (var item in ViewBag.InventoryItems)
+                        {
+                            var invBadge = item.Status switch {
+                                "Ready"    => "badge-ready",
+                                "Repair"   => "badge-repair",
+                                "Cleaning" => "badge-cleaning",
+                                "Damaged"  => "badge-damaged",
+                                "Rented"   => "badge-dispatched",
+                                _          => "bg-secondary text-white"
+                            };
+                            <tr>
+                                <td class="ps-3 fw-semibold small">#@item.ItemId</td>
+                                <td class="small">
+                                    @item.ProductName
+                                    @if (item.IsClearanceCandidate == true)
+                                    {
+                                        <span class="badge clearance-tag rounded-pill ms-1">Clearance</span>
+                                    }
+                                </td>
+                                <td class="small text-muted font-monospace">@item.Sku</td>
+                                <td class="small text-muted">@item.Category</td>
+                                <td><span class="badge @invBadge rounded-pill badge-xs">@item.Status</span></td>
+                                <td class="small text-muted">@item.WarehouseLocation</td>
+                                <td class="small text-muted">@item.UpdatedAt.ToString("d MMM yy HH:mm")</td>
+                                <td>
+                                    <a asp-controller="Module2" asp-action="ItemDetail" asp-route-id="@item.ItemId" class="btn btn-outline-secondary btn-sm py-0"><i class="bi bi-eye"></i></a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="8" class="text-center text-muted py-4 small"><i class="bi bi-box-seam fs-4 d-block mb-1"></i>No inventory items match the selected status.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2">
+        <small class="text-muted">Showing @(ViewBag.InventoryItemCount ?? 0) item(s)</small>
+        <a asp-controller="Module2" asp-action="Inventory" class="btn btn-sm btn-outline-secondary">Full Inventory <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+</div>

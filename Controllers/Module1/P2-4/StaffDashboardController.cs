@@ -25,6 +25,8 @@ public class StaffDashboardController : Controller
         return View();
     }
 
+    
+
     public IActionResult OnNavigateToWalkIn()
     {
         return RedirectToAction("Index", "WalkInOrder");
