@@ -6,7 +6,7 @@ namespace ProRental.Domain.Module1.P24.Controls;
 public class ShipmentControl
 {
     private readonly IShipmentBuilder _builder;
-    private Shipment? _currentShipment;
+    private Shipment? _currentShipment = null;
 
     public ShipmentControl(IShipmentBuilder builder)
     {
