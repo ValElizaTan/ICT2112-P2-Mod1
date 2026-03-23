@@ -1,6 +1,7 @@
 using ProRental.Data.Module1.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProRental.Data.Module1.Gateways;
 
@@ -15,7 +16,9 @@ public class StaffGateway : IStaffGateway
 
     public Staff? FindById(int staffId)
     {
-        return _context.Staff.Find(staffId);
+        return _context.Staff
+            .Include(s => s.User)
+            .FirstOrDefault(s => EF.Property<int>(s, "Staffid") == staffId);
     }
 
     public Staff? FindByEmail(string email)

@@ -1,0 +1,98 @@
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Track Order";
+    var order = ViewData["Order"] as ProRental.Domain.Entities.Order;
+    var status = ViewData["OrderStatus"] as OrderStatus?;
+    var customerId = ViewData["CustomerId"] as int? ?? 0;
+    var control = ViewData["Control"] as ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl;
+
+    var orderId = order != null && control != null ? control.GetOrderId(order) : 0;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">Track Your Order</h5>
+                </div>
+                <div class="card-body">
+                    @if (order != null && control != null)
+                    {
+                        <div class="text-center mb-4">
+                            <h4 class="fw-bold" style="color: #2d7a4f;">Order #@orderId</h4>
+                            <div class="mt-4">
+                                @{
+                                    var steps = new[]
+                                    {
+                                        new { Status = OrderStatus.PENDING, Icon = "bi-hourglass-split", Label = "Pending" },
+                                        new { Status = OrderStatus.CONFIRMED, Icon = "bi-check-circle", Label = "Confirmed" },
+                                        new { Status = OrderStatus.PROCESSING, Icon = "bi-arrow-repeat", Label = "Processing" },
+                                        new { Status = OrderStatus.READY_FOR_DISPATCH, Icon = "bi-box-seam", Label = "Ready" },
+                                        new { Status = OrderStatus.DISPATCHED, Icon = "bi-truck", Label = "Dispatched" },
+                                        new { Status = OrderStatus.DELIVERED, Icon = "bi-check2-all", Label = "Delivered" }
+                                    };
+                                    var currentStepIndex = steps.ToList().FindIndex(s => s.Status == status);
+                                }
+                                <div class="row">
+                                    @foreach (var step in steps)
+                                    {
+                                        var isCompleted = steps.ToList().IndexOf(step) <= currentStepIndex;
+                                        var isCurrent = step.Status == status;
+                                        <div class="col-2 text-center">
+                                            <div class="rounded-circle bg-@(isCompleted ? "success" : "light") d-inline-flex align-items-center justify-content-center mb-2"
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="bi @step.Icon text-@(isCompleted ? "white" : "secondary") fs-5"></i>
+                                            </div>
+                                            <p class="small mb-0 @(isCurrent ? "fw-bold text-success" : "")">@step.Label</p>
+                                        </div>
+                                    }
+                                </div>
+                                <hr class="my-4" />
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    @if (status == OrderStatus.DELIVERED)
+                                    {
+                                        <span>Your order has been delivered. Thank you for renting with Pro Rentals!</span>
+                                    }
+                                    else if (status == OrderStatus.DISPATCHED)
+                                    {
+                                        <span>Your order is out for delivery. You will receive it soon!</span>
+                                    }
+                                    else if (status == OrderStatus.READY_FOR_DISPATCH)
+                                    {
+                                        <span>Your order is ready and will be dispatched shortly.</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Your order is being processed. We'll notify you when it's ready.</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="bi bi-search fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">Enter an order ID to track its status</p>
+                            <form method="get" class="mt-3">
+                                <div class="input-group" style="max-width: 400px; margin: 0 auto;">
+                                    <input type="number" name="orderId" class="form-control" placeholder="Enter Order ID"
+                                           required />
+                                    <button type="submit" class="btn btn-primary">Track</button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+
+                    <div class="mt-4 text-center">
+                        <a asp-action="Index" asp-route-customerId="@customerId" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -6,7 +6,7 @@ using ProRental.Domain.Module1.P24.Interfaces;
 namespace ProRental.Domain.Module1.P24.Controls;
 
 public class StaffControl : IStaffService
-{
+{ 
     private readonly IStaffGateway _staffGateway;
 
     public StaffControl(IStaffGateway staffGateway)
@@ -34,8 +34,14 @@ public class StaffControl : IStaffService
     }
 
     public void UpdateStaff(int staffId, string name, string email, int phoneCountry,
-        int phoneNumber, string passwordHash)
+    string phoneNumber, string? passwordHash)
     {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be empty.");
+        if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be empty.");
+        if (!email.Contains("@")) throw new ArgumentException("Email is not valid.");
+        if (phoneCountry <= 0) throw new ArgumentException("Phone country code is not valid.");
+        if (string.IsNullOrWhiteSpace(phoneNumber)) throw new ArgumentException("Phone number cannot be empty.");
+
         var staff = _staffGateway.FindById(staffId);
         if (staff == null)
             throw new InvalidOperationException($"Staff with ID {staffId} not found.");
@@ -46,7 +52,7 @@ public class StaffControl : IStaffService
             name,
             email,
             phoneCountry,
-            phoneNumber.ToString()
+            phoneNumber
         );
 
         var updatedStaffInfo = new StaffInfo(

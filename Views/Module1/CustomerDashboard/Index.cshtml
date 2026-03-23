@@ -1,0 +1,186 @@
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "My Dashboard";
+    var orders = ViewData["Orders"] as List<ProRental.Domain.Entities.Order>;
+    var customer = ViewData["Customer"] as ProRental.Domain.Entities.Customer;
+    var customerInfo = customer?.GetCustomerInfo();
+    var activeCount = ViewData["ActiveOrdersCount"] as int? ?? 0;
+    var completedCount = ViewData["CompletedOrdersCount"] as int? ?? 0;
+    var totalSpent = ViewData["TotalSpent"] as decimal? ?? 0;
+    var control = ViewData["Control"] as ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Dashboard</h2>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-controller="CustomerProfile" asp-action="Index" asp-route-customerId="@customerInfo?.CustomerId"
+                   class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-person-circle me-1"></i>My Profile
+            </a>
+            <span class="text-muted">Welcome back, @(customerInfo?.User.Name ?? "Customer")!</span>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active Orders</h6>
+                            <h3 class="mb-0" style="color: #2d7a4f;">@activeCount</h3>
+                        </div>
+                        <i class="bi bi-cart3 fs-1 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Completed Orders</h6>
+                            <h3 class="mb-0">@completedCount</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 text-secondary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Spent</h6>
+                            <h3 class="mb-0">$@totalSpent.ToString("0.00")</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 fw-bold">My Orders</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Order ID</th>
+                            <th>Order Date</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (orders != null && orders.Any() && control != null)
+                        {
+                            foreach (var order in orders)
+                            {
+                                var orderId = control.GetOrderId(order);
+                                var orderDate = control.GetOrderDate(order);
+                                var totalAmount = control.GetTotalAmount(order);
+                                var status = control.GetOrderStatusFromOrder(order);
+                                var badgeClass = status switch
+                                {
+                                    OrderStatus.PENDING => "badge-pending",
+                                    OrderStatus.CONFIRMED => "badge-ready",
+                                    OrderStatus.PROCESSING => "badge-cleaning",
+                                    OrderStatus.READY_FOR_DISPATCH => "badge-ready",
+                                    OrderStatus.DISPATCHED => "badge-dispatched",
+                                    OrderStatus.DELIVERED => "badge-returned",
+                                    OrderStatus.CANCELLED => "badge-overdue",
+                                    _ => "bg-secondary text-white"
+                                };
+                                <tr>
+                                    <td class="ps-3 fw-semibold small">#@orderId</td>
+                                    <td class="small">@orderDate.ToString("dd MMM yyyy")</td>
+                                    <td class="small fw-semibold">$@totalAmount.ToString("0.00")</td>
+                                    <td><span class="badge @badgeClass rounded-pill">@status</span></td>
+                                    <td>
+                                        <a asp-action="OrderDetails" asp-route-orderId="@orderId"
+                                               asp-route-customerId="@customerInfo?.CustomerId"
+                                               class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No orders found.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <i class="bi bi-search fs-1" style="color: #2d7a4f;"></i>
+                    <h6 class="mt-2">Track Order</h6>
+                    <p class="small text-muted">Enter your order ID to track its status</p>
+                    <form asp-action="TrackOrder" method="get">
+                        <input type="hidden" name="customerId" value="@customerInfo?.CustomerId" />
+                        <div class="input-group">
+                            <input type="number" name="orderId" class="form-control form-control-sm"
+                                   placeholder="Order ID" required />
+                            <button type="submit" class="btn btn-primary btn-sm">Track</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <i class="bi bi-arrow-return-left fs-1" style="color: #2d7a4f;"></i>
+                    <h6 class="mt-2">Returns</h6>
+                    <p class="small text-muted">View and manage your returns</p>
+                    <a asp-action="Returns" asp-route-customerId="@customerInfo?.CustomerId"
+                       class="btn btn-outline-secondary btn-sm">View Returns</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <i class="bi bi-bell fs-1" style="color: #2d7a4f;"></i>
+                    <h6 class="mt-2">Notifications</h6>
+                    <p class="small text-muted">Configure your notification preferences</p>
+                    <a asp-action="Notifications" asp-route-customerId="@customerInfo?.CustomerId"
+                       class="btn btn-outline-secondary btn-sm">Settings</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .badge-pending { background: #fff3cd; color: #856404; }
+    .badge-ready { background: #d1e7dd; color: #0a3622; }
+    .badge-dispatched { background: #cfe2ff; color: #084298; }
+    .badge-returned { background: #d1e7dd; color: #0a3622; }
+    .badge-overdue { background: #f8d7da; color: #842029; }
+    .badge-cleaning { background: #cfe2ff; color: #084298; }
+</style>

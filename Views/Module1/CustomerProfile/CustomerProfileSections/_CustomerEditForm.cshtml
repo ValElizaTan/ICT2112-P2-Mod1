@@ -1,0 +1,77 @@
+@{
+    var customer = ViewBag.CustomerInfo;
+}
+
+<div class="card shadow-sm border-0 mb-4 section-divider">
+    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+        <h6 class="fw-bold mb-0"><i class="bi bi-pencil me-2" style="color:#2d7a4f;"></i>Edit Details</h6>
+        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                data-bs-target="#customerEditCollapse">
+            <i class="bi bi-chevron-down"></i>
+        </button>
+    </div>
+    <div class="collapse show" id="customerEditCollapse">
+        <div class="card-body p-4">
+            <form asp-action="UpdateCustomerDetails" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="customerId" value="@(customer?.CustomerId ?? 0)" />
+                <input type="hidden" name="customerType" value="@(customer?.CustomerType ?? 1)" />
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="info-label mb-1">Full Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm"
+                               value="@(customer?.Name ?? "")" placeholder="Full name" required />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="info-label mb-1">Email Address</label>
+                        <input type="email" name="email" class="form-control form-control-sm"
+                               value="@(customer?.Email ?? "")" placeholder="email@example.com" required />
+                    </div>
+
+                    <div class="col-4">
+                        <label class="info-label mb-1">Country Code</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">+</span>
+                            <input type="number" name="phoneCountry" class="form-control form-control-sm"
+                                   value="@(customer?.PhoneCountry ?? 65)" placeholder="65" />
+                        </div>
+                    </div>
+
+                    <div class="col-8">
+                        <label class="info-label mb-1">Phone Number</label>
+                        <input type="text" name="phoneNumber" class="form-control form-control-sm"
+                               value="@(customer?.PhoneNumber ?? "")" placeholder="8123 4567" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="info-label mb-1">Address</label>
+                        <textarea name="address" class="form-control form-control-sm" rows="2"
+                                  placeholder="Your address">@(customer?.Address ?? "")</textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="info-label mb-1">New Password <span class="text-muted fw-normal"
+                                                                              style="text-transform:none;">(leave blank to keep current)</span></label>
+                            <input type="password" name="passwordHash" class="form-control form-control-sm"
+                                   placeholder="••••••••" autocomplete="new-password" />
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="reset" class="btn btn-outline-secondary btn-sm">Reset</button>
+                        <button type="submit" class="btn btn-primary btn-sm fw-semibold"
+                                style="background-color:#2d7a4f; border-color:#2d7a4f;">
+                            <i class="bi bi-check2 me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .section-divider { border-left: 3px solid #2d7a4f; }
+        .info-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; font-weight: 600; }
+    </style>
