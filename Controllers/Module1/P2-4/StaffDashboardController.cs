@@ -37,7 +37,7 @@ public class StaffDashboardController : Controller
 
     public IActionResult OnNavigateToShipping()
     {
-        return RedirectToAction("Index", "Shipping");
+        return RedirectToAction("DisplayShipmentList", "Shipping");
     }
     public IActionResult OnNavigateToStaffProfile()
     {
