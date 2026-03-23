@@ -41,10 +41,10 @@ public class ShipmentGateway : IShipmentGateway
         var existing = GetShipmentById(shipmentId);
         if (existing == null) return;
 
-        existing.SetTrackingId(data.TrackingId);
-        existing.SetDispatchStatus(data.DispatchStatus);
-        existing.SetDestinationAddress(data.DestinationAddress);
-        existing.SetBatchId(data.BatchId);
+        existing.UpdateTrackingId(data.TrackingId);
+        existing.UpdateDispatchStatus(data.DispatchStatus);
+        existing.UpdateDestinationAddress(data.DestinationAddress);
+        existing.UpdateBatchId(data.BatchId);
 
         _context.Shipments.Update(existing);
         SaveChanges();

@@ -35,7 +35,7 @@ public class ShipmentBuilder : IShipmentBuilder
     public Shipment Build()
     {
         var shipment = new Shipment(_trackingId, _weight, _destinationAddress, _dispatchStatus, _batchId);
-        shipment.SetOrders(_trackingId);
+        shipment.UpdateOrders(_trackingId);
         return shipment;
     }
 }
