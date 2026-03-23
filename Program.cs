@@ -4,6 +4,12 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
+using ProRental.Interfaces.Data;
+using ProRental.Data;
+using ProRental.Interfaces.Domain;
+using ProRental.Domain.Controls;
+using ProRental.Controllers.Module1;
+using ProRental.Data.Services;
 
 // uncomment when ready to code
 using ProRental.Data;
@@ -17,6 +23,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(2);   // matches Session.ExpiresAt (2 hr)
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -168,10 +182,16 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 //Team P2-6
-// Data source
+// Data source (mappers / DB-backed service implementations)
+builder.Services.AddScoped<ISessionMapper, SessionMapper>();
+builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
+builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
 builder.Services.AddScoped<ProRental.Interfaces.Data.ICartMapper, ProRental.Data.Module1.Gateways.CartMapper>();
-
-// Domain
+ 
+// Domain (controls — pure business logic, no DB dependency)
+builder.Services.AddScoped<ISessionService, SessionControl>();
+builder.Services.AddScoped<AuthenticationControl>();
+builder.Services.AddScoped<CustomerIDValidationControl>();
 builder.Services.AddScoped<ICartService, CartControl>();
 builder.Services.AddScoped<CartSessionControl>();
 builder.Services.AddScoped<CartItemControl>();
@@ -179,8 +199,15 @@ builder.Services.AddScoped<CartSelectionControl>();
 builder.Services.AddScoped<CartQueryControl>();
 builder.Services.AddScoped<CartCheckoutControl>();
 
-// Presentation/Controllers
+// Session middleware (required for HttpContext.Session)
+builder.Services.AddSession(options => {
+    options.IdleTimeout = TimeSpan.FromHours(2);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
+// Presentation/Controllers
+builder.Services.AddScoped<Module1Controller>();
 
 var app = builder.Build();
 
@@ -196,7 +223,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
