@@ -35,9 +35,11 @@ public class ShipmentControl
     {
         if (_currentShipment == null) return false;
 
-        if (!_currentShipment.IsDispatched())
+        var info = _currentShipment.GetShipmentInfo();
+        if (!info.DispatchStatus)
         {
-            _currentShipment.UpdateDispatchStatus(true);
+            info.DispatchStatus = true;
+            _currentShipment.SetShipmentInfo(info);
             return true;
         }
 
@@ -56,7 +58,7 @@ public class ShipmentControl
         return baseRate + (decimal)weight * perKg;
     }
 
-    public bool GetDispatchStatus() => _currentShipment?.IsDispatched() ?? false;
+    public bool GetDispatchStatus() => _currentShipment?.GetShipmentInfo().DispatchStatus ?? false;
 
     private bool ValidateAddress(string destinationAddress)
     {

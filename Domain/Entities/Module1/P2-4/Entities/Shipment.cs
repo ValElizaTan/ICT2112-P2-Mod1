@@ -18,6 +18,7 @@ public partial class Shipment
         _destinationAddress = destinationAddress;
         _dispatchStatus = dispatchStatus;
         _batchId = batchId;
+        SetOrders(trackingId);
     }
 
     private int GetTrackingId() => _trackingId;
@@ -57,35 +58,23 @@ public partial class Shipment
         _batchId = batchId;
     }
 
-    private Shipment GetShipmentInfo() => this;
-
-    private void SetShipmentInfo(int trackingId)
-    {
-        _trackingId = trackingId;
-    }
-
     // Public methods exposed at the bottom of the class
-    public int TrackingId() => GetTrackingId();
+    public ShipmentData GetShipmentInfo() => new()
+    {
+        TrackingId = GetTrackingId(),
+        Weight = Weight,
+        DestinationAddress = GetDestinationAddress(),
+        DispatchStatus = GetDispatchStatus(),
+        BatchId = GetBatchId(),
+    };
 
-    public IReadOnlyList<Order> Orders() => GetOrders();
-
-    public string DestinationAddress() => GetDestinationAddress();
-
-    public bool IsDispatched() => GetDispatchStatus();
-
-    public int BatchId() => GetBatchId();
-
-    public Shipment ShipmentInfo() => GetShipmentInfo();
-
-    public void UpdateTrackingId(int trackingId) => SetTrackingId(trackingId);
-
-    public void UpdateOrders(int trackingId) => SetOrders(trackingId);
-
-    public void UpdateDestinationAddress(string destinationAddress) => SetDestinationAddress(destinationAddress);
-
-    public void UpdateDispatchStatus(bool dispatchStatus) => SetDispatchStatus(dispatchStatus);
-
-    public void UpdateBatchId(int batchId) => SetBatchId(batchId);
-
-    public void UpdateShipmentInfo(int trackingId) => SetShipmentInfo(trackingId);
+    public void SetShipmentInfo(ShipmentData info)
+    {
+        SetTrackingId(info.TrackingId);
+        Weight = info.Weight;
+        SetDestinationAddress(info.DestinationAddress);
+        SetDispatchStatus(info.DispatchStatus);
+        SetBatchId(info.BatchId);
+        SetOrders(info.TrackingId);
+    }
 }

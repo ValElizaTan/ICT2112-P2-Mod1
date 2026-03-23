@@ -6,7 +6,6 @@ namespace ProRental.Domain.Controls.Module1.P2_4;
 public class ShipmentBuilder : IShipmentBuilder
 {
     private int _trackingId;
-    private List<Order> _orders = new List<Order>();
     private string _destinationAddress = string.Empty;
     private bool _dispatchStatus;
     private int _batchId;
@@ -34,8 +33,6 @@ public class ShipmentBuilder : IShipmentBuilder
 
     public Shipment Build()
     {
-        var shipment = new Shipment(_trackingId, _weight, _destinationAddress, _dispatchStatus, _batchId);
-        shipment.UpdateOrders(_trackingId);
-        return shipment;
+        return new Shipment(_trackingId, _weight, _destinationAddress, _dispatchStatus, _batchId);
     }
 }
