@@ -5,14 +5,11 @@ namespace ProRental.Domain.Controls;
 
 public class CostCalculationControl : ICostCalculation
 {
-    private readonly IInventoryService _inventoryService;
     private readonly IShippingOptionService _shippingOptionService;
 
     public CostCalculationControl(
-        IInventoryService inventoryService,
         IShippingOptionService shippingOptionService)
     {
-        _inventoryService = inventoryService;
         _shippingOptionService = shippingOptionService;
     }
 
@@ -27,7 +24,7 @@ public class CostCalculationControl : ICostCalculation
         foreach (var item in items)
         {
             var product = item.GetProduct();
-            var price = product.ProductDetail?.GetPrice() ?? 0;
+            var price = item.GetUnitPrice();
             var quantity = item.GetQuantity();
             rentalCost += price * quantity * rentalPeriod;
         }
@@ -61,20 +58,26 @@ public class CostCalculationControl : ICostCalculation
 
     // ===========================
     // 3. CalculateCartItemCosts
-    // (commented out — waiting for Cart team)
     // ===========================
-    // public List<CartItemCost> CalculateCartItemCosts(List<CartItem> items)
-    // {
-    //     var result = new List<CartItemCost>();
-    //     foreach (var item in items)
-    //     {
-    //         var product = item.GetProduct();
-    //         var price = product.ProductDetail?.GetPrice() ?? 0;
-    //         var quantity = item.GetQuantity();
-    //         result.Add(new CartItemCost(item, price * quantity));
-    //     }
-    //     return result;
-    // }
+// public List<(CartItem Item, decimal Cost)> CalculateCartItemCosts
+// (List<CartItem> items)
+// {
+//     var result = new List<(CartItem, decimal)>();
+
+//     if (items == null || !items.Any())
+//         return result;
+
+//     foreach (var item in items)
+//     {
+//         var product = item.GetProduct();
+//         var price = product?.GetPrice() ?? 0;
+//         var quantity = item.GetQuantity();
+
+//         result.Add((item, price * quantity));
+//     }
+
+//     return result;
+// }
 
     // ===========================
     // 4. CalculateDepositAmount
