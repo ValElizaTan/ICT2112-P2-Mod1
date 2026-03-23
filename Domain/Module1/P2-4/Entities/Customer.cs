@@ -12,25 +12,18 @@ public partial class Customer
     public Customer(int customerId, string address, int customerType, User user)
     {
         _customerid = customerId;
-        Address = address;
-        Customertype = customerType;
+        _address = address;
+        _customertype = customerType;
         _userid = user.GetUserInfo().UserId;
         User = user;
     }
 
     protected Customer() { }
 
-    private int GetCustomerId() => _customerid;
-    private string GetAddress() => _address;
-    private int GetCustomerType() => _customertype;
-
-    private void SetAddress(string address) => Address = address;
-    private void SetCustomerType(int customerType) => Customertype = customerType;
-
     public CustomerInfo GetCustomerInfo() => new(
-        GetCustomerId(),
-        GetAddress(),
-        GetCustomerType(),
+        GetCustomerIdInternal(),
+        GetAddressInternal(),
+        GetCustomerTypeInternal(),
         User.GetUserInfo()
     );
 
@@ -40,4 +33,11 @@ public partial class Customer
         SetCustomerType(info.CustomerType);
         User.SetUserInfo(info.User);
     }
+
+    private int GetCustomerIdInternal() => _customerid;
+    private string GetAddressInternal() => _address;
+    private int GetCustomerTypeInternal() => _customertype;
+
+    private void SetAddress(string address) => _address = address;
+    private void SetCustomerType(int customerType) => _customertype = customerType;
 }

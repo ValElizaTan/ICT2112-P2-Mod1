@@ -173,9 +173,9 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Warehouse> Warehouses { get; set; }
 
-//     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-// #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-//         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=pro_rental;Username=devuser;Password=devpassword");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -201,8 +201,7 @@ public partial class AppDbContext : DbContext
             .HasPostgresEnum("notification_frequency_enum", new[] { "INSTANT", "DAILY", "WEEKLY" })
             .HasPostgresEnum("notification_granularity_enum", new[] { "ALL", "IMPORTANT_ONLY", "NONE" })
             .HasPostgresEnum("notification_type_enum", new[] { "ORDER_UPDATE", "PROMOTION", "SYSTEM", "PRODUCT" })
-            .HasPostgresEnum("order_history_status_enum", new[] { "PENDING", "CONFIRMED", "PROCESSING", "READY_FOR_DISPATCH", "DISPATCHED", "DELIVERED", "CANCELLED" })
-            .HasPostgresEnum("order_status_enum", new[] { "PENDING", "CONFIRMED", "PROCESSING", "READY_FOR_DISPATCH", "DISPATCHED", "DELIVERED", "CANCELLED" })
+            .HasPostgresEnum("order_status_enum", new[] { "PENDING", "CONFIRMED", "PACKING", "READY_FOR_DISPATCH", "DISPATCHED", "DELIVERED", "IN_RENTAL", "CANCELLED", "RETURN_PICKUP", "RETURNED", "INSPECTION", "REFUND_PROCESSING", "COMPLETED" })
             .HasPostgresEnum("payment_method_enum", new[] { "CREDIT_CARD" })
             .HasPostgresEnum("payment_purpose_enum", new[] { "RENTAL_FEE_DEPOSIT", "PENALTY_FEE" })
             .HasPostgresEnum("po_status_enum", new[] { "COMPLETED", "CONFIRMED", "SUBMITTED", "APPROVED", "REJECTED", "CANCELLED" })
@@ -1426,6 +1425,11 @@ public partial class AppDbContext : DbContext
             entity.Property("Productid")
                 .HasField("_productid")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("productid");
+            entity.Property("Productname")
+                .HasField("_productname")
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasMaxLength(255)
+                .HasColumnName("productname");
             entity.Property("Quantity")
                 .HasField("_quantity")
                 .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("quantity");
@@ -1462,9 +1466,9 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("historyid");
-            entity.Property("Orderid")
-                .HasField("_orderid")
-                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderid");
+            entity.Property("Orderitemid")
+                .HasField("_orderitemid")
+                .UsePropertyAccessMode(PropertyAccessMode.Field).HasColumnName("orderitemid");
             entity.Property("Remark")
                 .HasField("_remark")
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -1480,10 +1484,6 @@ public partial class AppDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field)
                 .HasMaxLength(50)
                 .HasColumnName("updatedby");
-
-            entity.HasOne(d => d.Order).WithMany(p => p.Orderstatushistories)
-                .HasForeignKey("Orderid")
-                .HasConstraintName("fk_order_status_history_order");
         });
 
         modelBuilder.Entity<Packagingconfigmaterial>(entity =>

@@ -70,12 +70,6 @@ CREATE TYPE notification_frequency_enum AS ENUM ('INSTANT', 'DAILY', 'WEEKLY');
 
 CREATE TYPE notification_granularity_enum AS ENUM ('ALL', 'IMPORTANT_ONLY', 'NONE');
 
--- Aligns with order_status_enum (Team 6); SHIPPED → DISPATCHED for consistency
-CREATE TYPE order_history_status_enum AS ENUM (
-    'PENDING', 'CONFIRMED', 'PROCESSING',
-    'READY_FOR_DISPATCH', 'DISPATCHED', 'DELIVERED', 'CANCELLED'
-);
-
 CREATE TYPE shipment_status_enum AS ENUM ('PENDING', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED');
 
 CREATE TYPE user_role_enum AS ENUM ('CUSTOMER', 'STAFF', 'ADMIN');
@@ -719,11 +713,17 @@ CREATE TYPE checkout_status_enum AS ENUM ('IN_PROGRESS','CONFIRMED','CANCELLED')
 CREATE TYPE order_status_enum AS ENUM (
     'PENDING',
     'CONFIRMED',
-    'PROCESSING',
+    'PACKING',
     'READY_FOR_DISPATCH',
     'DISPATCHED',
     'DELIVERED',
-    'CANCELLED'
+    'IN_RENTAL',
+    'CANCELLED',
+    'RETURN_PICKUP',
+    'RETURNED',
+    'INSPECTION',
+    'REFUND_PROCESSING',
+    'COMPLETED'
 );
 
 CREATE TYPE delivery_duration_enum AS ENUM ('NextDay','ThreeDays','OneWeek');
@@ -854,6 +854,8 @@ CREATE TABLE IF NOT EXISTS OrderItem (
     orderItemId     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     orderId         INT           NOT NULL,
     productId       INT           NOT NULL,
+    productName     VARCHAR(255)  NOT NULL,
+    currentStatus   order_status_enum DEFAULT 'PENDING',
     quantity        INT           NOT NULL,
     unitPrice       DECIMAL(10,2) NOT NULL,
     rentalStartDate TIMESTAMPTZ,
@@ -1084,13 +1086,11 @@ CREATE TABLE DamageReport (
 --TEAM 4 CROSS TEAM FK TABLES
 CREATE TABLE IF NOT EXISTS OrderStatusHistory (
     historyId  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    orderId    INT          NOT NULL,
-    status     order_history_status_enum NOT NULL,  -- aligned with order_status_enum values
+    orderItemId    INT          NOT NULL,
+    status     order_status_enum NOT NULL,
     timestamp  TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedBy  VARCHAR(50)  NOT NULL,
-    remark     VARCHAR(255),
-    CONSTRAINT fk_order_status_history_order
-        FOREIGN KEY (orderId) REFERENCES "Order"(orderId) ON UPDATE CASCADE ON DELETE CASCADE
+    remark     VARCHAR(255)
   );
 
 CREATE TABLE IF NOT EXISTS Refund (

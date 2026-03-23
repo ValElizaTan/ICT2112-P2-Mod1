@@ -124,6 +124,54 @@ VALUES
   (15, 'IT')
 ON CONFLICT (userId) DO NOTHING;
 
+INSERT INTO OrderStatusHistory 
+(orderItemId, status, timestamp, updatedBy, remark)
+VALUES
+
+-- OrderItem 1 Full Completed Flow
+(1, 'PENDING', NOW() - INTERVAL '30 days', 12, 'Order created'),
+(1, 'CONFIRMED', NOW() - INTERVAL '29 days', 12, 'Payment confirmed'),
+(1, 'PACKING', NOW() - INTERVAL '29 days', 13, 'Packing item'),
+(1, 'READY_FOR_DISPATCH', NOW() - INTERVAL '28 days', 13, 'Ready for dispatch'),
+(1, 'DISPATCHED', NOW() - INTERVAL '28 days', 13, 'Sent to courier'),
+(1, 'DELIVERED', NOW() - INTERVAL '27 days', 12, 'Delivered to customer'),
+(1, 'IN_RENTAL', NOW() - INTERVAL '27 days', 12, 'Rental started'),
+(1, 'RETURN_PICKUP', NOW() - INTERVAL '25 days', 13, 'Pickup scheduled'),
+(1, 'RETURNED', NOW() - INTERVAL '24 days', 13, 'Item returned'),
+(1, 'INSPECTION', NOW() - INTERVAL '24 days', 14, 'Inspection ongoing'),
+(1, 'REFUND_PROCESSING', NOW() - INTERVAL '23 days', 14, 'Refund processing'),
+(1, 'COMPLETED', NOW() - INTERVAL '22 days', 14, 'Order completed'),
+
+-- OrderItem 2 Delivered only
+(2, 'PENDING', NOW() - INTERVAL '25 days', 12, 'Order created'),
+(2, 'CONFIRMED', NOW() - INTERVAL '24 days', 12, 'Payment confirmed'),
+(2, 'PACKING', NOW() - INTERVAL '24 days', 13, 'Packing item'),
+(2, 'READY_FOR_DISPATCH', NOW() - INTERVAL '23 days', 13, 'Ready for dispatch'),
+(2, 'DISPATCHED', NOW() - INTERVAL '23 days', 13, 'Sent to courier'),
+(2, 'DELIVERED', NOW() - INTERVAL '22 days', 12, 'Delivered'),
+
+-- OrderItem 10 Future Rental
+(10, 'PENDING', NOW() - INTERVAL '5 days', 12, 'Order created'),
+(10, 'CONFIRMED', NOW() - INTERVAL '5 days', 12, 'Payment confirmed'),
+
+-- OrderItem 14 Cancelled
+(14, 'PENDING', NOW() - INTERVAL '4 days', 12, 'Order created'),
+(14, 'CONFIRMED', NOW() - INTERVAL '4 days', 12, 'Payment confirmed'),
+(14, 'CANCELLED', NOW() - INTERVAL '3 days', 12, 'Order cancelled by customer'),
+
+-- OrderItem 20 Return Flow Example
+(20, 'PENDING', NOW() - INTERVAL '10 days', 12, 'Order created'),
+(20, 'CONFIRMED', NOW() - INTERVAL '9 days', 12, 'Payment confirmed'),
+(20, 'PACKING', NOW() - INTERVAL '9 days', 13, 'Packing item'),
+(20, 'READY_FOR_DISPATCH', NOW() - INTERVAL '8 days', 13, 'Ready for dispatch'),
+(20, 'DISPATCHED', NOW() - INTERVAL '8 days', 13, 'Sent to courier'),
+(20, 'DELIVERED', NOW() - INTERVAL '7 days', 12, 'Delivered'),
+(20, 'IN_RENTAL', NOW() - INTERVAL '7 days', 12, 'Rental started'),
+(20, 'RETURN_PICKUP', NOW() - INTERVAL '5 days', 13, 'Pickup scheduled'),
+(20, 'RETURNED', NOW() - INTERVAL '4 days', 13, 'Item returned'),
+(20, 'INSPECTION', NOW() - INTERVAL '4 days', 14, 'Inspection ongoing'),
+(20, 'COMPLETED', NOW() - INTERVAL '3 days', 14, 'Completed');
+
 -- ============================================================
 -- TEAM 1 SEED DATA - INSERT STATEMENTS (In Dependency Order)
 -- ============================================================
@@ -383,8 +431,8 @@ INSERT INTO "Order" (customerId, checkoutId, transactionId, orderDate, status, d
 (6,  6,  6,    NOW() - INTERVAL '12 days', 'READY_FOR_DISPATCH', 'OneWeek',    265.00),  -- 6
 (11, 12, 7,    NOW() - INTERVAL '6 days',  'READY_FOR_DISPATCH', 'NextDay',     60.00),  -- 7
 -- PROCESSING
-(7,  7,  8,    NOW() - INTERVAL '10 days', 'PROCESSING',         'ThreeDays',  150.00),  -- 8
-(8,  8,  9,    NOW() - INTERVAL '7 days',  'PROCESSING',         'NextDay',     45.00),  -- 9
+(7,  7,  8,    NOW() - INTERVAL '10 days', 'PACKING',         'ThreeDays',  150.00),  -- 8
+(8,  8,  9,    NOW() - INTERVAL '7 days',  'PACKING',         'NextDay',     45.00),  -- 9
 -- CONFIRMED
 (9,  9,  10,   NOW() - INTERVAL '5 days',  'CONFIRMED',          'ThreeDays',   90.00),  -- 10
 (1,  11, 11,   NOW() - INTERVAL '3 days',  'CONFIRMED',          'OneWeek',    210.00),  -- 11
@@ -399,50 +447,65 @@ INSERT INTO "Order" (customerId, checkoutId, transactionId, orderDate, status, d
 -- 7. ORDER ITEM
 -- rentalStartDate/rentalEndDate = NULL → non-rental (purchase)
 -- ================================================================
-INSERT INTO OrderItem (orderId, productId, quantity, unitPrice, rentalStartDate, rentalEndDate) VALUES
+INSERT INTO OrderItem 
+(orderId, productId, productName, quantity, unitPrice, rentalStartDate, rentalEndDate, currentStatus)
+VALUES
 -- Order 1: Canon R5 (rental) + tripod (purchase)
-(1, 1, 1, 150.00, NOW() - INTERVAL '30 days', NOW() - INTERVAL '27 days'),
-(1, 5, 1,  25.00, NULL, NULL),
+(1, 1, 'Canon EOS R5', 1, 150.00, NOW() - INTERVAL '30 days', NOW() - INTERVAL '27 days', 'COMPLETED'),
+(1, 5, 'Manfrotto Befree Advanced Tripod', 1, 25.00, NULL, NULL, 'COMPLETED'),
+
 -- Order 2: Sony A7IV (rental) + Sony 24-70mm (rental)
-(2, 2, 1, 130.00, NOW() - INTERVAL '25 days', NOW() - INTERVAL '22 days'),
-(2, 3, 1,  90.00, NOW() - INTERVAL '25 days', NOW() - INTERVAL '22 days'),
+(2, 2, 'Sony A7 IV', 1, 130.00, NOW() - INTERVAL '25 days', NOW() - INTERVAL '22 days', 'COMPLETED'),
+(2, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NOW() - INTERVAL '25 days', NOW() - INTERVAL '22 days', 'COMPLETED'),
+
 -- Order 3: Sony 24-70mm (rental) + mic (purchase)
-(3, 3, 1,  90.00, NOW() - INTERVAL '20 days', NOW() - INTERVAL '15 days'),
-(3, 7, 1,  20.00, NULL, NULL),
+(3, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NOW() - INTERVAL '20 days', NOW() - INTERVAL '15 days', 'COMPLETED'),
+(3, 7, 'Rode VideoMic Pro+', 1, 20.00, NULL, NULL, 'COMPLETED'),
+
 -- Order 4: Canon 70-200 (rental) + DJI RS3 (rental)
-(4, 4, 1, 110.00, NOW() - INTERVAL '18 days', NOW() - INTERVAL '15 days'),
-(4, 6, 1,  60.00, NOW() - INTERVAL '18 days', NOW() - INTERVAL '15 days'),
+(4, 4, 'Canon RF 70-200mm f2.8 L', 1, 110.00, NOW() - INTERVAL '18 days', NOW() - INTERVAL '15 days', 'DISPATCHED'),
+(4, 6, 'DJI RS 3 Gimbal Stabilizer', 1, 60.00, NOW() - INTERVAL '18 days', NOW() - INTERVAL '15 days', 'DISPATCHED'),
+
 -- Order 5: Canon 70-200 (rental)
-(5, 4, 1, 110.00, NOW() - INTERVAL '15 days', NOW() - INTERVAL '12 days'),
+(5, 4, 'Canon RF 70-200mm f2.8 L', 1, 110.00, NOW() - INTERVAL '15 days', NOW() - INTERVAL '12 days', 'DELIVERED'),
+
 -- Order 6: Canon R5 + Sony lens + tripod (all rental)
-(6, 1, 1, 150.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days'),
-(6, 3, 1,  90.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days'),
-(6, 5, 1,  25.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days'),
+(6, 1, 'Canon EOS R5', 1, 150.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days', 'RETURNED'),
+(6, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days', 'RETURNED'),
+(6, 5, 'Manfrotto Befree Advanced Tripod', 1, 25.00, NOW() - INTERVAL '12 days', NOW() - INTERVAL '5 days', 'RETURNED'),
+
 -- Order 7: DJI RS3 (rental)
-(7, 6, 1,  60.00, NOW() - INTERVAL '6 days', NOW() - INTERVAL '3 days'),
+(7, 6, 'DJI RS 3 Gimbal Stabilizer', 1, 60.00, NOW() - INTERVAL '6 days', NOW() - INTERVAL '3 days', 'RETURNED'),
+
 -- Order 8: Canon R5 (rental) + mic (purchase)
-(8, 1, 1, 150.00, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days'),
-(8, 7, 1,  20.00, NULL, NULL),
+(8, 1, 'Canon EOS R5', 1, 150.00, NOW() - INTERVAL '10 days', NOW() - INTERVAL '7 days', 'IN_RENTAL'),
+(8, 7, 'Rode VideoMic Pro+', 1, 20.00, NULL, NULL, 'DELIVERED'),
+
 -- Order 9: Tripod (purchase) + mic (purchase) — non-rental order
-(9, 5, 1, 25.00, NULL, NULL),
-(9, 7, 1, 20.00, NULL, NULL),
+(9, 5, 'Manfrotto Befree Advanced Tripod', 1, 25.00, NULL, NULL, 'DELIVERED'),
+(9, 7, 'Rode VideoMic Pro+', 1, 20.00, NULL, NULL, 'DELIVERED'),
+
 -- Order 10: Sony 24-70mm (future rental, confirmed)
-(10, 3, 1, 90.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '7 days'),
+(10, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '7 days', 'CONFIRMED'),
+
 -- Order 11: Canon R5 + Sony 24-70mm (future rental, confirmed)
-(11, 1, 1, 150.00, NOW() + INTERVAL '5 days', NOW() + INTERVAL '12 days'),
-(11, 3, 1,  90.00, NOW() + INTERVAL '5 days', NOW() + INTERVAL '12 days'),
+(11, 1, 'Canon EOS R5', 1, 150.00, NOW() + INTERVAL '5 days', NOW() + INTERVAL '12 days', 'CONFIRMED'),
+(11, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NOW() + INTERVAL '5 days', NOW() + INTERVAL '12 days', 'CONFIRMED'),
+
 -- Order 12: Sony A7IV (future rental, pending)
-(12, 2, 1, 130.00, NOW() + INTERVAL '3 days', NOW() + INTERVAL '7 days'),
+(12, 2, 'Sony A7 IV', 1, 130.00, NOW() + INTERVAL '3 days', NOW() + INTERVAL '7 days', 'PENDING'),
+
 -- Order 13: DJI RS3 + tripod (future rental, pending)
-(13, 6, 1, 60.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '4 days'),
-(13, 5, 1, 25.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '4 days'),
+(13, 6, 'DJI RS 3 Gimbal Stabilizer', 1, 60.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '4 days', 'PENDING'),
+(13, 5, 'Manfrotto Befree Advanced Tripod', 1, 25.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '4 days', 'PENDING'),
+
 -- Order 14: Sony A7IV + Sony 24-70mm (cancelled — rental never started)
-(14, 2, 1, 130.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '5 days'),
-(14, 3, 1,  90.00, NOW() + INTERVAL '1 day', NOW() + INTERVAL '5 days'),
+(14, 2, 'Sony A7 IV', 1, 130.00, NULL, NULL, 'CANCELLED'),
+(14, 3, 'Sony FE 24-70mm f2.8 GM', 1, 90.00, NULL, NULL, 'CANCELLED'),
+
 -- Order 15: Canon R5 + Canon 70-200 + DJI RS3 (cancelled)
-(15, 1, 1, 150.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '9 days'),
-(15, 4, 1, 110.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '9 days'),
-(15, 6, 1,  60.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '9 days');
+(15, 1, 'Canon EOS R5', 1, 150.00, NULL, NULL, 'CANCELLED'),
+(15, 6, 'DJI RS 3 Gimbal Stabilizer', 1, 60.00, NULL, NULL, 'CANCELLED');
 
 -- ================================================================
 -- 8. PAYMENT (one per order, using Transaction ids 1–15)

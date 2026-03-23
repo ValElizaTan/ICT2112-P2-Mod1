@@ -1,0 +1,156 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Order Item Timeline";
+    var item = ViewBag.OrderItem as Orderitem;
+    var timeline = ViewBag.Timeline as List<Orderstatushistory> ?? new List<Orderstatushistory>();
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "bg-secondary",
+            OrderStatus.CONFIRMED => "bg-info text-dark",
+            OrderStatus.PACKING => "bg-warning text-dark",
+            OrderStatus.READY_FOR_DISPATCH => "bg-primary",
+            OrderStatus.DISPATCHED => "bg-primary",
+            OrderStatus.DELIVERED => "bg-success",
+            OrderStatus.IN_RENTAL => "bg-dark",
+            OrderStatus.RETURN_PICKUP => "bg-warning text-dark",
+            OrderStatus.RETURNED => "bg-info text-dark",
+            OrderStatus.INSPECTION => "bg-warning text-dark",
+            OrderStatus.REFUND_PROCESSING => "bg-danger",
+            OrderStatus.CANCELLED => "bg-danger",
+            OrderStatus.COMPLETED => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<style>
+    .timeline {
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .timeline::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-left: 55px;
+        margin-bottom: 24px;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: 8px;
+        top: 6px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #0d6efd;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+    }
+
+    .timeline-card {
+        border-radius: 14px;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="mb-3">
+        <a asp-controller="OrderTracking" asp-action="StaffOrderTracking" class="btn btn-outline-secondary btn-sm">
+            Back to Staff Tracking
+        </a>
+    </div>
+
+    @if (item == null)
+    {
+        <div class="alert alert-danger">Order item not found.</div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h2 class="mb-2">Order Item Timeline</h2>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-muted small">Order Item ID</div>
+                        <div class="fw-semibold">#@item.GetOrderItemId()</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Order ID</div>
+                        <div class="fw-semibold">#@item.GetOrderId()</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Product</div>
+                        <div class="fw-semibold">@item.GetProductName()</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Current Status</div>
+                        <span class="badge @GetBadgeClass(item.GetCurrentStatus()) fs-6">
+                            @item.GetCurrentStatus()
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!timeline.Any())
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-muted">No timeline records found.</div>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <ul class="timeline">
+                        @foreach (var entry in timeline.OrderBy(t => t.GetTimestamp()))
+                        {
+                            <li class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="card timeline-card shadow-sm border-0 bg-light">
+                                    <div class="card-body">
+                                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+                                            <span class="badge @GetBadgeClass(entry.GetStatus()) fs-6">
+                                                @entry.GetStatus()
+                                            </span>
+                                            <small class="text-muted">
+                                                @entry.GetTimestamp().ToString("dd MMM yyyy, hh:mm tt")
+                                            </small>
+                                        </div>
+
+                                        <div class="mb-1">
+                                            <strong>Updated By Staff ID:</strong> @entry.GetUpdatedBy()
+                                        </div>
+
+                                        <div>
+                                            <strong>Remark:</strong>
+                                            @(string.IsNullOrWhiteSpace(entry.GetRemark()) ? "—" : entry.GetRemark())
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+    }
+</div>

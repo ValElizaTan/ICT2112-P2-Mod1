@@ -1,0 +1,208 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Staff Order Tracking";
+    var items = ViewBag.Items as List<Orderitem> ?? new List<Orderitem>();
+    var selectedStatus = ViewBag.SelectedStatus;
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "bg-secondary",
+            OrderStatus.CONFIRMED => "bg-info text-dark",
+            OrderStatus.PACKING => "bg-warning text-dark",
+            OrderStatus.READY_FOR_DISPATCH => "bg-primary",
+            OrderStatus.DISPATCHED => "bg-primary",
+            OrderStatus.DELIVERED => "bg-success",
+            OrderStatus.IN_RENTAL => "bg-dark",
+            OrderStatus.RETURN_PICKUP => "bg-warning text-dark",
+            OrderStatus.RETURNED => "bg-info text-dark",
+            OrderStatus.INSPECTION => "bg-warning text-dark",
+            OrderStatus.REFUND_PROCESSING => "bg-danger",
+            OrderStatus.CANCELLED => "bg-danger",
+            OrderStatus.COMPLETED => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <div>
+                    <h2 class="mb-1">Staff Order Tracking</h2>
+                    <p class="text-muted mb-0">Demo Staff ID: <strong>@ViewBag.StaffId</strong></p>
+                </div>
+                <div>
+                    <span class="badge bg-dark fs-6">Total Items: @items.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Message as string))
+    {
+        <div class="alert alert-info shadow-sm">@ViewBag.Message</div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filter by Status</h5>
+
+            <form method="get" asp-controller="OrderTracking" asp-action="StaffOrderTracking" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Order Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">-- Select Status --</option>
+                        @foreach (var status in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+                        {
+                            <option value="@status" selected="@(selectedStatus?.ToString() == status.ToString())">@status</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+                <div class="col-md-auto">
+                    <a asp-controller="OrderTracking" asp-action="StaffOrderTracking" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BULK UPDATE FORM -->
+    <form method="post" asp-controller="OrderTracking" asp-action="BulkUpdate" id="bulkUpdateForm">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Bulk Update Selected Items</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">New Status</label>
+                        <select name="newStatus" class="form-select" required>
+                            @foreach (var status in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Remark</label>
+                        <input type="text" name="remark" class="form-control" placeholder="Required for some statuses" />
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-success">Bulk Update Selected</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- ORDER ITEMS TABLE -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Order Items</h5>
+            <div>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleAll(true)">Select All</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleAll(false)">Clear</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            @if (!items.Any())
+            {
+                <div class="p-4 text-muted">No order items found.</div>
+            }
+            else
+            {
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:50px;">
+                                <input type="checkbox" class="form-check-input" onclick="headerToggle(this)" />
+                            </th>
+                            <th>Order Item ID</th>
+                            <th>Order ID</th>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Status</th>
+                            <th>Timeline</th>
+                            <th style="min-width: 320px;">Single Update</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in items)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox"
+                                       class="form-check-input item-checkbox"
+                                       name="orderItemIds"
+                                       value="@item.GetOrderItemId()"
+                                       form="bulkUpdateForm" />
+                            </td>
+                            <td><strong>#@item.GetOrderItemId()</strong></td>
+                            <td>#@item.GetOrderId()</td>
+                            <td>@item.GetProductName()</td>
+                            <td>@item.GetQuantity()</td>
+                            <td>
+                                <span class="badge @GetBadgeClass(item.GetCurrentStatus())">
+                                    @item.GetCurrentStatus()
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-controller="OrderTracking"
+                                   asp-action="Timeline"
+                                   asp-route-orderItemId="@item.GetOrderItemId()"
+                                   class="btn btn-sm btn-outline-dark">
+                                    View Timeline
+                                </a>
+                            </td>
+                            <td>
+                                <form method="post" asp-controller="OrderTracking" asp-action="UpdateStatus">
+                                    <input type="hidden" name="orderItemId" value="@item.GetOrderItemId()" />
+
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-5">
+                                            <select name="newStatus" class="form-select form-select-sm">
+                                                @foreach (var status in Enum.GetValues(typeof(OrderStatus)).Cast<OrderStatus>())
+                                                {
+                                                    <option value="@status">@status</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-5">
+                                            <input type="text" name="remark" class="form-control form-control-sm" placeholder="Remark" />
+                                        </div>
+
+                                        <div class="col-md-2 d-grid">
+                                            <button type="submit" class="btn btn-success btn-sm">Update</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAll(selectAll) {
+        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = selectAll);
+    }
+
+    function headerToggle(source) {
+        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = source.checked);
+    }
+</script>

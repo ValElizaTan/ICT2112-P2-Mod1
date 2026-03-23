@@ -166,6 +166,25 @@ public partial class AppDbContext
                   .HasColumnName("deliverytype").HasColumnType("delivery_duration_enum");
         });
 
+        modelBuilder.Entity<Orderitem>(entity =>
+        {
+            entity.Property("Currentstatus").HasField("_currentStatus").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("currentstatus").HasColumnType("order_status_enum");
+        });
+
+        modelBuilder.Entity<Orderstatushistory>(entity =>
+{
+            entity.HasKey("Historyid");
+
+            entity.Property<int>("Historyid")
+                  .HasColumnName("historyid")
+                  .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.Status)
+                  .HasColumnName("status")
+                  .HasColumnType("order_status_enum");
+        });
+
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.Property("Purpose").HasField("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)

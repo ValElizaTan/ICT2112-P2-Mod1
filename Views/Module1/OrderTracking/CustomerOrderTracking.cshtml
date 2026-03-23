@@ -1,0 +1,110 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Customer Order Tracking";
+    var orders = ViewBag.Orders as List<Order> ?? new List<Order>();
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "bg-secondary",
+            OrderStatus.CONFIRMED => "bg-info text-dark",
+            OrderStatus.PACKING => "bg-warning text-dark",
+            OrderStatus.READY_FOR_DISPATCH => "bg-primary",
+            OrderStatus.DISPATCHED => "bg-primary",
+            OrderStatus.DELIVERED => "bg-success",
+            OrderStatus.IN_RENTAL => "bg-dark",
+            OrderStatus.RETURN_PICKUP => "bg-warning text-dark",
+            OrderStatus.RETURNED => "bg-info text-dark",
+            OrderStatus.INSPECTION => "bg-warning text-dark",
+            OrderStatus.REFUND_PROCESSING => "bg-danger",
+            OrderStatus.CANCELLED => "bg-danger",
+            OrderStatus.COMPLETED => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h2 class="mb-1">Customer Order Tracking</h2>
+            <p class="text-muted mb-0">Demo Customer ID: <strong>@ViewBag.CustomerId</strong></p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Message as string))
+    {
+        <div class="alert alert-info shadow-sm">@ViewBag.Message</div>
+    }
+
+    @if (!orders.Any())
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-body text-muted">No orders found.</div>
+        </div>
+    }
+    else
+    {
+        foreach (var order in orders)
+        {
+            var items = order.Orderitems?.ToList() ?? new List<Orderitem>();
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                    <div>
+                        <h5 class="mb-1">Order #@order.GetOrderId()</h5>
+                        <div class="text-muted small">Placed on @order.GetOrderDate().ToString("dd MMM yyyy, hh:mm tt")</div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center">
+                        <span class="badge @GetBadgeClass(order.GetStatus()) fs-6">@order.GetStatus()</span>
+                        <span class="badge bg-light text-dark border fs-6">Total: $@order.GetTotalAmount()</span>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order Item ID</th>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Status</th>
+                                <th>Timeline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in items)
+                        {
+                            <tr>
+                                <td><strong>#@item.GetOrderItemId()</strong></td>
+                                <td>@item.GetProductName()</td>
+                                <td>@item.GetQuantity()</td>
+                                <td>$@item.GetUnitPrice()</td>
+                                <td>
+                                    <span class="badge @GetBadgeClass(item.GetCurrentStatus())">
+                                        @item.GetCurrentStatus()
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-controller="OrderTracking"
+                                       asp-action="Timeline"
+                                       asp-route-orderItemId="@item.GetOrderItemId()"
+                                       class="btn btn-sm btn-outline-dark">
+                                        View Timeline
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    }
+</div>

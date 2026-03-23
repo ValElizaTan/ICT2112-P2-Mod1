@@ -15,29 +15,19 @@ public partial class User
 {
     private UserRole _userRole;
     private UserRole UserRole { get => _userRole; set => _userRole = value; }
+
     private User() { }
+
     public User(int userId, UserRole userRole, string name, string email, string passwordHash, int phoneCountry, string phoneNumber)
     {
         _userid = userId;
         _userRole = userRole;
-        Name = name;
-        Email = email;
-        Passwordhash = passwordHash;
-        Phonecountry = phoneCountry;
-        Phonenumber = phoneNumber;
+        _name = name;
+        _email = email;
+        _passwordhash = passwordHash;
+        _phonecountry = phoneCountry;
+        _phonenumber = phoneNumber;
     }
-
-    private int GetUserId() => _userid;
-    private string GetName() => _name;
-    private string GetEmail() => _email;
-    private int? GetPhoneCountry() => _phonecountry;
-    private string? GetPhoneNumber() => _phonenumber;
-
-    private void SetName(string name) => Name = name;
-    private void SetEmail(string email) => Email = email;
-    private void SetPasswordHash(string passwordHash) => Passwordhash = passwordHash;
-    private void SetPhoneCountry(int phoneCountry) => Phonecountry = phoneCountry;
-    private void SetPhoneNumber(string phoneNumber) => Phonenumber = phoneNumber;
 
     public UserInfo GetUserInfo() => new(
         GetUserId(),
@@ -54,6 +44,18 @@ public partial class User
         SetName(info.Name);
         SetEmail(info.Email);
         SetPhoneCountry(info.PhoneCountry ?? 0);
-        SetPhoneNumber(info.PhoneNumber ?? "");
+        SetPhoneNumber(info.PhoneNumber ?? string.Empty);
     }
+    
+    private int GetUserId() => _userid;
+    private string GetName() => _name;
+    private string GetEmail() => _email;
+    private int? GetPhoneCountry() => _phonecountry;
+    private string? GetPhoneNumber() => _phonenumber;
+
+    private void SetName(string name) => _name = name;
+    private void SetEmail(string email) => _email = email;
+    private void SetPasswordHash(string passwordHash) => _passwordhash = passwordHash;
+    private void SetPhoneCountry(int phoneCountry) => _phonecountry = phoneCountry;
+    private void SetPhoneNumber(string phoneNumber) => _phonenumber = phoneNumber;
 }

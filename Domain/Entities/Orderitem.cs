@@ -14,6 +14,9 @@ public partial class Orderitem
     private int _productid;
     private int Productid { get => _productid; set => _productid = value; }
 
+    private string _productname = null!;
+    private string Productname { get => _productname; set => _productname = value; }
+
     private int _quantity;
     private int Quantity { get => _quantity; set => _quantity = value; }
 

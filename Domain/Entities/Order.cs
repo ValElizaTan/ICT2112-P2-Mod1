@@ -39,8 +39,6 @@ public partial class Order
 
     public virtual ICollection<Orderitem> Orderitems { get; private set; } = new List<Orderitem>();
 
-    public virtual ICollection<Orderstatushistory> Orderstatushistories { get; private set; } = new List<Orderstatushistory>();
-
     public virtual ICollection<Packagingprofile> Packagingprofiles { get; private set; } = new List<Packagingprofile>();
 
     public virtual ICollection<Payment> Payments { get; private set; } = new List<Payment>();

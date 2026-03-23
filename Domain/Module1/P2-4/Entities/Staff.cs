@@ -8,23 +8,26 @@ public record StaffInfo(
 
 public partial class Staff
 {
+    public Staff(int staffId, string department, User user)
+    {
+        _staffid = staffId;
+        _department = department;
+        _userid = user.GetUserInfo().UserId;
+        User = user;
+    }
+
     public Staff(int staffId, string department)
     {
         _staffid = staffId;
-        Department = department;
+        _department = department;
     }
 
     protected Staff() { }
 
-    private int GetStaffId() => _staffid;
-    private string GetDepartment() => _department;
-
-    private void SetDepartment(string department) => Department = department;
-
     public StaffInfo GetStaffInfo() => new(
-        GetStaffId(),
-        GetDepartment(),
-        User.GetUserInfo()
+        GetStaffIdInternal(),
+        GetDepartmentInternal(),
+        User != null ? User.GetUserInfo() : new UserInfo(0, default, "", "", null, null)
     );
 
     public void SetStaffInfo(StaffInfo info)
@@ -32,4 +35,9 @@ public partial class Staff
         SetDepartment(info.Department);
         User.SetUserInfo(info.User);
     }
+    
+    private int GetStaffIdInternal() => _staffid;
+    private string GetDepartmentInternal() => _department;
+
+    private void SetDepartment(string department) => _department = department;
 }
