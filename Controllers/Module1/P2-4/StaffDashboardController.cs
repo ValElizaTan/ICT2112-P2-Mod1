@@ -39,6 +39,10 @@ public class StaffDashboardController : Controller
     {
         return RedirectToAction("Index", "Shipping");
     }
+    public IActionResult OnNavigateToStaffProfile()
+    {
+        return RedirectToAction("Index", "StaffProfile");
+    }
 
     public IActionResult OnLogout()
     {

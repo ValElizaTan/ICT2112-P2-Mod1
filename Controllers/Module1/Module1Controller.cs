@@ -51,10 +51,4 @@ public class Module1Controller : Controller
         // return RedirectToAction("Index", "Home");
         return RedirectToAction("Index","StaffDashboard");
     }
-
-    // GET /Module1/StaffDashboard
-    public IActionResult StaffDashboard()
-    {
-        return View("P2-4/StaffDashboard");
-    }
 }
