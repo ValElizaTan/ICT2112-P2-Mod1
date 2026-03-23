@@ -168,9 +168,10 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderCont
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl>();
 
 // Presentation/Controllers
-
+builder.Services.AddScoped<ProRental.Controllers.Module1.P24.CustomerProfileController>();
 
 //Team P2-5
 // Data source
