@@ -167,6 +167,7 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl>();
 
 // Presentation/Controllers
 
