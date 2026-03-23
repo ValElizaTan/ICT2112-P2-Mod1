@@ -12,6 +12,15 @@
             <p class="text-muted">Join the unified rental management platform.</p>
         </div>
 
+        <!-- Alerts -->
+        @if (ViewData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger d-flex align-items-center gap-2 py-2" role="alert">
+                <i class="bi bi-exclamation-circle-fill flex-shrink-0"></i>
+                <span class="small">@ViewData["ErrorMessage"]</span>
+            </div>
+        }
+
         <!-- Signup form card -->
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
@@ -112,6 +121,7 @@
                                    type="checkbox"
                                    id="AgreeTerms"
                                    name="AgreeTerms"
+                                   value="true"
                                    required />
                             <label class="form-check-label small text-muted" for="AgreeTerms">
                                 I agree to the
