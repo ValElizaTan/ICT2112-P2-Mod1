@@ -160,15 +160,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Data source
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.ICustomerGateway, ProRental.Data.Module1.Gateways.CustomerGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IStaffGateway, ProRental.Data.Module1.Gateways.StaffGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IShipmentGateway, ProRental.Data.Module1.Gateways.ShipmentGateway>();
 
 // Domain
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.ICustomerService, ProRental.Domain.Module1.P24.Controls.CustomerControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService, ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IShipmentBuilder, ProRental.Domain.Module1.P24.Controls.ShipmentBuilder>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.ShipmentControl>();
 
 // Presentation/Controllers
 builder.Services.AddScoped<ProRental.Controllers.Module1.P24.CustomerProfileController>();
