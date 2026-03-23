@@ -9,6 +9,6 @@ public class CartDisplayItem
     public bool IsObtainable { get; set; }
     public int? AvailableQuantity { get; set; }
     public int RentalDays { get; set; }
-    public decimal UnitDailyRate { get; set; }
-    public decimal LineRentalCost { get; set; }
+    public decimal CartItemPrice { get; set; }
+    public decimal Subtotal { get; set; }
 }

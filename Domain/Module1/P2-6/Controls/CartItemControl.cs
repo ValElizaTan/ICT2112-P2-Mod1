@@ -31,7 +31,7 @@ public class CartItemControl
             item.SetCartId(cart.GetCartId());
             item.SetProductId(productId);
             item.SetQuantity(qty);
-            item.SetSelected(true);
+            item.SetSelected(false);
 
             cart.AddItem(item);
         }
