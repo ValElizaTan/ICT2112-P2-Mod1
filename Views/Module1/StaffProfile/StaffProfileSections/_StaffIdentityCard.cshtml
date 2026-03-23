@@ -34,7 +34,7 @@
                 <p class="info-value mb-0">
                     @if (staff?.PhoneCountry != null && staff?.PhoneNumber != null)
                     {
-                        <span>+@staff.PhoneCountry &nbsp;@staff.PhoneNumber</span>
+                        <span>+@staff!.PhoneCountry &nbsp;@staff!.PhoneNumber</span>
                     }
                     else { <span class="text-muted">—</span> }
                 </p>

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Controls.Module1.P2_4;
+using ProRental.Domain.Module1.P24.Controls;
 using ProRental.Domain.Entities;
 
-namespace ProRental.Controllers.Module1.P2_4;
+namespace ProRental.Controllers.Module1.P24;
 
 // <<boundary>>
 public class ShippingController : Controller
