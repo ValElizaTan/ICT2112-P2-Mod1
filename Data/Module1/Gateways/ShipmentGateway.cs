@@ -13,20 +13,32 @@ public class ShipmentGateway : IShipmentGateway
         _context = context;
     }
 
-    public Shipment? FindByShipmentId(int shipmentId)
+    // Private methods for internal data access
+    private Shipment? GetShipmentById(int shipmentId)
     {
         return _context.Shipments.Find(shipmentId);
+    }
+
+    private void SaveChanges()
+    {
+        _context.SaveChanges();
+    }
+
+    // Public methods exposed at the bottom of the class
+    public Shipment? FindByShipmentId(int shipmentId)
+    {
+        return GetShipmentById(shipmentId);
     }
 
     public void InsertShipment(Shipment shipment)
     {
         _context.Shipments.Add(shipment);
-        _context.SaveChanges();
+        SaveChanges();
     }
 
     public void Update(int shipmentId, ShipmentData data)
     {
-        var existing = _context.Shipments.Find(shipmentId);
+        var existing = GetShipmentById(shipmentId);
         if (existing == null) return;
 
         existing.SetTrackingId(data.TrackingId);
@@ -35,15 +47,15 @@ public class ShipmentGateway : IShipmentGateway
         existing.SetBatchId(data.BatchId);
 
         _context.Shipments.Update(existing);
-        _context.SaveChanges();
+        SaveChanges();
     }
 
     public void Delete(int shipmentId)
     {
-        var existing = _context.Shipments.Find(shipmentId);
+        var existing = GetShipmentById(shipmentId);
         if (existing == null) return;
 
         _context.Shipments.Remove(existing);
-        _context.SaveChanges();
+        SaveChanges();
     }
 }
