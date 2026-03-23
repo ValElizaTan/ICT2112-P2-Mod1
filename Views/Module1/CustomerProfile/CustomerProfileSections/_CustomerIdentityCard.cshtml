@@ -2,9 +2,9 @@
     var customer = ViewBag.CustomerInfo;
     string initials = "?";
 
-    if (customer != null && customer.Name != null)
+    if (customer != null && customer!.Name != null)
     {
-        var nameParts = customer.Name.Split(' ');
+        var nameParts = customer!.Name.Split(' ');
         if (nameParts.Length >= 2)
         {
             initials = (nameParts[0]?[0].ToString().ToUpper() ?? "") +
@@ -44,9 +44,9 @@
             <div>
                 <p class="info-label mb-1">Phone</p>
                 <p class="info-value mb-0">
-                    @if (customer != null && customer.PhoneCountry != null && customer.PhoneNumber != null)
+                    @if (customer != null && customer!.PhoneCountry != null && customer!.PhoneNumber != null)
                     {
-                        <span>+@customer.PhoneCountry &nbsp;@customer.PhoneNumber</span>
+                        <span>+@customer!.PhoneCountry &nbsp;@customer!.PhoneNumber</span>
                     }
                     else
                     {

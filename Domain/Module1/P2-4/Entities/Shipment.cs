@@ -2,6 +2,15 @@ using System.Collections.Generic;
 
 namespace ProRental.Domain.Entities;
 
+public record ShipmentData
+{
+    public int TrackingId { get; set; }
+    public double Weight { get; set; }
+    public string DestinationAddress { get; set; } = string.Empty;
+    public bool DispatchStatus { get; set; }
+    public int BatchId { get; set; }
+}
+
 public partial class Shipment
 {
     private int _trackingId;
@@ -9,6 +18,8 @@ public partial class Shipment
     private string _destinationAddress = string.Empty;
     private bool _dispatchStatus;
     private int _batchId;
+
+    protected Shipment() { }
 
     public Shipment(int trackingId, double weight, string destinationAddress, bool dispatchStatus, int batchId)
     {
