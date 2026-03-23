@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module1.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
@@ -20,8 +21,10 @@ public class CustomerGateway : ICustomerGateway
 
     public Customer? FindByEmail(string email)
     {
-        return _context.Customers
-            .FirstOrDefault(c => c.User.GetUserInfo().Email == email);
+        return _context.Users
+            .Where(u => EF.Property<string>(u, "Email") == email)
+            .Select(u => u.Customer)
+            .FirstOrDefault();
     }
 
     public void InsertCustomer(Customer customer)
