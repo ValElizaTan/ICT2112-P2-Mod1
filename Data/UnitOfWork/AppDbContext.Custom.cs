@@ -73,10 +73,10 @@ public partial class AppDbContext
         });
 
         modelBuilder.Entity<Cart>(entity =>
-        {
-            entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("status").HasColumnType("cart_status_enum");
-        });
+      {
+            entity.Property<CartStatus>("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("status").HasColumnType("cart_status_enum");
+      });
 
         modelBuilder.Entity<Checkout>(entity =>
         {

@@ -1,0 +1,152 @@
+@using ProRental.Domain.Entities
+@{
+    ViewData["Title"] = "Cart";
+
+    var items = ViewBag.Items as List<CartDisplayItem> ?? new List<CartDisplayItem>();
+    var summary = ViewBag.Summary as CostSummary ?? new CostSummary();
+
+    var message = TempData["Message"]?.ToString();
+    var error = TempData["Error"]?.ToString();
+
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var startValue = ViewBag.RentalStart as string ?? today;
+    var endValue = ViewBag.RentalEnd as string ?? today;
+}
+
+<div class="container mt-4">
+    <h2>Cart</h2>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-info">@message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Rental Period</h5>
+
+            <form id="rentalPeriodForm" asp-controller="Cart" asp-action="SetRentalPeriod" method="post" class="row g-3">
+                @Html.AntiForgeryToken()
+
+                <div class="col-md-4">
+                    <label class="form-label">Start</label>
+                    <input type="date"
+                           id="startDate"
+                           name="start"
+                           class="form-control"
+                           min="@today"
+                           value="@startValue"
+                           onchange="document.getElementById('rentalPeriodForm').submit()" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">End</label>
+                    <input type="date"
+                           id="endDate"
+                           name="end"
+                           class="form-control"
+                           min="@today"
+                           value="@endValue"
+                           onchange="document.getElementById('rentalPeriodForm').submit()" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <form asp-controller="Cart" asp-action="SelectAll" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-success">Select All</button>
+        </form>
+
+        <form asp-controller="Cart" asp-action="ClearSelection" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-secondary">Clear Selection</button>
+        </form>
+
+        <form asp-controller="Cart" asp-action="EmptyCart" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger">Empty Cart</button>
+        </form>
+    </div>
+
+    @if (items.Count == 0)
+    {
+        <div class="alert alert-warning">Your cart is empty. Browse the catalogue to add items.</div>
+    }
+    else
+    {
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in items.OrderBy(i => i.ProductId))
+            {
+                <tr>
+                    <td>
+                        <form asp-controller="Cart" asp-action="ToggleSelectItem" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <input type="hidden" name="isSelected" value="@(item.IsSelected.ToString().ToLower())" class="select-hidden-value" />
+                            <input type="checkbox"
+                                   @(item.IsSelected ? "checked" : null)
+                                   onchange="this.form.querySelector('.select-hidden-value').value = this.checked; this.form.submit();" />
+                        </form>
+                    </td>
+
+                    <td>@item.ProductName</td>
+                    <td></td>
+
+                    <td>
+                        <form asp-controller="Cart" asp-action="UpdateQuantity" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <input type="number"
+                                   class="form-control"
+                                   name="qty"
+                                   min="1"
+                                   value="@item.Quantity"
+                                   style="max-width: 100px;"
+                                   onchange="this.form.submit()" />
+                        </form>
+                    </td>
+
+                    <td>
+                        <form asp-controller="Cart" asp-action="RemoveItem" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="productId" value="@item.ProductId" />
+                            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Cost Summary</h5>
+            <p class="mb-0"><strong>Total Item Cost:</strong> @summary.FinalOrderCost.ToString("0.00")</p>
+        </div>
+    </div>
+
+    <form asp-controller="Cart" asp-action="StartCheckout" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-success">
+            Start Checkout
+        </button>
+    </form>
+</div>

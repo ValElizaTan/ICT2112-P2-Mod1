@@ -6,12 +6,12 @@ using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
 
 // uncomment when ready to code
-// using ProRental.Data;
-// using ProRental.Domain.Controls;
-// using ProRental.Domain.Entities;
-// using ProRental.Interfaces.Domain;
-// using ProRental.Interfaces.Data;
-// using ProRental.Controllers;
+using ProRental.Data;
+using ProRental.Domain.Controls;
+using ProRental.Domain.Entities;
+using ProRental.Interfaces.Domain;
+using ProRental.Interfaces.Data;
+using ProRental.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -169,8 +169,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-6
 // Data source
+builder.Services.AddScoped<ProRental.Interfaces.Data.ICartMapper, ProRental.Data.Module1.Gateways.CartMapper>();
 
 // Domain
+builder.Services.AddScoped<ICartService, CartControl>();
+builder.Services.AddScoped<CartSessionControl>();
+builder.Services.AddScoped<CartItemControl>();
+builder.Services.AddScoped<CartSelectionControl>();
+builder.Services.AddScoped<CartQueryControl>();
+builder.Services.AddScoped<CartCheckoutControl>();
 
 // Presentation/Controllers
 
