@@ -1,4 +1,5 @@
 using ProRental.Domain.Entities;
+using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Controls;
@@ -7,8 +8,7 @@ public class CostCalculationControl : ICostCalculation
 {
     private readonly IShippingOptionService _shippingOptionService;
 
-    public CostCalculationControl(
-        IShippingOptionService shippingOptionService)
+    public CostCalculationControl(IShippingOptionService shippingOptionService)
     {
         _shippingOptionService = shippingOptionService;
     }
@@ -23,9 +23,9 @@ public class CostCalculationControl : ICostCalculation
 
         foreach (var item in items)
         {
-            var product = item.GetProduct();
             var price = item.GetUnitPrice();
             var quantity = item.GetQuantity();
+
             rentalCost += price * quantity * rentalPeriod;
         }
 
@@ -41,12 +41,16 @@ public class CostCalculationControl : ICostCalculation
     // ============================
     // 2. CalculateFinalOrderCost
     // ============================
-    public CostSummary CalculateFinalOrderCost(CostSummary summary, string orderId)
+    public CostSummary CalculateFinalOrderCost(
+        CostSummary summary,
+        DeliveryDuration deliveryType)
     {
-        var shippingOptions = _shippingOptionService.GetShippingOptions(orderId);
-        var shippingOption = shippingOptions.FirstOrDefault();
+        var shippingOption = _shippingOptionService.GetShippingOption(deliveryType);
 
-        decimal shippingCost = shippingOption?.GetCost() ?? 0;
+        if (shippingOption == null)
+            throw new Exception("Invalid delivery type selected.");
+
+        decimal shippingCost = shippingOption.GetCost();
 
         summary.DeliveryCost = shippingCost;
 
@@ -57,28 +61,27 @@ public class CostCalculationControl : ICostCalculation
 
         return summary;
     }
+
     // ===========================
     // 3. CalculateCartItemCosts
     // ===========================
-    public List<(CartItem Item, decimal Cost)> CalculateCartItemCosts
-    (List<CartItem> items)
-    {
-        var result = new List<(CartItem, decimal)>();
+public List<CartItemCost> CalculateCartItemCosts(List<CartItem> items)
+{
+    var result = new List<CartItemCost>();
 
-        if (items == null || !items.Any())
-            return result;
-
-        foreach (var item in items)
-        {
-            var product = item.GetProduct();
-            var price = product?.GetPrice() ?? 0;
-            var quantity = item.GetQuantity();
-
-            result.Add((item, price * quantity));
-        }
-
+    if (items == null || !items.Any())
         return result;
+
+    foreach (var item in items)
+    {
+        var price = item.GetProduct()?.GetPrice() ?? 0m;
+        var quantity = item.GetQuantity();
+
+        result.Add(new CartItemCost(item, price * quantity));
     }
+
+    return result;
+}
 
     // ===========================
     // 4. CalculateDepositAmount

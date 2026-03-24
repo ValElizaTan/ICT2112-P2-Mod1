@@ -1,4 +1,5 @@
 using ProRental.Domain.Entities;
+using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Controls;
@@ -31,7 +32,8 @@ public class CartControl : ICartService
         var sessionCart  = _cartMapper.GetCartBySession(sessionId);
         var customerCart = _cartMapper.GetCartByCustomer(customerId);
 
-        if (sessionCart == null) return customerCart;
+        if (sessionCart == null)
+        throw new Exception("Cart is null");
 
         foreach (var item in sessionCart.GetItems())
         {
@@ -188,4 +190,14 @@ public class CartControl : ICartService
 
         return cart;
     }
+    private decimal GetDeliveryCost(DeliveryDuration type)
+{
+    return type switch
+    {
+        DeliveryDuration.NextDay   => 10m,
+        DeliveryDuration.ThreeDays => 5m,
+        DeliveryDuration.OneWeek   => 2m,
+        _ => 0m
+    };
+}
 }

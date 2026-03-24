@@ -1,0 +1,144 @@
+@model ProRental.Domain.Module6.Entities.CheckoutViewModel
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="container py-4" style="max-width:800px;">
+
+    <h2 class="fw-bold mb-4">
+        <i class="bi bi-bag-check me-2" style="color:#2d7a4f;"></i>Checkout
+    </h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+        </div>
+    }
+
+    <form asp-controller="Checkout" asp-action="PlaceOrder" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+
+            {{!-- LEFT: Order summary --}}
+            <div class="col-md-7">
+
+                {{!-- Items --}}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-dark text-white fw-semibold">
+                        <i class="bi bi-cart3 me-2"></i>Selected Items
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var item in Model.Draft.Items)
+                        {
+                            var product  = item.GetProduct();
+                            var subtotal = (product?.GetPrice() ?? 0) * item.GetQuantity();
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <strong>@(product?.GetName() ?? $"Product {item.GetProductId()}")</strong>
+                                    <small class="text-muted ms-2">× @item.GetQuantity()</small>
+                                </span>
+                                <span class="fw-semibold">@subtotal.ToString("C")</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                {{!-- Rental period --}}
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-dark text-white fw-semibold">
+                        <i class="bi bi-calendar-range me-2"></i>Rental Period
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Start Date</label>
+                                <input type="date" name="startDate" class="form-control"
+                                       value="@Model.StartDate.ToString("yyyy-MM-dd")"
+                                       min="@DateTime.Today.AddDays(1).ToString("yyyy-MM-dd")" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">End Date</label>
+                                <input type="date" name="endDate" class="form-control"
+                                       value="@Model.EndDate.ToString("yyyy-MM-dd")"
+                                       min="@DateTime.Today.AddDays(2).ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{!-- Delivery --}}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-dark text-white fw-semibold">
+                        <i class="bi bi-truck me-2"></i>Delivery Option
+                    </div>
+                    <div class="card-body">
+                        @foreach (var option in Enum.GetValues<DeliveryDuration>())
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio"
+                                       name="deliveryType" value="@option"
+                                       id="delivery_@option"
+                                       @(option == Model.DeliveryType ? "checked" : "") />
+                                <label class="form-check-label" for="delivery_@option">
+                                    @option.ToString().Replace("_", " ")
+                                </label>
+                            </div>
+                        }
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox"
+                                   name="notifyOptIn" value="true" id="notifyOptIn"
+                                   @(Model.NotifyOptIn ? "checked" : "") />
+                            <label class="form-check-label small text-muted" for="notifyOptIn">
+                                Notify me when order is ready
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {{!-- RIGHT: Cost summary --}}
+            <div class="col-md-5">
+                <div class="card border-0 shadow-sm sticky-top" style="top:1rem;">
+                    <div class="card-header bg-dark text-white fw-semibold">
+                        <i class="bi bi-receipt me-2"></i>Cost Summary
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Rental Cost</span>
+                            <span>@Model.Costs.RentalCost.ToString("C")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Deposit (20%)</span>
+                            <span>@Model.Costs.DepositAmount.ToString("C")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Delivery</span>
+                            <span>@Model.Costs.DeliveryCost.ToString("C")</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between fw-bold fs-5">
+                            <span>Total</span>
+                            <span style="color:#2d7a4f;">
+                                @((Model.Costs.RentalCost + Model.Costs.DeliveryCost).ToString("C"))
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold">
+                            <i class="bi bi-lock-fill me-2"></i>Place Order
+                        </button>
+                        <a asp-controller="Cart" asp-action="Index"
+                           class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="bi bi-arrow-left me-1"></i>Back to Cart
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

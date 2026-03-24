@@ -344,7 +344,10 @@ public IActionResult FakeCart()
     var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
 
     // 🔥 STEP 2: Final cost (shipping)
-    summary = costControl.CalculateFinalOrderCost(summary, "TEST_ORDER");
+    summary = costControl.CalculateFinalOrderCost(
+        summary,
+        DeliveryDuration.NextDay
+    );
 
     return View("P2-6/FakeCart", summary);
 }
