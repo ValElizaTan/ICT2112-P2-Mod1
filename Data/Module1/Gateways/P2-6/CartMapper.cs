@@ -6,6 +6,7 @@ namespace ProRental.Data;
 public class CartMapper : ICartMapper
 {
     private static Cart _cart = CreateCart();
+    
 
     private static Cart CreateCart()
     {

@@ -24,4 +24,6 @@ public interface ICatalogueService
 
     /// <summary>Returns the rental price for a product.</summary>
     decimal GetProductPrice(int productId);
+
+    List<Category> GetCategories();
 }

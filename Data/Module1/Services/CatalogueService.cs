@@ -129,4 +129,30 @@ public class CatalogueService : ICatalogueService
 
     public decimal GetProductPrice(int productId)
         => _inventoryService.GetProduct(productId)?.GetPrice() ?? 0m;
+        
+public List<Category> GetCategories()
+{
+    var products = _inventoryService.GetAllProducts() ?? new List<Product>();
+
+    return products
+        .Where(p => p.GetCategoryId() > 0 && !string.IsNullOrWhiteSpace(p.GetCategoryName()))
+        .GroupBy(p => p.GetCategoryId())
+        .Select(g => g.First())
+        .Select(p =>
+        {
+            var cat = new Category();
+            cat.GetType()
+               .GetProperty("Categoryid",
+                   System.Reflection.BindingFlags.NonPublic |
+                   System.Reflection.BindingFlags.Instance)
+               ?.SetValue(cat, p.GetCategoryId());
+            cat.GetType()
+               .GetProperty("Name",
+                   System.Reflection.BindingFlags.NonPublic |
+                   System.Reflection.BindingFlags.Instance)
+               ?.SetValue(cat, p.GetCategoryName());
+            return cat;
+        })
+        .ToList();
+}
 }

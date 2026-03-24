@@ -5,13 +5,11 @@ using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Data;
-using ProRental.Data;
 using ProRental.Interfaces.Domain;
 using ProRental.Domain.Controls;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
 using ProRental.Domain.Services;
-using ProRental.Domain.Controls;
 
 // uncomment when ready to code
 using ProRental.Data;

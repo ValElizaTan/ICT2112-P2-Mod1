@@ -22,19 +22,19 @@ public class CatalogueControl
     /// <summary>Searches products using the supplied filter and returns a paged result.</summary>
     public PagedResult<Product> SearchProducts(SearchFilter filter)
     {
-        var all     = _catalogueService.GetProducts(filter);
-        var total   = all.Count;
-        var items   = all
+        var all = _catalogueService.GetProducts(filter);
+        var total = all.Count;
+        var items = all
             .Skip((filter.CurrentPage - 1) * filter.PageSize)
             .Take(filter.PageSize)
             .ToList();
 
         return new PagedResult<Product>
         {
-            Items       = items,
-            TotalCount  = total,
+            Items = items,
+            TotalCount = total,
             CurrentPage = filter.CurrentPage,
-            PageSize    = filter.PageSize
+            PageSize = filter.PageSize
         };
     }
 
@@ -57,6 +57,13 @@ public class CatalogueControl
     {
         ValidateProductId(productId);
         return _catalogueService.GetCarbonFootprint(productId);
+
+    }
+
+    /// <summary>Returns all categories for the filter dropdown.</summary>
+    public List<Category> GetCategories()
+    {
+        return _catalogueService.GetCategories();
     }
 
     // ── Add to Order ─────────────────────────────────────────────────────
