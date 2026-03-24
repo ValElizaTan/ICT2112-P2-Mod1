@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
+using ProRental.Domain.Entities;
 
 namespace ProRental.Controllers.Module1;
 
@@ -16,14 +17,19 @@ public class Module1Controller : Controller
 
     private readonly IOrderService _orderService;
 
-    public Module1Controller(
-        AuthenticationControl authControl,
-        CustomerIDValidationControl customerIdValidationControl, IOrderService orderService)
-    {
-        _authControl = authControl;
-        _customerIdValidationControl = customerIdValidationControl;
-        _orderService = orderService;
-    }
+private readonly IShippingOptionService _shippingService;
+
+public Module1Controller(
+    AuthenticationControl authControl,
+    CustomerIDValidationControl customerIdValidationControl,
+    IOrderService orderService,
+    IShippingOptionService shippingService)
+{
+    _authControl = authControl;
+    _customerIdValidationControl = customerIdValidationControl;
+    _orderService = orderService;
+    _shippingService = shippingService;
+}
 
     // ── Login ────────────────────────────────────────────────────────────
 
@@ -315,5 +321,31 @@ public IActionResult CreateOrderTest(int customerId, int checkoutId,
 
     return RedirectToAction("OrderDetail", new { orderId = order.OrderId });
 }
+// ── Fake Cart Test ─────────────────────────────────────────────
 
+// GET /Module1/FakeCart
+public IActionResult FakeCart()
+{
+    var product1 = new Product();
+    product1.SetPrice(10);
+
+    var product2 = new Product();
+    product2.SetPrice(25);
+
+    var items = new List<SelectedItem>
+    {
+        new SelectedItem(product1, 2),
+        new SelectedItem(product2, 1)
+    };
+
+    var costControl = new CostCalculationControl(_shippingService);
+
+    // 🔥 STEP 1: Rental cost
+    var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
+
+    // 🔥 STEP 2: Final cost (shipping)
+    summary = costControl.CalculateFinalOrderCost(summary, "TEST_ORDER");
+
+    return View("P2-6/FakeCart", summary);
+}
 }

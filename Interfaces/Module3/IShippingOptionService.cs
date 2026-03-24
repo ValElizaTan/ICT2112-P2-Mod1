@@ -11,4 +11,8 @@ public interface IShippingOptionService
     List<ShippingOption> BuildOptionSet(Order order);
     IActionResult SelectShippingOption(string orderId, string optionId);
     IActionResult CompareOptions(string orderId);
+
+    string Name { get; }
+    decimal CalculateCost(decimal subtotal, int rentalDays);
+    bool IsAvailable(int cartId);
 }

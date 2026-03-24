@@ -10,7 +10,8 @@ using ProRental.Interfaces.Domain;
 using ProRental.Domain.Controls;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
-
+using ProRental.Domain.Services;
+using ProRental.Domain.Controls;
 
 // uncomment when ready to code
 using ProRental.Data;
@@ -186,6 +187,7 @@ builder.Services.AddScoped<CatalogueController>();
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
 builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
+builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 // Domain
 
 // Presentation/Controllers
@@ -200,6 +202,8 @@ builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService
 builder.Services.AddScoped<ISessionService, SessionControl>();
 builder.Services.AddScoped<AuthenticationControl>();
 builder.Services.AddScoped<CustomerIDValidationControl>();
+builder.Services.AddScoped<ICartService, CartControl>();
+builder.Services.AddScoped<ICartMapper, CartMapper>();
 
 // HTTP context accessor (required for session access in Razor layouts)
 builder.Services.AddHttpContextAccessor();
