@@ -19,6 +19,9 @@ using ProRental.Domain.Controls;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
 using ProRental.Controllers;
+using ProRental.Data.Module6.Services;
+using ProRental.Domain.Module6.Controls;
+using ProRental.Controllers.Module1.P2_6;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -175,6 +178,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 
 //Team P2-6
+builder.Services.AddScoped<ICatalogueService, CatalogueService>();
+builder.Services.AddScoped<CatalogueControl>();
+builder.Services.AddScoped<CatalogueController>();
+
 // Data source
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
 builder.Services.AddScoped<IOrderService, OrderManagementControl>();
