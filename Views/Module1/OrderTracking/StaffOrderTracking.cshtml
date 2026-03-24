@@ -1,0 +1,425 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Staff Order Tracking";
+
+    var orders = ViewBag.Orders as List<Order> ?? new List<Order>();
+    var selectedTimelineOrderId = ViewBag.SelectedTimelineOrderId as int?;
+    var selectedTimeline = ViewBag.SelectedTimeline as List<Orderstatushistory> ?? new List<Orderstatushistory>();
+    var bulkResults = ViewBag.BulkResults as List<string> ?? new List<string>();
+
+    var allStatuses = new List<OrderStatus>
+    {
+        OrderStatus.PENDING,
+        OrderStatus.CONFIRMED,
+        OrderStatus.PROCESSING,
+        OrderStatus.READY_FOR_DISPATCH,
+        OrderStatus.DISPATCHED,
+        OrderStatus.DELIVERED,
+        OrderStatus.COMPLETED,
+        OrderStatus.CANCELLED
+    };
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus? status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "bg-secondary",
+            OrderStatus.CONFIRMED => "bg-info text-dark",
+            OrderStatus.PROCESSING => "bg-warning text-dark",
+            OrderStatus.READY_FOR_DISPATCH => "bg-primary",
+            OrderStatus.DISPATCHED => "bg-dark",
+            OrderStatus.DELIVERED => "bg-success",
+            OrderStatus.COMPLETED => "bg-success",
+            OrderStatus.CANCELLED => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    public bool IsStatusReached(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return false;
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED;
+        }
+
+        var sequence = new List<OrderStatus>
+        {
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.READY_FOR_DISPATCH,
+            OrderStatus.DISPATCHED,
+            OrderStatus.DELIVERED,
+            OrderStatus.COMPLETED
+        };
+
+        var stepIndex = sequence.IndexOf(step);
+        var currentIndex = sequence.IndexOf(current.Value);
+
+        if (step == OrderStatus.CANCELLED) return false;
+        if (stepIndex < 0 || currentIndex < 0) return false;
+
+        return stepIndex <= currentIndex;
+    }
+
+    public string GetStepClass(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return "step step-muted";
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED
+                ? "step step-active step-cancelled"
+                : "step step-muted";
+        }
+
+        return IsStatusReached(step, current) ? "step step-active" : "step step-muted";
+    }
+}
+
+<style>
+    .tracking-card {
+        border-radius: 18px;
+    }
+
+    .timeline-wrapper {
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .timeline-horizontal {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        min-width: 900px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .step {
+        position: relative;
+        flex: 1 1 0;
+        text-align: center;
+        padding: 0 8px;
+    }
+
+    .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 100%;
+        height: 3px;
+        background: #dee2e6;
+        z-index: 1;
+    }
+
+    .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        margin: 0 auto 10px auto;
+        position: relative;
+        z-index: 2;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+        background: #adb5bd;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .step-active .step-dot {
+        background: #0d6efd;
+    }
+
+    .step-cancelled .step-dot {
+        background: #dc3545;
+    }
+
+    .step-active .step-label {
+        color: #212529;
+    }
+
+    .step-muted .step-label {
+        color: #adb5bd;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="card shadow-sm border-0 tracking-card mb-4">
+        <div class="card-body">
+            <h2 class="mb-1">Staff Order Tracking</h2>
+            <p class="text-muted mb-0">
+                Demo Staff ID: <strong>@ViewBag.StaffId</strong>
+            </p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Message as string))
+    {
+        <div class="alert alert-success shadow-sm">@ViewBag.Message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger shadow-sm">@ViewBag.ErrorMessage</div>
+    }
+
+    @if (bulkResults.Any())
+    {
+        <div class="alert alert-info shadow-sm">
+            <strong>Bulk Update Results</strong>
+            <ul class="mb-0 mt-2">
+                @foreach (var result in bulkResults)
+                {
+                    <li>@result</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 tracking-card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <form asp-action="SearchOrderById" method="get" class="row g-2">
+                        <div class="col-md-8">
+                            <label class="form-label">Search by Order ID</label>
+                            <input name="orderId" class="form-control" type="number" placeholder="Enter order ID" />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-primary w-100" type="submit">Search</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-lg-6">
+                    <form asp-action="FilterOrdersByStatus" method="get" class="row g-2">
+                        <div class="col-md-8">
+                            <label class="form-label">Filter by Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">Select status</option>
+                                @foreach (var s in allStatuses)
+                                {
+                                    <option value="@s">@s</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary w-100" type="submit">Filter</button>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <a asp-action="StaffOrderTracking" class="btn btn-outline-dark w-100">Clear</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 tracking-card mb-4">
+        <div class="card-body">
+            <form asp-action="BulkUpdateOrderStatus" method="post" class="border rounded p-3">
+                <h5 class="mb-3">Bulk Update Orders</h5>
+                <div class="text-muted small mb-3">
+                    Tick orders below, then choose a status and submit.
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <select name="newStatus" class="form-select" required>
+                            @foreach (var s in allStatuses)
+                            {
+                                <option value="@s">@s</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input name="remark" class="form-control" placeholder="Bulk remark (required for some statuses)" />
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-danger w-100" type="submit">Bulk Update</button>
+                    </div>
+                </div>
+
+                <div id="bulkOrderIdsContainer"></div>
+            </form>
+        </div>
+    </div>
+
+    @if (!orders.Any())
+    {
+        <div class="card shadow-sm border-0 tracking-card">
+            <div class="card-body text-muted">No orders found.</div>
+        </div>
+    }
+    else
+    {
+        foreach (var order in orders)
+        {
+            var currentStatus = order.GetStatus();
+
+            <div class="card shadow-sm border-0 tracking-card mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                        <div>
+                            <h5 class="mb-1">Order #@order.GetOrderId()</h5>
+                            <div class="text-muted small">
+                                Placed on @order.GetOrderDate().ToString("dd MMM yyyy, hh:mm tt")
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge @GetBadgeClass(currentStatus) fs-6">@currentStatus</span>
+                            <span class="badge bg-light text-dark border fs-6">
+                                Customer: #@order.GetCustomerId()
+                            </span>
+                            <span class="badge bg-light text-dark border fs-6">
+                                Total: $@order.GetTotalAmount().ToString("0.00")
+                            </span>
+                            <a asp-action="StaffOrderTracking"
+                               asp-route-timelineOrderId="@order.GetOrderId()"
+                               class="btn btn-sm btn-outline-dark">
+                                @(selectedTimelineOrderId == order.GetOrderId() ? "Hide / Refresh Timeline" : "Show Timeline")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body px-4 pb-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <input class="form-check-input bulk-order-checkbox mt-0" type="checkbox" value="@order.GetOrderId()" />
+                            <label class="form-label mb-0 text-muted">Select</label>
+                        </div>
+                    </div>
+
+                    <form asp-action="UpdateOrderStatus" method="post" class="border rounded p-3 mb-4">
+                        <input type="hidden" name="orderId" value="@order.GetOrderId()" />
+
+                        <h6 class="mb-3">Update Order Status</h6>
+
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label">New Status</label>
+                                <select name="newStatus" class="form-select" required>
+                                    @foreach (var s in allStatuses)
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Remark</label>
+                                <input name="remark" class="form-control" placeholder="Required for some statuses" />
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100">Update</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    @if (selectedTimelineOrderId == order.GetOrderId())
+                    {
+                        <div class="border rounded p-3 bg-light-subtle">
+                            <h6 class="mb-3">Status Timeline</h6>
+
+                            <div class="timeline-wrapper mb-4">
+                                <ul class="timeline-horizontal">
+                                    @foreach (var step in allStatuses)
+                                    {
+                                        <li class="@GetStepClass(step, currentStatus)">
+                                            <div class="step-dot"></div>
+                                            <div class="step-label">@step</div>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+
+                            @if (!selectedTimeline.Any())
+                            {
+                                <div class="alert alert-secondary mb-0">
+                                    No timeline records found for this order.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Status</th>
+                                                <th>Timestamp</th>
+                                                <th>Updated By</th>
+                                                <th>Remark</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in selectedTimeline.OrderByDescending(t => t.GetTimestamp()))
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge @GetBadgeClass(item.GetStatus())">
+                                                            @item.GetStatus()
+                                                        </span>
+                                                    </td>
+                                                    <td>@item.GetTimestamp().ToString("dd MMM yyyy, hh:mm tt")</td>
+                                                    <td>@item.GetUpdatedBy()</td>
+                                                    <td>@(string.IsNullOrWhiteSpace(item.GetRemark()) ? "—" : item.GetRemark())</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const container = document.getElementById("bulkOrderIdsContainer");
+            const checkboxes = document.querySelectorAll(".bulk-order-checkbox");
+            const bulkForm = document.querySelector('form[action*="BulkUpdateOrderStatus"]');
+
+            if (!container || !bulkForm) return;
+
+            function syncHiddenInputs() {
+                container.innerHTML = "";
+
+                checkboxes.forEach(cb => {
+                    if (cb.checked) {
+                        const input = document.createElement("input");
+                        input.type = "hidden";
+                        input.name = "orderIds";
+                        input.value = cb.value;
+                        container.appendChild(input);
+                    }
+                });
+            }
+
+            checkboxes.forEach(cb => {
+                cb.addEventListener("change", syncHiddenInputs);
+            });
+
+            bulkForm.addEventListener("submit", syncHiddenInputs);
+        })();
+    </script>
+}
