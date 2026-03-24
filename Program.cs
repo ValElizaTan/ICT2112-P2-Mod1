@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
+using ProRental.Data;
+using ProRental.Domain.Controls;
+using ProRental.Interfaces.Domain;
 
 // uncomment when ready to code
 // using ProRental.Data;
@@ -169,10 +172,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-6
 // Data source
+builder.Services.AddSingleton<IPaymentProviderClient, MockPaymentProviderClient>();
+builder.Services.AddScoped<IPaymentAdaptors, StripeAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, PayPalAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, AdyenAdapter>();
 
 // Domain
+builder.Services.AddScoped<IPaymentAdaptorSelector, PaymentAdaptorSelector>();
+builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayControl>();
 
 // Presentation/Controllers
+
 
 
 var app = builder.Build();
