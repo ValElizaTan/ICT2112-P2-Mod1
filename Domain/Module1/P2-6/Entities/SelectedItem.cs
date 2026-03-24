@@ -21,9 +21,8 @@ public class SelectedItem
     public void DecreaseQuantity(int amount) => _quantity -= amount;
     public void ValidateQuantity(int amount) { /* validation logic */ }
 
-    // 🔥 ADD THIS
     public decimal GetUnitPrice()
     {
-        return _product?.GetPrice() ?? 0;
+        return GetProduct().Productdetail?.GetPrice() ?? 0;
     }
 }

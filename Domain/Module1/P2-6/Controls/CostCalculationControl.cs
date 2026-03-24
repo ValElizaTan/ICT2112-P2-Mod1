@@ -41,27 +41,33 @@ public class CostCalculationControl : ICostCalculation
     // ============================
     // 2. CalculateFinalOrderCost
     // ============================
-    public CostSummary CalculateFinalOrderCost(
-        CostSummary summary,
-        DeliveryDuration deliveryType)
+public CostSummary CalculateFinalOrderCost(
+    List<SelectedItem> items,
+    int rentalPeriod,
+    string shippingOptionId)
+{
+    var rentalSummary = CalculateRentalCost(items, rentalPeriod);
+
+    decimal deliveryFee = 0;
+
+    var options = _shippingOptionService.GetShippingOptions("");
+    var selected = options.FirstOrDefault(
+    o => o.GetOptionId() == int.Parse(shippingOptionId)
+);
+
+    if (selected != null)
     {
-        var shippingOption = _shippingOptionService.GetShippingOption(deliveryType);
-
-        if (shippingOption == null)
-            throw new Exception("Invalid delivery type selected.");
-
-        decimal shippingCost = shippingOption.GetCost();
-
-        summary.DeliveryCost = shippingCost;
-
-        summary.FinalOrderCost =
-            summary.RentalCost +
-            summary.DepositAmount +
-            shippingCost;
-
-        return summary;
+        deliveryFee = selected.GetCost();
     }
 
+    return new CostSummary
+    {
+        RentalCost = rentalSummary.RentalCost,
+        DepositAmount = rentalSummary.DepositAmount,
+        DeliveryFee = deliveryFee,
+        TotalCost = rentalSummary.RentalCost + rentalSummary.DepositAmount + deliveryFee
+    };
+}
     // ===========================
     // 3. CalculateCartItemCosts
     // ===========================

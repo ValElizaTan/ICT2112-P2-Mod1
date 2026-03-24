@@ -9,30 +9,46 @@ public class FakeShippingService : IShippingOptionService
 {
     public string Name => "Fake Shipping";
 
-    // ✅ MAIN METHOD USED BY COST CALCULATION
+    // ✅ SINGLE OPTION (used sometimes)
     public ShippingOption GetShippingOption(DeliveryDuration duration)
     {
-        return duration switch
+        var opt = new ShippingOption();
+
+        switch (duration)
         {
-            DeliveryDuration.NextDay   => new ShippingOption(10m),
-            DeliveryDuration.ThreeDays => new ShippingOption(5m),
-            DeliveryDuration.OneWeek   => new ShippingOption(2m),
-            _ => new ShippingOption(0m)
-        };
+            case DeliveryDuration.NextDay:
+                opt.Init(1, 10, "Next Day");
+                break;
+
+            case DeliveryDuration.ThreeDays:
+                opt.Init(2, 5, "Three Days");
+                break;
+
+            case DeliveryDuration.OneWeek:
+                opt.Init(3, 2, "One Week");
+                break;
+
+            default:
+                opt.Init(0, 0, "Unknown");
+                break;
+        }
+
+        return opt;
     }
 
-    // =========================
-    // Keep these for compatibility
-    // =========================
-
+    // ✅ LIST OF OPTIONS (used by cost calculation)
     public List<ShippingOption> GetShippingOptions(string orderId)
     {
-        return new List<ShippingOption>
-        {
-            new ShippingOption(10m),
-            new ShippingOption(5m),
-            new ShippingOption(2m)
-        };
+        var opt1 = new ShippingOption();
+        opt1.Init(1, 10, "Next Day");
+
+        var opt2 = new ShippingOption();
+        opt2.Init(2, 5, "Three Days");
+
+        var opt3 = new ShippingOption();
+        opt3.Init(3, 2, "One Week");
+
+        return new List<ShippingOption> { opt1, opt2, opt3 };
     }
 
     public void ApplyCustomerSelection(string orderId, string optionId, string preference)
