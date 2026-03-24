@@ -1,4 +1,5 @@
 namespace ProRental.Domain.Entities;
+
 public class SelectedItem
 {
     private Product _product;
@@ -19,4 +20,9 @@ public class SelectedItem
     public void IncreaseQuantity(int amount) => _quantity += amount;
     public void DecreaseQuantity(int amount) => _quantity -= amount;
     public void ValidateQuantity(int amount) { /* validation logic */ }
+
+    public decimal GetUnitPrice()
+    {
+        return GetProduct().Productdetail?.GetPrice() ?? 0;
+    }
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @using System.Collections
 @using System.Reflection
 
@@ -215,4 +216,93 @@ else
 <form asp-action="StartCheckout" method="post">
     @Html.AntiForgeryToken()
     <button type="submit" class="btn btn-success btn-lg">Start Checkout</button>
+=======
+@model List<ProRental.Domain.Entities.CartItem>
+
+@{
+    ViewData["Title"] = "Cart";
+}
+
+<h2>Your Cart</h2>
+
+<form method="post" asp-action="UpdateCart">
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Select</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Subtotal</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    var product = item.GetProduct();
+                    var price = product.GetPrice();
+                    var subtotal = price * item.GetQuantity();
+
+                    <tr>
+                        <td>
+                            <input type="checkbox"
+                                   name="selectedItems"
+                                   value="@item.GetProductId()"
+                                   @(item.IsSelected() ? "checked" : "") />
+                        </td>
+
+                        <td>@product.GetName()</td>
+
+                        <td>
+                            <input type="number"
+                                   name="quantities[@item.GetProductId()]"
+                                   value="@item.GetQuantity()"
+                                   min="1"
+                                   class="form-control"
+                                   style="width:80px;" />
+                        </td>
+
+                        <td>@price.ToString("C")</td>
+                        <td>@subtotal.ToString("C")</td>
+
+                        <td>
+                            <button type="submit"
+                                    name="removeItemId"
+                                    value="@item.GetProductId()"
+                                    class="btn btn-danger btn-sm">
+                                Remove
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6">Cart is empty</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="mt-3">
+        <button type="submit" name="action" value="update" class="btn btn-primary">
+            Update Cart
+        </button>
+
+        <button type="submit" name="action" value="clear" class="btn btn-warning">
+            Clear Selection
+        </button>
+
+        <button type="submit" name="action" value="checkout" class="btn btn-success">
+            Checkout Selected
+        </button>
+    </div>
+
+>>>>>>> origin/Catalauge,-Cart,-Checkout,-Payment-(Backup)
 </form>

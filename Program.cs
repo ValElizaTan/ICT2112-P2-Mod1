@@ -4,12 +4,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
-using ProRental.Interfaces.Data;
-using ProRental.Data;
-using ProRental.Interfaces.Domain;
-using ProRental.Domain.Controls;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
+using ProRental.Domain.Services;
 
 // uncomment when ready to code
 using ProRental.Data;
@@ -18,19 +15,13 @@ using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
 using ProRental.Controllers;
+using ProRental.Domain.Module6.Controls;
+using ProRental.Controllers.Module1.P2_6;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromHours(2);   // matches Session.ExpiresAt (2 hr)
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-});
 
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -92,7 +83,7 @@ var dataSource = dataSourceBuilder.Build();
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(dataSource));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(dataSource, o => 
+    options.UseNpgsql(dataSource, o =>
     {
         o.MapEnum<AccessEventType>("access_event_type");
         o.MapEnum<AlertStatus>("alert_status");
@@ -188,7 +179,11 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl
 
 
 //Team P2-6
-// Data source (mappers / DB-backed service implementations)
+// Data source
+builder.Services.AddScoped<ICatalogueService, CatalogueService>();
+builder.Services.AddScoped<IOrderMapper, OrderMapper>();
+builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
+builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
 builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
@@ -196,6 +191,10 @@ builder.Services.AddScoped<ICartMapper, ProRental.Data.Module1.Gateways.CartMapp
 builder.Services.AddScoped<ICheckoutMapper, ProRental.Data.Module1.Gateways.CheckoutMapper>();
  
 // Domain (controls — pure business logic, no DB dependency)
+
+// Domain
+builder.Services.AddScoped<CatalogueControl>();
+builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<ISessionService, SessionControl>();
 builder.Services.AddScoped<AuthenticationControl>();
 builder.Services.AddScoped<CustomerIDValidationControl>();
@@ -214,16 +213,23 @@ builder.Services.AddScoped<CheckoutPaymentControl>();
 // builder.Services.AddScoped<CheckoutCarbonControl>();
 // builder.Services.AddScoped<OrderBuilderControl>();
 
-// Session middleware (required for HttpContext.Session)
-builder.Services.AddSession(options => {
-    options.IdleTimeout = TimeSpan.FromHours(2);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+// Auth
+builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
+builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
 
 // Presentation/Controllers
+builder.Services.AddScoped<CatalogueController>();
 builder.Services.AddScoped<Module1Controller>();
 
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
+
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 
@@ -237,8 +243,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseSession();      
 app.UseRouting();
-app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

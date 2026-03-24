@@ -1,18 +1,15 @@
 using ProRental.Domain.Entities;
+using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Controls;
 
 public class CostCalculationControl : ICostCalculation
 {
-    private readonly IInventoryService _inventoryService;
     private readonly IShippingOptionService _shippingOptionService;
 
-    public CostCalculationControl(
-        IInventoryService inventoryService,
-        IShippingOptionService shippingOptionService)
+    public CostCalculationControl(IShippingOptionService shippingOptionService)
     {
-        _inventoryService = inventoryService;
         _shippingOptionService = shippingOptionService;
     }
 
@@ -26,9 +23,9 @@ public class CostCalculationControl : ICostCalculation
 
         foreach (var item in items)
         {
-            var product = item.GetProduct();
-            var price = product.ProductDetail?.GetPrice() ?? 0;
+            var price = item.GetUnitPrice();
             var quantity = item.GetQuantity();
+
             rentalCost += price * quantity * rentalPeriod;
         }
 
@@ -44,37 +41,53 @@ public class CostCalculationControl : ICostCalculation
     // ============================
     // 2. CalculateFinalOrderCost
     // ============================
-    public CostSummary CalculateFinalOrderCost(
-        CostSummary summary, string orderId)
-    {
-        var shippingOptions =
-            _shippingOptionService.GetShippingOptions(orderId);
-        var shippingOption = shippingOptions.FirstOrDefault();
-        decimal shippingCost = shippingOption?.GetCost() ?? 0;
+public CostSummary CalculateFinalOrderCost(
+    List<SelectedItem> items,
+    int rentalPeriod,
+    string shippingOptionId)
+{
+    var rentalSummary = CalculateRentalCost(items, rentalPeriod);
 
-        summary.DeliveryCost = shippingCost;
-        summary.FinalOrderCost = summary.RentalCost +
-                                 summary.DepositAmount +
-                                 shippingCost;
-        return summary;
+    decimal deliveryFee = 0;
+
+    var options = _shippingOptionService.GetShippingOptions("");
+    var selected = options.FirstOrDefault(
+    o => o.GetOptionId() == int.Parse(shippingOptionId)
+);
+
+    if (selected != null)
+    {
+        deliveryFee = selected.GetCost();
     }
 
+    return new CostSummary
+    {
+        RentalCost = rentalSummary.RentalCost,
+        DepositAmount = rentalSummary.DepositAmount,
+        DeliveryFee = deliveryFee,
+        TotalCost = rentalSummary.RentalCost + rentalSummary.DepositAmount + deliveryFee
+    };
+}
     // ===========================
     // 3. CalculateCartItemCosts
-    // (commented out — waiting for Cart team)
     // ===========================
-    // public List<CartItemCost> CalculateCartItemCosts(List<CartItem> items)
-    // {
-    //     var result = new List<CartItemCost>();
-    //     foreach (var item in items)
-    //     {
-    //         var product = item.GetProduct();
-    //         var price = product.ProductDetail?.GetPrice() ?? 0;
-    //         var quantity = item.GetQuantity();
-    //         result.Add(new CartItemCost(item, price * quantity));
-    //     }
-    //     return result;
-    // }
+public List<CartItemCost> CalculateCartItemCosts(List<CartItem> items)
+{
+    var result = new List<CartItemCost>();
+
+    if (items == null || !items.Any())
+        return result;
+
+    foreach (var item in items)
+    {
+        var price = item.GetProduct()?.GetPrice() ?? 0m;
+        var quantity = item.GetQuantity();
+
+        result.Add(new CartItemCost(item, price * quantity));
+    }
+
+    return result;
+}
 
     // ===========================
     // 4. CalculateDepositAmount

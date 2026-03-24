@@ -1,18 +1,37 @@
-using ProRental.Domain.Enums;
-
 namespace ProRental.Domain.Entities;
 
 public partial class ShippingOption
 {
-    private PreferenceType? _preferenceType;
-    private PreferenceType? PreferenceType { get => _preferenceType; set => _preferenceType = value; }
-    public void UpdatePreferenceType(PreferenceType newValue) => _preferenceType = newValue;
+    public int GetOptionId()
+    {
+        return _optionId;
+    }
 
-    private TransportMode? _transportMode;
-    private TransportMode? TransportMode { get => _transportMode; set => _transportMode = value; }
-    public void UpdateTransportMode(TransportMode newValue) => _transportMode = newValue;
+    public decimal GetCost()
+    {
+        return _cost ?? 0;
+    }
 
-    // Add these:
-    public decimal GetCost() => _cost ?? 0;
-    public void SetCost(decimal? cost) => _cost = cost;
+    public void SetCost(decimal cost)
+    {
+        _cost = cost;
+    }
+
+    public string GetDisplayName()
+    {
+        return _displayName ?? "";
+    }
+
+    public int GetDeliveryDays()
+    {
+        return _deliveryDays ?? 0;
+    }
+
+    // OPTIONAL helper for fake data
+    public void Init(int id, decimal cost, string name)
+    {
+        _optionId = id;
+        _cost = cost;
+        _displayName = name;
+    }
 }
