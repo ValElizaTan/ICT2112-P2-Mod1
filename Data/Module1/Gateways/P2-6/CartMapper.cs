@@ -31,20 +31,14 @@ public class CartMapper : ICartMapper
                 EF.Property<CartStatus>(c, "Status") == CartStatus.ACTIVE);
     }
 
-    public Cart? FindActiveBySessionId(string sessionId)
+    public Cart? FindActiveBySessionId(int sessionId)
     {
-        if (!int.TryParse(sessionId, out var sid))
-        {
-            return null;
-        }
-
         return _context.Set<Cart>()
             .Include(c => c.Cartitems)
             .FirstOrDefault(c =>
-                EF.Property<int?>(c, "Sessionid") == sid &&
+                EF.Property<int?>(c, "Sessionid") == sessionId &&
                 EF.Property<CartStatus>(c, "Status") == CartStatus.ACTIVE);
     }
-
     public void Insert(Cart cart)
     {
         _context.Set<Cart>().Add(cart);

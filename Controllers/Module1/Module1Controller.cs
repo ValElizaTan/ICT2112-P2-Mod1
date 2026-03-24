@@ -1,112 +1,158 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Controls;
+using ProRental.Data.Module1.Interfaces;
+using ProRental.Domain.Entities;
+using ProRental.Domain.Enums;
 
 namespace ProRental.Controllers.Module1;
 
-/// <summary>
-/// ASP.NET HTTP controller for Module 1 (authentication, session, customer validation).
-/// This is a thin HTTP boundary only — all business logic lives in the Control classes.
-/// </summary>
 public class Module1Controller : Controller
 {
-    private readonly AuthenticationControl _authControl;
-    private readonly CustomerIDValidationControl _customerIdValidationControl;
+    private readonly ICustomerGateway _customerGateway;
 
-    public Module1Controller(
-        AuthenticationControl authControl,
-        CustomerIDValidationControl customerIdValidationControl)
+    public Module1Controller(ICustomerGateway customerGateway)
     {
-        _authControl = authControl;
-        _customerIdValidationControl = customerIdValidationControl;
+        _customerGateway = customerGateway;
     }
-
-    // ── Login ────────────────────────────────────────────────────────────
 
     // GET /Module1/Login
-    public IActionResult Login()
-    {
-        return View("P2-6/Login");
-    }
+    public IActionResult Login() => View("Login/Login");
 
     // POST /Module1/Login
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Login(int userId, string password)
+    public IActionResult Login(string email, string password, bool rememberMe = false)
     {
-        var result = _authControl.AuthenticateUser(userId, password);
+        // keep your current temporary login flow
+        var customer = _customerGateway.FindByEmail(email);
 
-        if (!result.IsSuccess)
+        if (customer == null)
         {
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Login failed.");
-            return View("P2-6/Login");
+            ViewData["ErrorMessage"] = "Invalid email or password.";
+            return View("Login/Login");
         }
 
-        // Store sessionId in an HTTP session cookie so subsequent requests can validate it.
-        HttpContext.Session.SetInt32("SessionId", result.Session!.SessionId);
+        HttpContext.Session.SetString("UserEmail", email);
+        HttpContext.Session.SetInt32("CustomerId", GetCustomerIdForSession(customer));
+
         return RedirectToAction("Index", "Home");
     }
 
-    // POST /Module1/Logout
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    private static int GetCustomerIdForSession(Customer customer)
+    {
+        var prop = customer.GetType().GetProperty("Customerid",
+            System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.NonPublic);
+
+        if (prop?.GetValue(customer) is int id)
+            return id;
+
+        var field = customer.GetType().GetField("_customerid",
+            System.Reflection.BindingFlags.Instance |
+            System.Reflection.BindingFlags.Public |
+            System.Reflection.BindingFlags.NonPublic);
+
+        if (field?.GetValue(customer) is int fieldId)
+            return fieldId;
+
+        throw new InvalidOperationException("Unable to read CustomerId from Customer entity.");
+    }
+
+    // GET /Module1/Logout
     public IActionResult Logout()
     {
-        var sessionId = HttpContext.Session.GetInt32("SessionId");
-        if (sessionId.HasValue)
-            _authControl.Logout(sessionId.Value);
-
         HttpContext.Session.Clear();
-        return RedirectToAction("Login");
+        return RedirectToAction("Index", "Home");
     }
 
-    // ── Customer ID Validation ───────────────────────────────────────────
+    // GET /Module1/Signup
+    public IActionResult Signup() => View("Login/Signup");
 
-    // GET /Module1/CustomerIdEntry
-    public IActionResult CustomerIdEntry()
-    {
-        return View("P2-6/_CustomerIdEntry");
-    }
-
-    // POST /Module1/CustomerIdEntry
+    // POST /Module1/Signup
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult CustomerIdEntry(int customerId)
+    public IActionResult Signup(string firstName, string lastName, string email,
+                               string? phone, string password, string confirmPassword,
+                               bool agreeTerms = false)
     {
-        var result = _customerIdValidationControl.ValidateCustomer(customerId);
-
-        if (!result.IsValid)
+        if (!agreeTerms)
         {
-            ViewBag.ValidationMessage = result.ValidationMessage;
-            return View("P2-6/_CustomerIdEntry");
+            ViewData["ErrorMessage"] = "You must agree to the Terms of Service to create an account.";
+            return View("Login/Signup");
         }
 
-        // Store the validated customer ID for the downstream checkout flow.
-        HttpContext.Session.SetInt32("ValidatedCustomerId", result.CustomerId);
-        return RedirectToAction("Index", "Cart");
-    }
+        if (password != confirmPassword)
+        {
+            ViewData["ErrorMessage"] = "Passwords do not match.";
+            return View("Login/Signup");
+        }
 
-    // ── Staff Login ──────────────────────────────────────────────────────
+        if (password.Length < 8)
+        {
+            ViewData["ErrorMessage"] = "Password must be at least 8 characters.";
+            return View("Login/Signup");
+        }
+
+        if (_customerGateway.FindByEmail(email) != null)
+        {
+            ViewData["ErrorMessage"] = "An account with that email already exists.";
+            return View("Login/Signup");
+        }
+
+        // Parse phone: "+65 91234567" → country=65, number="91234567"
+        int phoneCountry = 65;
+        string phoneNumber = "";
+        if (!string.IsNullOrWhiteSpace(phone))
+        {
+            var stripped = phone.TrimStart('+');
+            var parts = stripped.Split(' ', 2);
+            if (parts.Length == 2 && int.TryParse(parts[0], out int cc))
+            {
+                phoneCountry = cc;
+                phoneNumber = parts[1].Replace(" ", "");
+            }
+            else
+            {
+                phoneNumber = stripped.Replace(" ", "");
+            }
+        }
+
+        var passwordHash = HashPassword(password);
+        var name = $"{firstName.Trim()} {lastName.Trim()}";
+        var user = new User(0, UserRole.CUSTOMER, name, email, passwordHash, phoneCountry, phoneNumber);
+        var customer = new Customer(0, "", 1, user);
+
+        try
+        {
+            _customerGateway.InsertCustomer(customer);
+            TempData["SuccessMessage"] = "Account created successfully! Please sign in.";
+            return RedirectToAction("Login");
+        }
+        catch (Exception)
+        {
+            ViewData["ErrorMessage"] = "Registration failed. The email may already be in use.";
+            return View("Login/Signup");
+        }
+    }
 
     // GET /Module1/StaffLogin
-    public IActionResult StaffLogin()
-    {
-        return View("P2-6/StaffLogin");
-    }
+    public IActionResult StaffLogin() => View("P2-6/StaffLogin");
 
     // POST /Module1/StaffLogin
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult StaffLogin(int staffUserId, string staffPassword)
+    public IActionResult StaffLogin(string staffEmail, string staffPassword)
     {
-        var result = _authControl.AuthenticateUser(staffUserId, staffPassword);
+        // TODO: add staff authentication logic here (Team P2-6)
+        return RedirectToAction("Index", "StaffDashboard");
+    }
 
-        if (!result.IsSuccess)
-        {
-            ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Staff login failed.");
-            return View("P2-6/StaffLogin");
-        }
-
-        HttpContext.Session.SetInt32("SessionId", result.Session!.SessionId);
-        return RedirectToAction("Index", "Home");
+    private static string HashPassword(string password)
+    {
+        var salt = RandomNumberGenerator.GetBytes(16);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(
+            password, salt, 100_000, HashAlgorithmName.SHA256, 32);
+        return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 }

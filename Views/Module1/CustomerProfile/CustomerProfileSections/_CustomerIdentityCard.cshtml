@@ -1,0 +1,82 @@
+@{
+    var customer = ViewBag.CustomerInfo;
+    string initials = "?";
+
+    if (customer != null && customer.Name != null)
+    {
+        var nameParts = customer.Name.Split(' ');
+        if (nameParts.Length >= 2)
+        {
+            initials = (nameParts[0]?[0].ToString().ToUpper() ?? "") +
+                      (nameParts[1]?[0].ToString().ToUpper() ?? "");
+        }
+        else if (nameParts.Length == 1 && nameParts[0] != null && nameParts[0].Length > 0)
+        {
+            initials = nameParts[0][0].ToString().ToUpper();
+        }
+    }
+}
+
+<div class="card shadow-sm border-0 h-100">
+    <div class="card-body p-4">
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="profile-avatar">@initials</div>
+            <div>
+                <p class="fw-bold mb-0">@(customer?.Name ?? "—")</p>
+                <span class="badge rounded-pill" style="background:#d1e7dd;color:#0a3622;font-size:.7rem;">
+                    <i class="bi bi-person-check me-1"></i>Customer
+                </span>
+            </div>
+        </div>
+
+        <hr class="my-3">
+
+        <div class="d-flex flex-column gap-3">
+            <div>
+                <p class="info-label mb-1">Customer ID</p>
+                <p class="info-value mb-0 text-muted">#@(customer?.CustomerId?.ToString() ?? "—")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Email</p>
+                <p class="info-value mb-0">@(customer?.Email ?? "—")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Phone</p>
+                <p class="info-value mb-0">
+                    @if (customer != null && customer.PhoneCountry != null && customer.PhoneNumber != null)
+                    {
+                        <span>+@customer.PhoneCountry &nbsp;@customer.PhoneNumber</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Account Type</p>
+                <p class="info-value mb-0">@(customer?.CustomerType == 1 ? "Regular" : "Premium")</p>
+            </div>
+            <div>
+                <p class="info-label mb-1">Address</p>
+                <p class="info-value mb-0">@(customer?.Address ?? "—")</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .profile-avatar {
+        width: 64px; height: 64px;
+        background: rgba(45,122,79,.10);
+        color: #2d7a4f;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem; font-weight: 700;
+        flex-shrink: 0;
+    }
+    .info-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; font-weight: 600; }
+    .info-value { font-size: .92rem; }
+</style>

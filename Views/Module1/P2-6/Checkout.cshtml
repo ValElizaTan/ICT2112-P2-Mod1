@@ -1,0 +1,281 @@
+@using System.Reflection
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Checkout";
+
+    var checkout = ViewBag.Checkout as Checkout;
+    var cart = ViewBag.SelectedCart as Cart;
+    var warnings = ViewBag.Warnings as List<string> ?? new List<string>();
+    var checkoutId = (int)(ViewBag.CheckoutId ?? 0);
+    var customer = ViewBag.Customer as Customer;
+    var customerInfo = customer?.GetCustomerInfo();
+    var userInfo = customerInfo?.User;
+
+
+    var message = TempData["Message"]?.ToString();
+    var error = TempData["Error"]?.ToString();
+
+    var items = cart?.GetItems()?.Where(x => x.IsSelected()).ToList() ?? new List<Cartitem>();
+    var shippingOptions = ViewBag.ShippingOptions as List<ShippingOption> ?? new List<ShippingOption>();
+
+    int? selectedShippingOptionId = null;
+
+    if (ViewBag.SelectedShippingOptionId != null)
+    {
+        selectedShippingOptionId = Convert.ToInt32(ViewBag.SelectedShippingOptionId);
+    }
+}
+
+<div class="container mt-4">
+    <h2>Checkout</h2>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-info">@message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+
+    @if (warnings.Count > 0)
+    {
+        <div class="alert alert-warning">
+            <strong>Please review:</strong>
+            <ul class="mb-0">
+                @foreach (var w in warnings)
+                {
+                    <li>@w</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Customer Information</h5>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control"
+                        value="@userInfo?.Name"
+                        disabled />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" class="form-control"
+                        value="@($"{userInfo?.PhoneCountry} {userInfo?.PhoneNumber}")"
+                        disabled />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Delivery Address</label>
+                <textarea class="form-control" rows="2" disabled>
+    @customerInfo?.Address
+                </textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Selected Items</h5>
+
+            @if (!items.Any())
+            {
+                <p class="mb-0">No selected items found.</p>
+            }
+            else
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product Id</th>
+                            <th>Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in items)
+                        {
+                            <tr>
+                                <td>@item.GetProductId()</td>
+                                <td>@item.GetQuantity()</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Shipping Option</h5>
+
+            @if (!shippingOptions.Any())
+            {
+                <p class="mb-2">No shipping options available.</p>
+            }
+            else
+            {
+                <form asp-controller="Checkout" asp-action="SelectShippingOption" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="checkoutId" value="@checkoutId" />
+
+                    @foreach (var option in shippingOptions)
+                    {
+                        var type = option.GetType();
+
+                        int optionId =
+                            (int?)type.GetMethod("getOptionId", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(option, null)
+                            ?? (int?)type.GetField("_optionId", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(option)
+                            ?? 0;
+
+                        string optionName =
+                            type.GetMethod("getDisplayName", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(option, null)?.ToString()
+                            ?? type.GetField("_displayName", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(option)?.ToString()
+                            ?? "Shipping Option";
+
+                        string optionFee =
+                            type.GetMethod("getCost", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(option, null)?.ToString()
+                            ?? type.GetField("_cost", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(option)?.ToString()
+                            ?? "--";
+
+                        string optionDays =
+                            type.GetMethod("getDeliveryDays", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.Invoke(option, null)?.ToString()
+                            ?? type.GetField("_deliveryDays", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(option)?.ToString()
+                            ?? "--";
+
+                        var isSelected = selectedShippingOptionId.HasValue
+                            && selectedShippingOptionId.Value == optionId;
+
+                        <div class="border rounded p-3 mb-2 @(isSelected ? "border-primary" : "")">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="optionId"
+                                       id="ship_@optionId"
+                                       value="@optionId"
+                                       @(isSelected ? "checked" : null) />
+
+                                <label class="form-check-label" for="ship_@optionId">
+                                    <strong>@optionName</strong>
+                                </label>
+                            </div>
+
+                            <div class="mt-2 ms-4">
+                                <div>Fee: @optionFee</div>
+                                <div>Estimated Days: @optionDays</div>
+                            </div>
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-primary mt-2">Save Shipping Option</button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Notification Preference</h5>
+
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="notifyOptIn" checked disabled />
+                <label class="form-check-label" for="notifyOptIn">
+                    Receive order status updates
+                </label>
+            </div>
+
+            <small class="text-muted">Notification opt-in UI only. Backend not connected yet.</small>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Cost Summary</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-2"><strong>Rental Cost:</strong> --</p>
+                    <p class="mb-2"><strong>Deposit:</strong> --</p>
+                    <p class="mb-2"><strong>Delivery Fee:</strong> --</p>
+                    <hr />
+                    <p class="mb-0"><strong>Total:</strong> --</p>
+                </div>
+            </div>
+
+            <small class="text-muted">Cost summary UI only. Calculation logic not connected yet.</small>
+        </div>
+    </div>
+
+    <form asp-controller="Checkout" asp-action="ConfirmCheckout" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="checkoutId" value="@checkoutId" />
+
+        <div class="card mt-4 mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Payment Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="nameOnCard" class="form-label">Name on Card</label>
+                    <input type="text"
+                        class="form-control"
+                        id="nameOnCard"
+                        name="nameOnCard"
+                        required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="cardNumber" class="form-label">Card Number</label>
+                    <input type="text"
+                        class="form-control"
+                        id="cardNumber"
+                        name="cardNumber"
+                        maxlength="19"
+                        required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="expirationDate" class="form-label">Expiration Date</label>
+                    <input type="date"
+                        class="form-control"
+                        id="expirationDate"
+                        name="expirationDate"
+                        required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="securityCode" class="form-label">Security Code</label>
+                    <input type="password"
+                        class="form-control"
+                        id="securityCode"
+                        name="securityCode"
+                        maxlength="4"
+                        required />
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success">Confirm Checkout</button>
+        </div>
+    </form>
+
+    <div class="d-flex gap-2 mt-3">
+        <form asp-controller="Checkout" asp-action="CancelCheckout" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="checkoutId" value="@checkoutId" />
+            <button type="submit" class="btn btn-outline-danger">Cancel</button>
+        </form>
+
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary">Back to Cart</a>
+    </div>
+</div>

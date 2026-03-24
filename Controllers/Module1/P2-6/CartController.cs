@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Controllers.Module1;
@@ -6,26 +7,63 @@ namespace ProRental.Controllers.Module1;
 public class CartController : Controller
 {
     private readonly ICartService _cartService;
+    private readonly ICheckoutService _checkoutService;
+    private readonly ICustomerValidationService _customerValidationService;
+    private readonly ISessionService _sessionService;
 
-    public CartController(ICartService cartService)
+    public CartController(
+        ICartService cartService,
+        ICheckoutService checkoutService,
+        ICustomerValidationService customerValidationService,
+        ISessionService sessionService)
     {
         _cartService = cartService;
-    }
-
-    private int GetCartId()
-    {
-        return _cartService.GetOrCreateActiveCartIdByCustomer(1);
+        _checkoutService = checkoutService;
+        _customerValidationService = customerValidationService;
+        _sessionService = sessionService;
     }
 
     [HttpGet]
     public IActionResult Index()
     {
-        int cartId = GetCartId();
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue && TempData["Error"]?.ToString() == "Please log in before proceeding to checkout.")
+        {
+            TempData.Remove("Error");
+        }
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
         var cart = _cartService.GetCart(cartId);
 
         ViewBag.CartId = cartId;
         ViewBag.Items = _cartService.GetCartDisplayItems(cartId);
         ViewBag.Summary = _cartService.GetCartDisplaySummary(cartId);
+        ViewBag.GuestMode = !customerId.HasValue;
 
         ViewBag.RentalStart = cart.GetRentalStart() == DateTime.MinValue
             ? DateTime.Today.ToString("yyyy-MM-dd")
@@ -42,28 +80,44 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult SetRentalPeriod(DateTime start, DateTime end)
     {
-        var today = DateTime.Today;
+        int cartId;
 
-        if (start.Date < today)
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
         {
-            TempData["Error"] = "Rental start date cannot be earlier than today.";
-            return RedirectToAction(nameof(Index));
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
         }
 
-        if (end.Date < today)
+        var warnings = _cartService.SetRentalPeriod(cartId, start.Date, end.Date);
+
+        if (warnings != null && warnings.Count > 0)
         {
-            TempData["Error"] = "Rental end date cannot be earlier than today.";
-            return RedirectToAction(nameof(Index));
+            TempData["Error"] = string.Join(" ", warnings);
+        }
+        else
+        {
+            TempData["Message"] = "Rental period updated.";
         }
 
-        if (end.Date < start.Date)
-        {
-            TempData["Error"] = "Rental end date cannot be earlier than start date.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        _cartService.SetRentalPeriod(GetCartId(), start.Date, end.Date);
-        TempData["Message"] = "Rental period updated.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -71,7 +125,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ToggleSelectItem(int productId, bool isSelected)
     {
-        _cartService.ToggleSelectItem(GetCartId(), productId, isSelected);
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.ToggleSelectItem(cartId, productId, isSelected);
         return RedirectToAction(nameof(Index));
     }
 
@@ -79,7 +160,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult SelectAll()
     {
-        _cartService.SelectAllObtainable(GetCartId());
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.SelectAllObtainable(cartId);
         return RedirectToAction(nameof(Index));
     }
 
@@ -87,7 +195,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult ClearSelection()
     {
-        _cartService.ClearSelection(GetCartId());
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.ClearSelection(cartId);
         return RedirectToAction(nameof(Index));
     }
 
@@ -95,7 +230,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult UpdateQuantity(int productId, int qty)
     {
-        _cartService.UpdateQuantity(GetCartId(), productId, qty);
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.UpdateQuantity(cartId, productId, qty);
         return RedirectToAction(nameof(Index));
     }
 
@@ -103,7 +265,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult RemoveItem(int productId)
     {
-        _cartService.RemoveItem(GetCartId(), productId);
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.RemoveItem(cartId, productId);
         return RedirectToAction(nameof(Index));
     }
 
@@ -111,7 +300,34 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult EmptyCart()
     {
-        _cartService.EmptyCart(GetCartId());
+        int cartId;
+
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            if (sessionId.HasValue)
+            {
+                cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+            }
+            else
+            {
+                cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+            }
+        }
+        else
+        {
+            if (!sessionId.HasValue)
+            {
+                sessionId = 1; // local test only
+                HttpContext.Session.SetInt32("SessionId", sessionId.Value);
+            }
+
+            cartId = _cartService.GetOrCreateActiveCartIdBySession(sessionId.Value);
+        }
+
+        _cartService.EmptyCart(cartId);
         TempData["Message"] = "Cart emptied.";
         return RedirectToAction(nameof(Index));
     }
@@ -120,32 +336,44 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult StartCheckout()
     {
-        int cartId = GetCartId();
-        var cart = _cartService.GetCart(cartId);
+        int? customerId = HttpContext.Session.GetInt32("CustomerId");
 
-        var start = cart.GetRentalStart();
-        var end = cart.GetRentalEnd();
-        var selectedItems = _cartService.GetSelectedItems(cartId);
-
-        if (start == DateTime.MinValue || end == DateTime.MinValue)
+        if (!customerId.HasValue)
         {
-            TempData["Error"] = "Please select both rental start and end dates.";
+            TempData["Error"] = "Please log in before proceeding to checkout.";
+            return RedirectToAction("Login", "Module1");
+        }
+
+        var validation = _customerValidationService.ValidateCustomer(customerId.Value);
+        if (!validation.IsValid)
+        {
+            TempData["Error"] = validation.ValidationMessage ?? "Please log in before proceeding to checkout.";
             return RedirectToAction(nameof(Index));
         }
 
-        if (end < start)
+        int cartId;
+        int? sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (sessionId.HasValue)
         {
-            TempData["Error"] = "End rental date should not be earlier than start rental date.";
+            cartId = _cartService.MergeSessionCartToCustomerCart(sessionId.Value, customerId.Value);
+        }
+        else
+        {
+            cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId.Value);
+        }
+
+        if (!_cartService.CanProceedToCheckout(cartId))
+        {
+            TempData["Error"] = "Please select at least 1 valid item and complete the cart details before checkout.";
             return RedirectToAction(nameof(Index));
         }
 
-        if (selectedItems == null || selectedItems.Count == 0)
-        {
-            TempData["Error"] = "Please select at least 1 item to checkout.";
-            return RedirectToAction(nameof(Index));
-        }
+        var selectedProductIds = _cartService.GetSelectedItems(cartId)
+            .Select(x => x.GetProductId())
+            .ToList();
 
-        TempData["Message"] = "Checkout is not implemented yet. Selected items will remain in the active cart flow.";
-        return RedirectToAction(nameof(Index));
+        var checkoutId = _checkoutService.StartCheckout(customerId.Value, selectedProductIds);
+        return RedirectToAction("Index", "Checkout", new { checkoutId });
     }
 }

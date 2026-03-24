@@ -23,7 +23,8 @@ public class CustomerValidationService : ICustomerValidationService
     {
         // Customer.Customerid is private — query via raw SQL to avoid CS0122.
         var matches = _db.Customers
-            .FromSqlRaw(@"SELECT * FROM ""Customer"" WHERE ""customerId"" = {0}", customerId)
+            //.FromSqlRaw(@"SELECT * FROM ""Customer"" WHERE ""customerId"" = {0}", customerId)
+            .FromSqlRaw(@"SELECT * FROM customer WHERE customerid = {0}", customerId)
             .AsEnumerable()
             .ToList();
 
