@@ -60,25 +60,25 @@ public class CostCalculationControl : ICostCalculation
     // ===========================
     // 3. CalculateCartItemCosts
     // ===========================
-    // public List<(CartItem Item, decimal Cost)> CalculateCartItemCosts
-    // (List<CartItem> items)
-    // {
-    //     var result = new List<(CartItem, decimal)>();
+    public List<(CartItem Item, decimal Cost)> CalculateCartItemCosts
+    (List<CartItem> items)
+    {
+        var result = new List<(CartItem, decimal)>();
 
-    //     if (items == null || !items.Any())
-    //         return result;
+        if (items == null || !items.Any())
+            return result;
 
-    //     foreach (var item in items)
-    //     {
-    //         var product = item.GetProduct();
-    //         var price = product?.GetPrice() ?? 0;
-    //         var quantity = item.GetQuantity();
+        foreach (var item in items)
+        {
+            var product = item.GetProduct();
+            var price = product?.GetPrice() ?? 0;
+            var quantity = item.GetQuantity();
 
-    //         result.Add((item, price * quantity));
-    //     }
+            result.Add((item, price * quantity));
+        }
 
-    //     return result;
-    // }
+        return result;
+    }
 
     // ===========================
     // 4. CalculateDepositAmount

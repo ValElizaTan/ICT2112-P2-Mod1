@@ -6,6 +6,8 @@ namespace ProRental.Domain.Services;
 
 public class FakeShippingService : IShippingOptionService
 {
+    public string Name => "Fake Shipping";
+
     public List<ShippingOption> GetShippingOptions(string orderId)
     {
         return new List<ShippingOption>
@@ -37,5 +39,15 @@ public class FakeShippingService : IShippingOptionService
     public IActionResult CompareOptions(string orderId)
     {
         return new OkResult();
+    }
+
+    public decimal CalculateCost(decimal subtotal, int rentalDays)
+    {
+        return 0m; // no-op for now
+    }
+
+    public bool IsAvailable(int cartId)
+    {
+        return true; // no-op for now
     }
 }
