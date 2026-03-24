@@ -10,6 +10,7 @@ using ProRental.Interfaces.Domain;
 using ProRental.Domain.Controls;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
+using ProRental.Domain.Services;
 
 
 // uncomment when ready to code
@@ -179,6 +180,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
 builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
+builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 // Domain
 
 // Presentation/Controllers
