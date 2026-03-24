@@ -8,6 +8,5 @@ public enum OrderStatus
     READY_FOR_DISPATCH,
     DISPATCHED,
     DELIVERED,
-    COMPLETED,
     CANCELLED
 }

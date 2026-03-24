@@ -125,8 +125,7 @@ namespace ProRental.Domain.Module1.P24.Controls
                 OrderStatus.PROCESSING => newStatus == OrderStatus.READY_FOR_DISPATCH || newStatus == OrderStatus.CANCELLED,
                 OrderStatus.READY_FOR_DISPATCH => newStatus == OrderStatus.DISPATCHED || newStatus == OrderStatus.CANCELLED,
                 OrderStatus.DISPATCHED => newStatus == OrderStatus.DELIVERED,
-                OrderStatus.DELIVERED => newStatus == OrderStatus.COMPLETED,
-                OrderStatus.COMPLETED => false,
+                OrderStatus.DELIVERED => false,
                 OrderStatus.CANCELLED => false,
                 _ => false
             };
@@ -134,7 +133,7 @@ namespace ProRental.Domain.Module1.P24.Controls
 
         public bool IsFinalStatus(OrderStatus status)
         {
-            return status == OrderStatus.CANCELLED || status == OrderStatus.COMPLETED;
+            return status == OrderStatus.CANCELLED || status == OrderStatus.DELIVERED;
         }
 
         public bool IsRemarkRequired(OrderStatus newStatus)

@@ -683,7 +683,6 @@ CREATE TYPE order_status_enum AS ENUM (
     'READY_FOR_DISPATCH',
     'DISPATCHED',
     'DELIVERED',
-    'COMPLETED',
     'CANCELLED'
 );
 

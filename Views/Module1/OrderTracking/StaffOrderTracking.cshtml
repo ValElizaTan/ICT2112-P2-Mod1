@@ -16,7 +16,6 @@
         OrderStatus.READY_FOR_DISPATCH,
         OrderStatus.DISPATCHED,
         OrderStatus.DELIVERED,
-        OrderStatus.COMPLETED,
         OrderStatus.CANCELLED
     };
 }
@@ -32,7 +31,6 @@
             OrderStatus.READY_FOR_DISPATCH => "bg-primary",
             OrderStatus.DISPATCHED => "bg-dark",
             OrderStatus.DELIVERED => "bg-success",
-            OrderStatus.COMPLETED => "bg-success",
             OrderStatus.CANCELLED => "bg-danger",
             _ => "bg-secondary"
         };
@@ -55,7 +53,6 @@
             OrderStatus.READY_FOR_DISPATCH,
             OrderStatus.DISPATCHED,
             OrderStatus.DELIVERED,
-            OrderStatus.COMPLETED
         };
 
         var stepIndex = sequence.IndexOf(step);
