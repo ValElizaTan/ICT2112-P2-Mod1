@@ -10,11 +10,13 @@ public class CatalogueController : Controller
 {
     private readonly CatalogueControl _catalogueControl;
     private readonly ICartService     _cartService;
+    private readonly ICustomerValidationService _customerValidationService;
 
-    public CatalogueController(CatalogueControl catalogueControl, ICartService cartService)
+    public CatalogueController(CatalogueControl catalogueControl, ICartService cartService, ICustomerValidationService customerValidationService)
     {
         _catalogueControl = catalogueControl;
         _cartService      = cartService;
+        _customerValidationService = customerValidationService;
     }
 
     // GET: /Catalogue
@@ -61,14 +63,22 @@ public class CatalogueController : Controller
     private int ResolveCartId()
     {
         var customerId = GetResolvedCustomerId();
-        var sessionId = HttpContext.Session.GetInt32("SessionId");
 
-        if (customerId.HasValue)
+        if (!customerId.HasValue)
         {
-            return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
+            throw new InvalidOperationException("Please log in before adding items to your cart.");
         }
 
-        throw new InvalidOperationException("No active cart session found.");
+        var validation = _customerValidationService.ValidateCustomer(customerId.Value);
+        if (!validation.IsValid)
+        {
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(validation.ValidationMessage)
+                    ? "Please log in before adding items to your cart."
+                    : validation.ValidationMessage);
+        }
+
+        return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
     }
 
     // POST: /Catalogue/AddToOrder
@@ -91,6 +101,11 @@ public class CatalogueController : Controller
         }
         catch (Exception ex)
         {
+            if (ex.Message.Contains("log in", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction("Login", "Module1");
+            }
+
             TempData["Error"] = ex.Message;
             return RedirectToAction(nameof(Index));
         }
