@@ -9,12 +9,15 @@ namespace ProRental.Controllers.Module1;
 public class CatalogueController : Controller
 {
     private readonly CatalogueControl _catalogueControl;
-    private readonly ICartService     _cartService;
+    private readonly ICartService _cartService;
+    private readonly ICustomerValidationService _customerValidationService;
 
-    public CatalogueController(CatalogueControl catalogueControl, ICartService cartService)
+
+    public CatalogueController(CatalogueControl catalogueControl, ICartService cartService, ICustomerValidationService customerValidationService)
     {
         _catalogueControl = catalogueControl;
-        _cartService      = cartService;
+        _cartService = cartService;
+        _customerValidationService = customerValidationService;
     }
 
     // GET: /Catalogue
@@ -24,11 +27,11 @@ public class CatalogueController : Controller
     {
         var filter = new SearchFilter
         {
-            Keywords    = keywords,
-            CategoryId  = categoryId,
-            MinPrice    = minPrice,
-            MaxPrice    = maxPrice,
-            SortBy      = sortBy ?? "name_asc",
+            Keywords = keywords,
+            CategoryId = categoryId,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            SortBy = sortBy ?? "name_asc",
             CurrentPage = page           // ✅ was "Page", correct property is "CurrentPage"
         };
 
@@ -37,22 +40,22 @@ public class CatalogueController : Controller
         var vm = new CatalogueViewModel
         {
             PagedProducts = pagedProducts,
-            Filter        = filter,
-            Categories    = _catalogueControl.GetCategories(), // ✅ added below
-            Availability  = new Dictionary<int, AvailabilityStatus>(),
-            CarbonData    = new Dictionary<int, CarbonFootprint?>()
+            Filter = filter,
+            Categories = _catalogueControl.GetCategories(), // ✅ added below
+            Availability = new Dictionary<int, AvailabilityStatus>(),
+            CarbonData = new Dictionary<int, CarbonFootprint?>()
         };
 
         foreach (var p in vm.PagedProducts.Items)
         {
             vm.Availability[p.GetProductId()] = _catalogueControl.GetAvailability(p.GetProductId());
-            vm.CarbonData[p.GetProductId()]   = _catalogueControl.GetCarbonFootprint(p.GetProductId());
+            vm.CarbonData[p.GetProductId()] = _catalogueControl.GetCarbonFootprint(p.GetProductId());
         }
 
         return View("~/Views/Module1/P2-6/CatalogBrowsing.cshtml", vm);
     }
 
-        private int? GetResolvedCustomerId()
+    private int? GetResolvedCustomerId()
     {
         return HttpContext.Session.GetInt32("CustomerId")
             ?? HttpContext.Session.GetInt32("ValidatedCustomerId");
@@ -61,14 +64,21 @@ public class CatalogueController : Controller
     private int ResolveCartId()
     {
         var customerId = GetResolvedCustomerId();
-        var sessionId = HttpContext.Session.GetInt32("SessionId");
-
-        if (customerId.HasValue)
+        if (!customerId.HasValue)
         {
-            return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
+            throw new InvalidOperationException("Please log in before adding items to your cart.");
         }
 
-        throw new InvalidOperationException("No active cart session found.");
+        var validation = _customerValidationService.ValidateCustomer(customerId.Value);
+        if (!validation.IsValid)
+        {
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(validation.ValidationMessage)
+                    ? "Please log in before adding items to your cart."
+                    : validation.ValidationMessage);
+        }
+
+        return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
     }
 
     // POST: /Catalogue/AddToOrder
@@ -91,6 +101,10 @@ public class CatalogueController : Controller
         }
         catch (Exception ex)
         {
+            if (ex.Message.Contains("log in", StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction("Login", "Module1");
+            }
             TempData["Error"] = ex.Message;
             return RedirectToAction(nameof(Index));
         }
