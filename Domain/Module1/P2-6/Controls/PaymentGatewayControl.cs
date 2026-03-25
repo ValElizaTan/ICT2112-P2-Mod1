@@ -19,7 +19,7 @@ public class PaymentGatewayControl : IPaymentGatewayService
     {
         var paymentAdaptor = _paymentAdaptorSelector.SelectAdaptor(totalAmount, purpose, paymentMethodDetails);
         var response = paymentAdaptor.ProcessPayment(orderId, totalAmount, paymentMethodDetails);
-        response.ProviderName = GetProviderName(paymentAdaptor);
+        response.providerName = GetProviderName(paymentAdaptor);
         return response;
     }
 
@@ -28,7 +28,7 @@ public class PaymentGatewayControl : IPaymentGatewayService
         const decimal refundAmount = 100m;
         var paymentAdaptor = _paymentAdaptorSelector.SelectAdaptor(refundAmount, TransactionPurpose.REFUND_DEPOSIT, paymentMethodDetails: null);
         var response = paymentAdaptor.ProcessRefund(refundId, refundAmount, paymentMethodDetails: null);
-        response.ProviderName = GetProviderName(paymentAdaptor);
+        response.providerName = GetProviderName(paymentAdaptor);
         return response;
     }
 
@@ -36,7 +36,7 @@ public class PaymentGatewayControl : IPaymentGatewayService
     {
         var paymentAdaptor = _paymentAdaptorSelector.SelectAdaptor(penaltyAmount, purpose, paymentMethodDetails);
         var response = paymentAdaptor.ProcessPayment(orderId, penaltyAmount, paymentMethodDetails);
-        response.ProviderName = GetProviderName(paymentAdaptor);
+        response.providerName = GetProviderName(paymentAdaptor);
         return response;
     }
 
