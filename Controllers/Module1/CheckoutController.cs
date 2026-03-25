@@ -20,17 +20,14 @@ public class CheckoutController : Controller
             var checkout = _checkoutService.GetCheckout(checkoutId);
             var cart = _checkoutService.GetSelectedCartSnapshot(checkoutId);
             var summary = _checkoutService.GetCostSummary(checkoutId);
-            var shippingOptions = _checkoutService.GetShippingOptions(checkoutId);
-            var warnings = _checkoutService.ValidateCheckout(checkoutId);
-            var customer = _checkoutService.LoadCustomerInfo(checkoutId);
 
             ViewBag.Checkout = checkout;
-            ViewBag.SelectedCart = cart;
-            ViewBag.Summary = summary;
-            ViewBag.ShippingOptions = shippingOptions;
-            ViewBag.Warnings = warnings;
-            ViewBag.Customer = customer;
+            ViewBag.SelectedCart = _checkoutService.GetSelectedCartSnapshot(checkoutId);
+            ViewBag.ShippingOptions = _checkoutService.GetShippingOptions(checkoutId);
+            ViewBag.Warnings = _checkoutService.ValidateCheckout(checkoutId);
+            ViewBag.Customer = _checkoutService.LoadCustomerInfo(checkoutId);
             ViewBag.CheckoutId = checkoutId;
+            ViewBag.SelectedShippingOptionId = checkout.GetShippingOptionId();
 
             int? selectedShippingOptionId = null;
 

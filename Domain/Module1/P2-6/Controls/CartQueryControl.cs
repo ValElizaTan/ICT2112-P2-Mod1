@@ -30,8 +30,8 @@ public class CartQueryControl
         }
 
         var selectedItems = cart.GetItems()
-            .Where(x => x.IsSelected())
-            .Select(ci => new SelectedItem(ci.GetProduct(), ci.GetQuantity()))
+            .Where(x => x.IsSelected() && x.GetProduct() != null)
+            .Select(ci => new SelectedItem(ci.GetProduct()!, ci.GetQuantity()))
             .ToList();
 
         int rentalDays = GetRentalDays(cart);
@@ -69,10 +69,11 @@ public class CartQueryControl
         var itemCosts = _costCalculation.CalculateCartItemCosts(cart.GetItems());
 
         return cart.GetItems()
+            .Where(ci => ci.GetProduct() != null)
             .OrderBy(ci => ci.GetProductId())
             .Select(ci =>
             {
-                var product = ci.GetProduct();
+                var product = ci.GetProduct()!;
                 var matchedCost = itemCosts.FirstOrDefault(x => x.Item.GetProductId() == ci.GetProductId());
 
                 decimal itemPrice = 0m;

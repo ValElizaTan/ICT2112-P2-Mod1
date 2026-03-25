@@ -1,21 +1,27 @@
-using System;
-
 namespace ProRental.Domain.Entities;
 
 public partial class Cartitem
 {
-    private Product? _product;
+    private Product? _loadedProduct;
 
-    public void SetProduct(Product product)
+    public int GetCartItemId() => Cartitemid;
+
+    public int GetCartId() => Cartid;
+
+    public int GetProductId() => Productid;
+
+    public int GetQuantity() => Quantity;
+
+    public bool IsSelected() => Isselected ?? false;
+
+    public void SetQuantity(int quantity)
     {
-        _product = product;
+        Quantity = Math.Max(1, quantity);
     }
 
-    public Product GetProduct()
+    public void SetSelected(bool isSelected)
     {
-        return _product ?? throw new InvalidOperationException(
-            $"Product not loaded for Cartitem with ProductId {GetProductId()}."
-        );
+        Isselected = isSelected;
     }
 
     public void SetCartId(int cartId)
@@ -28,43 +34,14 @@ public partial class Cartitem
         Productid = productId;
     }
 
-    public int GetCartItemId()
+    // runtime-only helper for existing cart / cost calculation flow
+    public Product? GetProduct()
     {
-        return Cartitemid;
+        return _loadedProduct;
     }
 
-    public int GetCartId()
+    public void SetProduct(Product product)
     {
-        return Cartid;
-    }
-
-    public int GetProductId()
-    {
-        return Productid;
-    }
-
-    public int GetQuantity()
-    {
-        return Quantity;
-    }
-
-    public void SetQuantity(int quantity)
-    {
-        if (quantity < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity cannot be negative.");
-        }
-
-        Quantity = quantity;
-    }
-
-    public void SetSelected(bool isSelected)
-    {
-        Isselected = isSelected;
-    }
-
-    public bool IsSelected()
-    {
-        return Isselected ?? false;
+        _loadedProduct = product;
     }
 }

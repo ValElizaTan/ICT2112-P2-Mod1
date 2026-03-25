@@ -44,12 +44,8 @@
 
     decimal rentalCost = summary?.RentalCost ?? 0m;
     decimal depositAmount = summary?.DepositAmount ?? 0m;
-    decimal deliveryCost = summary?.DeliveryCost != 0m
-        ? summary.DeliveryCost
-        : summary?.DeliveryFee ?? 0m;
-    decimal totalCost = summary?.FinalOrderCost != 0m
-        ? summary.FinalOrderCost
-        : summary?.TotalCost ?? 0m;
+    decimal deliveryCost = summary?.DeliveryCost ?? 0m;
+    decimal totalCost = summary?.FinalOrderCost ?? 0m;
 }
 
 <div class="container mt-4">
@@ -145,16 +141,8 @@
                     <tbody>
                         @foreach (var item in items)
                         {
-                            var product = item.GetProduct();
-                            var productName = product.GetProductName();
-
-                            if (string.IsNullOrWhiteSpace(productName) || productName == "(unnamed)")
-                            {
-                                productName = product.GetName();
-                            }
-
                             <tr>
-                                <td>@productName</td>
+                                <td>@item.GetProduct().GetProductName()</td>
                                 <td>@item.GetQuantity()</td>
                             </tr>
                         }
