@@ -224,10 +224,16 @@ public class Module1Controller : Controller
 
     // ── Order Management ─────────────────────────────────────────────────
 
-    // GET /Module1/Orders?customerId=1&status=all
-    public IActionResult Orders(int customerId = 1, string status = "all")
+    // GET /Module1/Orders?status=all
+    public IActionResult Orders(string status = "all")
     {
-        var orders = _orderService.GetOrdersByCustomer(customerId);
+        var customerId = HttpContext.Session.GetInt32("CustomerId")
+                      ?? HttpContext.Session.GetInt32("ValidatedCustomerId");
+
+        if (customerId == null)
+            return RedirectToAction("Login");
+
+        var orders = _orderService.GetOrdersByCustomer(customerId.Value);
 
         var filtered = status.ToLower() switch
         {
@@ -241,7 +247,7 @@ public class Module1Controller : Controller
             _           => orders
         };
 
-        ViewBag.CustomerId     = customerId;
+        ViewBag.CustomerId     = customerId.Value;
         ViewBag.ActiveTab      = status;
         ViewBag.AllCount       = orders.Count;
         ViewBag.PendingCount   = orders.Count(o => o.CurrentStatus == OrderStatus.PENDING);
@@ -265,10 +271,10 @@ public class Module1Controller : Controller
     // POST /Module1/CancelOrder
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult CancelOrder(int orderId, int customerId = 1)
+    public IActionResult CancelOrder(int orderId)
     {
         _orderService.CancelOrder(orderId);
-        return RedirectToAction("Orders", new { customerId, status = "cancelled" });
+        return RedirectToAction("Orders", new { status = "cancelled" });
     }
 
     // GET /Module1/CreateOrderTest

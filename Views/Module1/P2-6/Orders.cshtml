@@ -213,12 +213,12 @@
         <!-- Tabs -->
         <div class="tabs-card">
             <div class="tabs-row">
-                <a href="/Module1/Orders?customerId=@customerId&status=all"       class="@TabClass("all")">All <span class="tab-count">@ViewBag.AllCount</span></a>
-                <a href="/Module1/Orders?customerId=@customerId&status=pending"   class="@TabClass("pending")">To Pay <span class="tab-count">@ViewBag.PendingCount</span></a>
-                <a href="/Module1/Orders?customerId=@customerId&status=confirmed" class="@TabClass("confirmed")">To Ship <span class="tab-count">@ViewBag.ConfirmedCount</span></a>
-                <a href="/Module1/Orders?customerId=@customerId&status=dispatch"  class="@TabClass("dispatch")">To Receive <span class="tab-count">@ViewBag.DispatchCount</span></a>
-                <a href="/Module1/Orders?customerId=@customerId&status=delivered" class="@TabClass("delivered")">Completed <span class="tab-count">@ViewBag.DeliveredCount</span></a>
-                <a href="/Module1/Orders?customerId=@customerId&status=cancelled" class="@TabClass("cancelled")">Cancelled <span class="tab-count">@ViewBag.CancelledCount</span></a>
+                <a href="/Module1/Orders?status=all"       class="@TabClass("all")">All <span class="tab-count">@ViewBag.AllCount</span></a>
+                <a href="/Module1/Orders?status=pending"   class="@TabClass("pending")">To Pay <span class="tab-count">@ViewBag.PendingCount</span></a>
+                <a href="/Module1/Orders?status=confirmed" class="@TabClass("confirmed")">To Ship <span class="tab-count">@ViewBag.ConfirmedCount</span></a>
+                <a href="/Module1/Orders?status=dispatch"  class="@TabClass("dispatch")">To Receive <span class="tab-count">@ViewBag.DispatchCount</span></a>
+                <a href="/Module1/Orders?status=delivered" class="@TabClass("delivered")">Completed <span class="tab-count">@ViewBag.DeliveredCount</span></a>
+                <a href="/Module1/Orders?status=cancelled" class="@TabClass("cancelled")">Cancelled <span class="tab-count">@ViewBag.CancelledCount</span></a>
             </div>
         </div>
 
@@ -288,7 +288,6 @@
                             <form method="post" action="/Module1/CancelOrder" style="display:inline;">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="orderId" value="@order.OrderId" />
-                                <input type="hidden" name="customerId" value="@customerId" />
                                 <button type="submit" class="btn-cancel"
                                     onclick="return confirm('Cancel order #@order.OrderId?')">
                                     Cancel

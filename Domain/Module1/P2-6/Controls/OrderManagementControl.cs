@@ -30,6 +30,9 @@ public class OrderManagementControl : IOrderService
 
         // 3. Persist — writes Order row + cascades Orderitem rows
         _orderMapper.Insert(order);
+        _orderMapper.InsertHistory(Orderstatushistory.Create(
+            order.OrderId, OrderHistoryStatus.PENDING, "system",
+            "Order created — awaiting inventory confirmation"));
 
         // 4. Call inventory to process the loan
         var loanSuccess = _inventoryService.ProcessLoan(
@@ -43,6 +46,11 @@ public class OrderManagementControl : IOrderService
         // 5. Status transition based on inventory result
         order.UpdateStatus(loanSuccess ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED);
         _orderMapper.Update(order);
+        _orderMapper.InsertHistory(Orderstatushistory.Create(
+            order.OrderId,
+            loanSuccess ? OrderHistoryStatus.CONFIRMED : OrderHistoryStatus.CANCELLED,
+            "system",
+            loanSuccess ? "Inventory confirmed" : "Inventory unavailable — order cancelled"));
 
         return order;
     }
@@ -74,6 +82,8 @@ public class OrderManagementControl : IOrderService
         var order = GetOrder(orderId);
         order.UpdateStatus(status);
         _orderMapper.Update(order);
+        _orderMapper.InsertHistory(Orderstatushistory.Create(
+            orderId, (OrderHistoryStatus)(int)status, "system", null));
     }
 
     public bool CancelOrder(int orderId)
@@ -87,6 +97,8 @@ public class OrderManagementControl : IOrderService
 
         order.UpdateStatus(OrderStatus.CANCELLED);
         _orderMapper.Update(order);
+        _orderMapper.InsertHistory(Orderstatushistory.Create(
+            orderId, OrderHistoryStatus.CANCELLED, "customer", "Cancelled by customer"));
         return true;
     }
 
