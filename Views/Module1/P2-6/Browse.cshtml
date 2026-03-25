@@ -1,0 +1,22 @@
+@model List<string>
+
+<h2>Browse Equipment</h2>
+
+@if (Model != null && Model.Count > 0)
+{
+    for (int i = 0; i < Model.Count; i++)
+    {
+        <div style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
+            <h4>@Model[i]</h4>
+            <p>Product ID: @(i + 1)</p>
+
+            <a href="/Module1/AddToCart?productId=@(i + 1)&quantity=1">
+                Add to Cart
+            </a>
+        </div>
+    }
+}
+else
+{
+    <p>No products available.</p>
+}
