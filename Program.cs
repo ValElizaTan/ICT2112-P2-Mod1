@@ -11,12 +11,10 @@ using ProRental.Domain.Services;
 // uncomment when ready to code
 using ProRental.Data;
 using ProRental.Domain.Controls;
-using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
 using ProRental.Controllers;
 using ProRental.Domain.Module6.Controls;
-using ProRental.Controllers.Module1.P2_6;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -208,7 +206,8 @@ builder.Services.AddScoped<ICheckoutService, CheckoutControl>();
 builder.Services.AddScoped<CheckoutLifecycleControl>();
 builder.Services.AddScoped<CheckoutShippingControl>();
 builder.Services.AddScoped<CheckoutPaymentControl>();
-// builder.Services.AddScoped<CheckoutCostControl>();
+builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
+builder.Services.AddScoped<CheckoutCostControl>();
 // builder.Services.AddScoped<CheckoutNotificationControl>();
 // builder.Services.AddScoped<CheckoutCarbonControl>();
 // builder.Services.AddScoped<OrderBuilderControl>();

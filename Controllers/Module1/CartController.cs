@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Controllers.Module1;
@@ -7,79 +6,239 @@ namespace ProRental.Controllers.Module1;
 public class CartController : Controller
 {
     private readonly ICartService _cartService;
+    private readonly ICheckoutService _checkoutService;
+    private readonly ICustomerValidationService _customerValidationService;
 
-    public CartController(ICartService cartService)
+    public CartController(
+        ICartService cartService,
+        ICheckoutService checkoutService,
+        ICustomerValidationService customerValidationService)
     {
         _cartService = cartService;
+        _checkoutService = checkoutService;
+        _customerValidationService = customerValidationService;
     }
 
-    // GET: /Cart
+    private int? GetResolvedCustomerId()
+    {
+        return HttpContext.Session.GetInt32("CustomerId")
+            ?? HttpContext.Session.GetInt32("ValidatedCustomerId");
+    }
+
+    private int GetCartId()
+    {
+        var customerId = GetResolvedCustomerId();
+        var sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
+        }
+
+        if (sessionId.HasValue)
+        {
+            return _cartService.GetOrCreateActiveCartIdBySessionId(sessionId.Value);
+        }
+
+        throw new InvalidOperationException("No active cart session found.");
+    }
+
+    [HttpGet]
     public IActionResult Index()
     {
-        var cart   = _cartService.GetOrCreateActiveCartBySession("test-session");
-        var cartId = cart.GetCartId();
-
-        if (cartId == null)
-            return View("~/Views/Module1/P2-6/Cart.cshtml", new List<CartItem>());
-
-        var items = _cartService.GetCartDisplaySummary(cartId);
-
-        // TEMP: inject product stub until inventory service is ready
-        foreach (var item in items)
+        try
         {
-            var product = new Product();
-            product.SetName($"Product {item.GetProductId()}");
-            product.SetPrice(10 * item.GetProductId());
-            item.SetProduct(product);
-        }
+            int cartId = GetCartId();
+            var cart = _cartService.GetCart(cartId);
 
-        return View("~/Views/Module1/P2-6/Cart.cshtml", items);
+            ViewBag.CartId = cartId;
+            ViewBag.Items = _cartService.GetCartDisplayItems(cartId);
+            ViewBag.Summary = _cartService.GetCartDisplaySummary(cartId);
+            ViewBag.RentalStart = cart.GetRentalStart() == DateTime.MinValue
+                ? ""
+                : cart.GetRentalStart().ToString("yyyy-MM-dd");
+            ViewBag.RentalEnd = cart.GetRentalEnd() == DateTime.MinValue
+                ? ""
+                : cart.GetRentalEnd().ToString("yyyy-MM-dd");
+
+            return View("~/Views/Module1/P2-6/Cart.cshtml");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction("Index", "Home");
+        }
     }
 
-    // POST: /Cart/UpdateCart
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult UpdateCart(
-        List<int>? selectedItems,
-        Dictionary<int, int>? quantities,
-        int? removeItemId,
-        string? action)
+    public IActionResult SetRentalPeriod(DateTime start, DateTime end)
     {
-        var cart   = _cartService.GetOrCreateActiveCartBySession("test-session");
-        var cartId = cart.GetCartId();
-
-        if (cartId == null)
-            return RedirectToAction("Index");
-
-        // Remove single item
-        if (removeItemId.HasValue)
+        try
         {
-            _cartService.RemoveItem(cartId, removeItemId.Value);
-            return RedirectToAction("Index");
+            int cartId = GetCartId();
+            var warnings = _cartService.SetRentalPeriod(cartId, start, end);
+
+            if (warnings.Any())
+            {
+                TempData["Error"] = string.Join(" ", warnings);
+            }
+            else
+            {
+                TempData["Message"] = "Rental period updated.";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        switch (action)
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ToggleSelectItem(int productId, bool isSelected)
+    {
+        try
         {
-            case "update":
-                if (quantities != null)
-                    foreach (var (productId, qty) in quantities)
-                        _cartService.UpdateQuantity(cartId, productId, qty);
-                if (selectedItems != null)
-                    foreach (var id in selectedItems)
-                        _cartService.ToggleSelectItem(cartId, id, true);
-                break;
-
-            case "clear":
-                _cartService.ClearSelection(cartId);
-                break;
-
-            case "checkout":
-                if (_cartService.CanProceedToCheckout(cartId))
-                    return RedirectToAction("Index", "Checkout");
-                TempData["Error"] = "No items selected for checkout.";
-                break;
+            int cartId = GetCartId();
+            _cartService.ToggleSelectItem(cartId, productId, isSelected);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        return RedirectToAction("Index");
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SelectAll()
+    {
+        try
+        {
+            int cartId = GetCartId();
+            _cartService.SelectAllObtainable(cartId);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ClearSelection()
+    {
+        try
+        {
+            int cartId = GetCartId();
+            _cartService.ClearSelection(cartId);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult UpdateQuantity(int productId, int qty)
+    {
+        try
+        {
+            int cartId = GetCartId();
+            _cartService.UpdateQuantity(cartId, productId, qty);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult RemoveItem(int productId)
+    {
+        try
+        {
+            int cartId = GetCartId();
+            _cartService.RemoveItem(cartId, productId);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult EmptyCart()
+    {
+        try
+        {
+            int cartId = GetCartId();
+            _cartService.EmptyCart(cartId);
+            TempData["Message"] = "Cart emptied.";
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult StartCheckout()
+    {
+        try
+        {
+            var customerId = GetResolvedCustomerId();
+            if (!customerId.HasValue)
+            {
+                TempData["Error"] = "Please complete customer validation before proceeding to checkout.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var validation = _customerValidationService.ValidateCustomer(customerId.Value);
+            if (!validation.IsValid)
+            {
+                TempData["Error"] = validation.ValidationMessage ?? "Customer is not allowed to checkout.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            int cartId = GetCartId();
+
+            if (!_cartService.CanProceedToCheckout(cartId))
+            {
+                TempData["Error"] = "Please select at least one item and complete cart details before checkout.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var selectedProductIds = _cartService.GetSelectedItems(cartId)
+                .Select(x => x.GetProductId())
+                .ToList();
+
+            var checkoutId = _checkoutService.StartCheckout(customerId.Value, selectedProductIds);
+
+            return RedirectToAction("Index", "Checkout", new { checkoutId });
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

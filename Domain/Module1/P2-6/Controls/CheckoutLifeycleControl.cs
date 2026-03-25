@@ -39,7 +39,7 @@ public class CheckoutLifecycleControl
         //         validation.ValidationMessage ?? "Customer is not allowed to checkout.");
         // }
 
-        int cartId = _cartService.GetOrCreateActiveCartIdByCustomer(customerId);
+        int cartId = _cartService.GetOrCreateActiveCartIdByCustomerId(customerId);
         var cart = _cartService.GetCart(cartId);
 
         if (cart == null)

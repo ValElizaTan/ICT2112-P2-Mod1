@@ -8,6 +8,8 @@ public class CheckoutControl : ICheckoutService
     private readonly CheckoutLifecycleControl _lifecycleCtrl;
     private readonly CheckoutShippingControl _shippingCtrl;
     private readonly CheckoutPaymentControl _paymentCtrl;
+    private readonly CheckoutCostControl _costCtrl;
+
 
     // TEMP DISABLED / INCOMPLETE
     // private readonly CheckoutCarbonControl _carbonCtrl;
@@ -19,9 +21,9 @@ public class CheckoutControl : ICheckoutService
     public CheckoutControl(
         CheckoutLifecycleControl lifecycleCtrl,
         CheckoutShippingControl shippingCtrl,
-        CheckoutPaymentControl paymentCtrl
+        CheckoutPaymentControl paymentCtrl,
+        CheckoutCostControl costCtrl
         // , CheckoutCarbonControl carbonCtrl
-        // , CheckoutCostControl costCtrl
         // , CheckoutNotificationControl notifCtrl
         // , OrderBuilderControl orderBuilderCtrl
         // , IOrderService orderService
@@ -30,9 +32,9 @@ public class CheckoutControl : ICheckoutService
         _lifecycleCtrl = lifecycleCtrl;
         _shippingCtrl = shippingCtrl;
         _paymentCtrl = paymentCtrl;
+        _costCtrl = costCtrl;
 
         // _carbonCtrl = carbonCtrl;
-        // _costCtrl = costCtrl;
         // _notifCtrl = notifCtrl;
         // _orderBuilderCtrl = orderBuilderCtrl;
         // _orderService = orderService;
@@ -73,6 +75,11 @@ public class CheckoutControl : ICheckoutService
         // warnings.AddRange(_orderBuilderCtrl.ValidateBeforeConfirm(GetCheckout(checkoutId)));
 
         return warnings.Distinct().ToList();
+    }
+
+    public CostSummary GetCostSummary(int checkoutId)
+    {
+        return _costCtrl.GetCostSummary(checkoutId);
     }
 
     public string ConfirmCheckout(

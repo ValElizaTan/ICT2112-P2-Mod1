@@ -26,7 +26,9 @@ public partial class Product
     public void UpdateStatus(ProductStatus status) => _status = status;
 
     // Add these:
-    public Productdetail? ProductDetail { get; set; }
+
+    // for testing
+    // public Productdetail? ProductDetail { get; set; }
     public Product GetProduct() => this;
 
 }

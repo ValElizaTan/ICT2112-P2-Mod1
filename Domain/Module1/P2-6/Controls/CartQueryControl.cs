@@ -1,15 +1,59 @@
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Data;
+using ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Controls;
 
 public class CartQueryControl
 {
     private readonly ICartMapper _cartMapper;
+    private readonly ICostCalculation _costCalculation;
 
-    public CartQueryControl(ICartMapper cartMapper)
+    public CartQueryControl(ICartMapper cartMapper, ICostCalculation costCalculation)
     {
         _cartMapper = cartMapper;
+        _costCalculation = costCalculation;
+    }
+
+    public CostSummary GetCartDisplaySummary(int cartId)
+    {
+        var cart = _cartMapper.FindById(cartId);
+
+        if (cart == null)
+        {
+            return new CostSummary
+            {
+                RentalCost = 0m,
+                DepositAmount = 0m,
+                TotalCost = 0m
+            };
+        }
+
+        var selectedItems = cart.GetItems()
+            .Where(x => x.IsSelected())
+            .Select(ci => new SelectedItem(ci.GetProduct(), ci.GetQuantity()))
+            .ToList();
+
+        int rentalDays = GetRentalDays(cart);
+
+        if (!selectedItems.Any() || rentalDays <= 0)
+        {
+            return new CostSummary
+            {
+                RentalCost = 0m,
+                DepositAmount = 0m,
+                TotalCost = 0m
+            };
+        }
+
+        var summary = _costCalculation.CalculateRentalCost(selectedItems, rentalDays);
+
+        return new CostSummary
+        {
+            RentalCost = summary.RentalCost,
+            DepositAmount = summary.DepositAmount,
+            TotalCost = summary.RentalCost
+        };
     }
 
     public List<CartDisplayItem> GetCartDisplayItems(int cartId)
@@ -21,30 +65,56 @@ public class CartQueryControl
             return new List<CartDisplayItem>();
         }
 
+        int rentalDays = GetRentalDays(cart);
+        var itemCosts = _costCalculation.CalculateCartItemCosts(cart.GetItems());
+
         return cart.GetItems()
             .OrderBy(ci => ci.GetProductId())
-            .Select(ci => new CartDisplayItem
+            .Select(ci =>
             {
-                ProductId = ci.GetProductId(),
-                ProductName = "Product " + ci.GetProductId(),
-                Quantity = ci.GetQuantity(),
-                IsSelected = ci.IsSelected()
+                var product = ci.GetProduct();
+                var matchedCost = itemCosts.FirstOrDefault(x => x.Item.GetProductId() == ci.GetProductId());
+
+                decimal itemPrice = 0m;
+
+                if (product.Productdetail != null)
+                {
+                    itemPrice = product.Productdetail.GetPrice();
+                }
+                else
+                {
+                    itemPrice = product.GetPrice();
+                }
+
+                decimal subtotal = matchedCost?.Cost ?? 0m;
+
+                return new CartDisplayItem
+                {
+                    ProductId = ci.GetProductId(),
+                    ProductName = product.GetProductName(),
+                    Quantity = ci.GetQuantity(),
+                    IsSelected = ci.IsSelected(),
+                    IsObtainable = true,
+                    AvailableQuantity = null,
+                    RentalDays = rentalDays,
+                    CartItemPrice = itemPrice,
+                    Subtotal = subtotal
+                };
             })
             .ToList();
     }
 
-    public CostSummary GetCartDisplaySummary(int cartId)
+    private int GetRentalDays(Cart cart)
     {
-        var cart = _cartMapper.FindById(cartId)
-                   ?? throw new InvalidOperationException($"Cart {cartId} was not found.");
+        var start = cart.GetRentalStart();
+        var end = cart.GetRentalEnd();
 
-        return new CostSummary
+        if (start == DateTime.MinValue || end == DateTime.MinValue)
         {
-            RentalCost = 0m,
-            DepositAmount = 0m,
-            DeliveryCost = 0m,
-            FinalOrderCost = 0m,
-            UnobtainableItems = new List<UnobtainableItemInfo>()
-        };
+            return 0;
+        }
+
+        var days = (end.Date - start.Date).Days;
+        return days > 0 ? days : 0;
     }
 }

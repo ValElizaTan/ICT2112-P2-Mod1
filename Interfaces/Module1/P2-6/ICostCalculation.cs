@@ -9,8 +9,8 @@ public interface ICostCalculation
     CostSummary CalculateFinalOrderCost(
     List<SelectedItem> items,
     int rentalPeriod,
-    string shippingOptionId
+    int shippingOptionId
 );
-    List<CartItemCost> CalculateCartItemCosts(List<CartItem> items);
+    List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items);
     decimal CalculateDepositAmount(decimal rentalCost);
 }

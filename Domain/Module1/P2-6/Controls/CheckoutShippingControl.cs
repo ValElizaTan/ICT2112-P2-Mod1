@@ -64,16 +64,43 @@ public class CheckoutShippingControl
         return BuildFakeShippingOptions();
     }
 
+    // public IActionResult SelectShippingOption(int checkoutId, int optionId)
+    // {
+    //     string orderId = checkoutId.ToString();
+
+    //     // REAL LOGIC - USE THIS WHEN IShippingOptionService IS READY
+    //     // return _shippingOptionService.SelectShippingOption(orderId, optionId.ToString());
+
+    //     // TEMP HARDCODED LOGIC FOR TESTING NOW
+    //     var options = GetShippingOptions(checkoutId);
+
+    //     bool exists = options.Any(x => GetOptionId(x) == optionId);
+
+    //     if (!exists)
+    //     {
+    //         return new BadRequestObjectResult("Invalid shipping option id.");
+    //     }
+
+    //     _selectedOptionByOrderId[orderId] = optionId;
+
+    //     // REAL LOGIC - USE THIS WHEN CHECKOUT OPTION_ID / SHIPPINGOPTION TABLE IS READY
+    //     /*
+    //     var checkout = _checkoutMapper.FindById(checkoutId);
+    //     if (checkout != null)
+    //     {
+    //         checkout.SetShippingOption(optionId);
+    //         _checkoutMapper.Update(checkout);
+    //     }
+    //     */
+
+    //     return new OkObjectResult($"Shipping option '{optionId}' selected.");
+    // }
+
     public IActionResult SelectShippingOption(int checkoutId, int optionId)
     {
         string orderId = checkoutId.ToString();
 
-        // REAL LOGIC - USE THIS WHEN IShippingOptionService IS READY
-        // return _shippingOptionService.SelectShippingOption(orderId, optionId.ToString());
-
-        // TEMP HARDCODED LOGIC FOR TESTING NOW
         var options = GetShippingOptions(checkoutId);
-
         bool exists = options.Any(x => GetOptionId(x) == optionId);
 
         if (!exists)
@@ -83,15 +110,13 @@ public class CheckoutShippingControl
 
         _selectedOptionByOrderId[orderId] = optionId;
 
-        // REAL LOGIC - USE THIS WHEN CHECKOUT OPTION_ID / SHIPPINGOPTION TABLE IS READY
-        /*
+        // Persist selected option into Checkout so CheckoutCostControl can read it
         var checkout = _checkoutMapper.FindById(checkoutId);
         if (checkout != null)
         {
             checkout.SetShippingOption(optionId);
             _checkoutMapper.Update(checkout);
         }
-        */
 
         return new OkObjectResult($"Shipping option '{optionId}' selected.");
     }

@@ -44,7 +44,7 @@ public class CostCalculationControl : ICostCalculation
 public CostSummary CalculateFinalOrderCost(
     List<SelectedItem> items,
     int rentalPeriod,
-    string shippingOptionId)
+    int shippingOptionId)
 {
     var rentalSummary = CalculateRentalCost(items, rentalPeriod);
 
@@ -52,7 +52,7 @@ public CostSummary CalculateFinalOrderCost(
 
     var options = _shippingOptionService.GetShippingOptions("");
     var selected = options.FirstOrDefault(
-    o => o.GetOptionId() == int.Parse(shippingOptionId)
+    o => o.GetOptionId() == shippingOptionId
 );
 
     if (selected != null)
@@ -71,7 +71,7 @@ public CostSummary CalculateFinalOrderCost(
     // ===========================
     // 3. CalculateCartItemCosts
     // ===========================
-public List<CartItemCost> CalculateCartItemCosts(List<CartItem> items)
+public List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items)
 {
     var result = new List<CartItemCost>();
 

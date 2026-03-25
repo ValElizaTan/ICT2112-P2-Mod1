@@ -31,5 +31,5 @@ public interface ICheckoutService
     Customer LoadCustomerInfo(int checkoutId);
     // CarbonResult GetDeliveryCarbonSummary(int checkoutId);
     // void SetOrderNotificationOptIn(int checkoutId, bool optIn);
-    // CostSummary GetCostSummary(int checkoutId);
+    CostSummary GetCostSummary(int checkoutId);
 }

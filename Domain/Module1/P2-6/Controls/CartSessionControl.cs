@@ -50,58 +50,56 @@ public class CartSessionControl
         var sessionCart = _cartMapper.FindActiveBySessionId(sessionId);
         var customerCart = _cartMapper.FindActiveByCustomerId(customerId);
 
-        if (sessionCart == null && customerCart == null)
+        // No ACTIVE session cart
+        if (sessionCart == null)
         {
-            var newCart = new Cart();
-            newCart.SetCustomerId(customerId);
-            newCart.SetStatus(CartStatus.ACTIVE);
+            if (customerCart != null)
+            {
+                return customerCart.GetCartId();
+            }
 
-            _cartMapper.Insert(newCart);
-            return newCart.GetCartId();
+            var newCustomerCart = new Cart();
+            newCustomerCart.SetCustomerId(customerId);
+            newCustomerCart.SetStatus(CartStatus.ACTIVE);
+
+            _cartMapper.Insert(newCustomerCart);
+            return newCustomerCart.GetCartId();
         }
 
-        if (sessionCart == null && customerCart != null)
+        // ACTIVE session cart exists but no ACTIVE customer cart
+        if (customerCart == null)
         {
-            return customerCart.GetCartId();
-        }
+            var newCustomerCart = new Cart();
+            newCustomerCart.SetCustomerId(customerId);
+            newCustomerCart.SetStatus(CartStatus.ACTIVE);
 
-        if (sessionCart != null && customerCart == null)
-        {
-            customerCart = new Cart();
-            customerCart.SetCustomerId(customerId);
-            customerCart.SetStatus(CartStatus.ACTIVE);
-
-            _cartMapper.Insert(customerCart);
+            _cartMapper.Insert(newCustomerCart);
 
             foreach (var item in sessionCart.GetItems())
             {
                 var mergedItem = new Cartitem();
-                mergedItem.SetCartId(customerCart.GetCartId());
+                mergedItem.SetCartId(newCustomerCart.GetCartId());
                 mergedItem.SetProductId(item.GetProductId());
                 mergedItem.SetQuantity(item.GetQuantity());
                 mergedItem.SetSelected(item.IsSelected());
 
-                customerCart.AddItem(mergedItem);
+                newCustomerCart.AddItem(mergedItem);
             }
 
-            _cartMapper.Update(customerCart);
+            _cartMapper.Update(newCustomerCart);
 
             sessionCart.SetStatus(CartStatus.EXPIRED);
             _cartMapper.Update(sessionCart);
 
-            return customerCart.GetCartId();
+            return newCustomerCart.GetCartId();
         }
 
-        if (sessionCart == null || customerCart == null)
-        {
-            throw new InvalidOperationException("Unable to merge carts.");
-        }
-
+        // Both ACTIVE carts exist -> merge session cart items into customer cart
         foreach (var item in sessionCart.GetItems())
         {
-            var existing = customerCart.GetItem(item.GetProductId());
+            var existingItem = customerCart.GetItem(item.GetProductId());
 
-            if (existing == null)
+            if (existingItem == null)
             {
                 var mergedItem = new Cartitem();
                 mergedItem.SetCartId(customerCart.GetCartId());
@@ -113,11 +111,11 @@ public class CartSessionControl
             }
             else
             {
-                existing.SetQuantity(existing.GetQuantity() + item.GetQuantity());
+                existingItem.SetQuantity(existingItem.GetQuantity() + item.GetQuantity());
 
                 if (item.IsSelected())
                 {
-                    existing.SetSelected(true);
+                    existingItem.SetSelected(true);
                 }
             }
         }

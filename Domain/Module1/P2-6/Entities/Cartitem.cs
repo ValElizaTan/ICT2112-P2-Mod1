@@ -4,6 +4,20 @@ namespace ProRental.Domain.Entities;
 
 public partial class Cartitem
 {
+    private Product? _product;
+
+    public void SetProduct(Product product)
+    {
+        _product = product;
+    }
+
+    public Product GetProduct()
+    {
+        return _product ?? throw new InvalidOperationException(
+            $"Product not loaded for Cartitem with ProductId {GetProductId()}."
+        );
+    }
+
     public void SetCartId(int cartId)
     {
         Cartid = cartId;

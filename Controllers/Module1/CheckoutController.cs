@@ -1,110 +1,180 @@
 using Microsoft.AspNetCore.Mvc;
-using ProRental.Domain.Module6.Entities;
-using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
 
 namespace ProRental.Controllers.Module1;
 
 public class CheckoutController : Controller
 {
-    private readonly ICartService   _cartService;
-    private readonly IOrderService  _orderService;
+    private readonly ICheckoutService _checkoutService;
 
-    public CheckoutController(ICartService cartService, IOrderService orderService)
+    public CheckoutController(ICheckoutService checkoutService)
     {
-        _cartService  = cartService;
-        _orderService = orderService;
+        _checkoutService = checkoutService;
     }
 
-    // GET: /Checkout
-    public IActionResult Index()
+    [HttpGet]
+    public IActionResult Index(int checkoutId)
     {
-        var cart   = _cartService.GetOrCreateActiveCartBySession("test-session");
-        var cartId = cart.GetCartId();
-
-        if (cartId == null)
-            return RedirectToAction("Index", "Cart");
-
-        // Redirect back if nothing selected
-        if (!_cartService.CanProceedToCheckout(cartId))
+        try
         {
-            TempData["Error"] = "Please select at least one item before checking out.";
+            var checkout = _checkoutService.GetCheckout(checkoutId);
+            var cart = _checkoutService.GetSelectedCartSnapshot(checkoutId);
+            var summary = _checkoutService.GetCostSummary(checkoutId);
+            var shippingOptions = _checkoutService.GetShippingOptions(checkoutId);
+            var warnings = _checkoutService.ValidateCheckout(checkoutId);
+            var customer = _checkoutService.LoadCustomerInfo(checkoutId);
+
+            ViewBag.Checkout = checkout;
+            ViewBag.SelectedCart = cart;
+            ViewBag.Summary = summary;
+            ViewBag.ShippingOptions = shippingOptions;
+            ViewBag.Warnings = warnings;
+            ViewBag.Customer = customer;
+            ViewBag.CheckoutId = checkoutId;
+
+            int? selectedShippingOptionId = null;
+
+            if (TempData.Peek("SelectedShippingOptionId") != null)
+            {
+                if (int.TryParse(TempData.Peek("SelectedShippingOptionId")?.ToString(), out var tempOptionId))
+                {
+                    selectedShippingOptionId = tempOptionId;
+                }
+            }
+            else
+            {
+                try
+                {
+                    selectedShippingOptionId = checkout?.GetShippingOptionId();
+                }
+                catch
+                {
+                    selectedShippingOptionId = null;
+                }
+            }
+
+            ViewBag.SelectedShippingOptionId = selectedShippingOptionId;
+
+            return View("~/Views/Module1/P2-6/Checkout.cshtml");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
             return RedirectToAction("Index", "Cart");
         }
-
-        var draft = _cartService.BuildSelectedOrderDraft(cartId);
-        var costs = _cartService.GetCartCosts(cartId);
-
-        var vm = new CheckoutViewModel
-        {
-            Draft       = draft,
-            Costs       = costs,
-            StartDate   = draft.StartDate ?? DateTime.Today.AddDays(1),
-            EndDate     = draft.EndDate   ?? DateTime.Today.AddDays(2),
-        };
-
-        return View("~/Views/Module1/P2-6/Checkout.cshtml", vm);
     }
 
-    // POST: /Checkout/PlaceOrder
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult PlaceOrder(DateTime startDate, DateTime endDate,
-                                    DeliveryDuration deliveryType, bool notifyOptIn = false)
+    public IActionResult SelectShippingOption(int checkoutId, int optionId)
     {
-        var cart   = _cartService.GetOrCreateActiveCartBySession("test-session");
-        var cartId = cart.GetCartId();
-
-        if (cartId == null || !_cartService.CanProceedToCheckout(cartId))
+        try
         {
-            TempData["Error"] = "Your session expired. Please try again.";
-            return RedirectToAction("Index", "Cart");
+            _checkoutService.SelectShippingOption(checkoutId, optionId);
+            TempData["Message"] = "Shipping option selected.";
+            TempData["SelectedShippingOptionId"] = optionId;
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
         }
 
-        // Set rental period on cart
-        _cartService.SetRentalPeriod(cartId, startDate, endDate);
-
-        var costs = _cartService.GetCartCosts(cartId);
-        var draft = _cartService.BuildSelectedOrderDraft(cartId);
-
-        // Build item tuples for IOrderService
-        var itemData = draft.Items.Select(item =>
-        (
-            productId   : item.GetProductId(),
-            quantity    : item.GetQuantity(),
-            unitPrice   : item.GetProduct()?.GetPrice() ?? 0m,
-            rentalStart : startDate,
-            rentalEnd   : endDate
-        )).ToList();
-
-        var productQuantities = draft.Items
-            .ToDictionary(i => i.GetProductId(), i => i.GetQuantity());
-
-        // Use 0 for customerId/checkoutId until auth is wired up
-        var order = _orderService.CreateOrder(
-            customerId        : 0,
-            checkoutId        : 0,
-            itemData          : itemData,
-            deliveryType      : deliveryType,
-            totalAmount       : costs.RentalCost + costs.DeliveryCost,
-            productQuantities : productQuantities
-        );
-
-        // Clear cart after successful order
-        _cartService.EmptyCart(cartId);
-
-        TempData["OrderId"] = order.OrderId;
-        return RedirectToAction("Confirmation");
+        return RedirectToAction(nameof(Index), new { checkoutId });
     }
 
-    // GET: /Checkout/Confirmation
-    public IActionResult Confirmation()
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ConfirmCheckout(
+        int checkoutId,
+        string nameOnCard,
+        string cardNumber,
+        string expirationDate,
+        string securityCode)
     {
-        var orderId = TempData["OrderId"];
-        if (orderId == null)
-            return RedirectToAction("Index", "Catalogue");
+        try
+        {
+            var orderNumber = _checkoutService.ConfirmCheckout(
+                checkoutId,
+                nameOnCard,
+                cardNumber,
+                expirationDate,
+                securityCode
+            );
 
-        var order = _orderService.GetOrder((int)orderId);
-        return View("~/Views/Module1/P2-6/OrderConfirmation.cshtml", order);
+            return RedirectToAction(nameof(Success), new
+            {
+                checkoutId,
+                orderNumber
+            });
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index), new { checkoutId });
+        }
     }
+
+    [HttpGet]
+    public IActionResult Success(int checkoutId, string orderNumber)
+    {
+        ViewBag.CheckoutId = checkoutId;
+        ViewBag.OrderNumber = orderNumber;
+        return View("~/Views/Module1/P2-6/CheckoutSuccess.cshtml");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CancelCheckout(int checkoutId)
+    {
+        try
+        {
+            _checkoutService.CancelCheckout(checkoutId);
+            TempData["Message"] = "Checkout cancelled.";
+            return RedirectToAction("Index", "Cart");
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index), new { checkoutId });
+        }
+    }
+
+    // =========================
+    // REAL FUTURE PAYMENT FLOW
+    // Uncomment when payment feature is ready
+    // =========================
+    /*
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ConfirmCheckoutWithRealPayment(
+        int checkoutId,
+        string nameOnCard,
+        string cardNumber,
+        string expirationDate,
+        string securityCode)
+    {
+        try
+        {
+            var details = new CreditCardPaymentDetails(
+                cardNumber,
+                DateOnly.Parse(expirationDate),
+                int.Parse(securityCode),
+                nameOnCard
+            );
+
+            var orderNumber = _checkoutService.ConfirmCheckout(checkoutId, details);
+
+            return RedirectToAction(nameof(Success), new
+            {
+                checkoutId,
+                orderNumber
+            });
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index), new { checkoutId });
+        }
+    }
+    */
 }

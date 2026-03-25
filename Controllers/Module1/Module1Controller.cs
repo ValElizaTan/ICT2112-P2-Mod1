@@ -56,7 +56,12 @@ public Module1Controller(
         HttpContext.Session.SetString("UserName", result.UserName ?? email);
         HttpContext.Session.SetString("UserRole", result.Session.RoleString);
 
-        // Redirect to customer success page; action guard handles fallback to Home.
+        // customer must validate customer id before cart / checkout flow
+        if (result.Session.RoleString.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction("CustomerIdEntry");
+        }
+
         return RedirectToAction("CustomerLoginSuccess");
     }
 
@@ -78,7 +83,7 @@ public Module1Controller(
     // GET /Module1/CustomerIdEntry
     public IActionResult CustomerIdEntry()
     {
-        return View("P2-6/_CustomerIdEntry");
+        return View("~/Views/Module1/P2-6/CustomerIdEntry.cshtml");
     }
 
     // POST /Module1/CustomerIdEntry
@@ -94,8 +99,9 @@ public Module1Controller(
             return View("P2-6/CustomerIdEntry");
         }
 
-        // Store the validated customer ID for the downstream checkout flow.
         HttpContext.Session.SetInt32("ValidatedCustomerId", result.CustomerId);
+        HttpContext.Session.SetInt32("CustomerId", result.CustomerId);
+
         return RedirectToAction("Index", "Cart");
     }
 
@@ -156,7 +162,6 @@ public Module1Controller(
         HttpContext.Session.SetInt32("SessionId", result.Session.SessionId);
         HttpContext.Session.SetString("UserName", result.UserName ?? StaffEmail);
         HttpContext.Session.SetString("UserRole", roleString);
-
         // Redirect staff to the staff success / dashboard page.
         return RedirectToAction("StaffLoginSuccess");
     }
@@ -344,11 +349,7 @@ public IActionResult FakeCart()
     var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
 
     // 🔥 STEP 2: Final cost (shipping)
-    summary = costControl.CalculateFinalOrderCost(
-        items,
-        3, // rental period
-        DeliveryDuration.NextDay.ToString()
-);
+    summary = costControl.CalculateFinalOrderCost(items, 3, 1);
 
     return View("P2-6/FakeCart", summary);
 }

@@ -2,7 +2,7 @@ using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;          // InventoryStatus, ProductStatus live here
 using ProRental.Interfaces.Domain;
 
-namespace ProRental.Data.Module6.Services;
+namespace ProRental.Data.Services;
 
 /// <summary>
 /// Real implementation of ICatalogueService.

@@ -4,7 +4,7 @@ using ProRental.Domain.Entities;
 using ProRental.Domain.Module6.Entities;
 using ProRental.Interfaces.Domain;
 
-namespace ProRental.Controllers.Module1.P2_6;
+namespace ProRental.Controllers.Module1;
 
 public class CatalogueController : Controller
 {
@@ -52,27 +52,53 @@ public class CatalogueController : Controller
         return View("~/Views/Module1/P2-6/CatalogBrowsing.cshtml", vm);
     }
 
+        private int? GetResolvedCustomerId()
+    {
+        return HttpContext.Session.GetInt32("CustomerId")
+            ?? HttpContext.Session.GetInt32("ValidatedCustomerId");
+    }
+
+    private int ResolveCartId()
+    {
+        var customerId = GetResolvedCustomerId();
+        var sessionId = HttpContext.Session.GetInt32("SessionId");
+
+        if (customerId.HasValue)
+        {
+            return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
+        }
+
+        if (sessionId.HasValue)
+        {
+            return _cartService.GetOrCreateActiveCartIdBySessionId(sessionId.Value);
+        }
+
+        throw new InvalidOperationException("No active cart session found.");
+    }
+
     // POST: /Catalogue/AddToOrder
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult AddToOrder(int productId, int quantity)
     {
-        var cart   = _cartService.GetOrCreateActiveCartBySession("test-session");
-        var cartId = cart.GetCartId();
-
-        if (cartId == null)
+        try
         {
-            TempData["Error"] = "Could not resolve cart. Please try again.";
-            return RedirectToAction("Index");
+            int cartId = ResolveCartId();
+
+            _cartService.AddToCart(cartId, productId, quantity);
+
+            var product = _catalogueControl.GetProductById(productId);
+            TempData["AddedItem"] = product?.GetProductName() ?? $"Product {productId}";
+            TempData["AddedQty"] = quantity;
+            TempData["Message"] = "Item added to cart.";
+
+            return RedirectToAction(nameof(Index));
         }
-
-        _cartService.AddToCart(cartId, productId, quantity);
-
-        var product = _catalogueControl.GetProductById(productId); // ✅ was "GetProduct"
-        TempData["AddedItem"] = product?.GetProductName() ?? $"Product {productId}";
-        TempData["AddedQty"]  = quantity;
-
-        return RedirectToAction("Index");
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index));
+        }
     }
 
     // GET: /Catalogue/Detail/5

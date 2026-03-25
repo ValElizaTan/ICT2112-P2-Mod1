@@ -12,7 +12,7 @@
     var customer = ViewBag.Customer as Customer;
     var customerInfo = customer?.GetCustomerInfo();
     var userInfo = customerInfo?.User;
-
+    var summary = ViewBag.Summary as CostSummary;
 
     var message = TempData["Message"]?.ToString();
     var error = TempData["Error"]?.ToString();
@@ -21,11 +21,35 @@
     var shippingOptions = ViewBag.ShippingOptions as List<ShippingOption> ?? new List<ShippingOption>();
 
     int? selectedShippingOptionId = null;
-
     if (ViewBag.SelectedShippingOptionId != null)
     {
         selectedShippingOptionId = Convert.ToInt32(ViewBag.SelectedShippingOptionId);
     }
+
+    string rentalStart = "";
+    string rentalEnd = "";
+
+    if (cart != null)
+    {
+        if (cart.GetRentalStart() != DateTime.MinValue)
+        {
+            rentalStart = cart.GetRentalStart().ToString("dd/MM/yyyy");
+        }
+
+        if (cart.GetRentalEnd() != DateTime.MinValue)
+        {
+            rentalEnd = cart.GetRentalEnd().ToString("dd/MM/yyyy");
+        }
+    }
+
+    decimal rentalCost = summary?.RentalCost ?? 0m;
+    decimal depositAmount = summary?.DepositAmount ?? 0m;
+    decimal deliveryCost = summary?.DeliveryCost != 0m
+        ? summary.DeliveryCost
+        : summary?.DeliveryFee ?? 0m;
+    decimal totalCost = summary?.FinalOrderCost != 0m
+        ? summary.FinalOrderCost
+        : summary?.TotalCost ?? 0m;
 }
 
 <div class="container mt-4">
@@ -85,6 +109,24 @@
 
     <div class="card mb-3">
         <div class="card-body">
+            <h5 class="card-title">Rental Period</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Start Date</label>
+                    <input type="text" class="form-control" value="@rentalStart" disabled />
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">End Date</label>
+                    <input type="text" class="form-control" value="@rentalEnd" disabled />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
             <h5 class="card-title">Selected Items</h5>
 
             @if (!items.Any())
@@ -96,15 +138,23 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Product Id</th>
+                            <th>Product</th>
                             <th>Quantity</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var item in items)
                         {
+                            var product = item.GetProduct();
+                            var productName = product.GetProductName();
+
+                            if (string.IsNullOrWhiteSpace(productName) || productName == "(unnamed)")
+                            {
+                                productName = product.GetName();
+                            }
+
                             <tr>
-                                <td>@item.GetProductId()</td>
+                                <td>@productName</td>
                                 <td>@item.GetQuantity()</td>
                             </tr>
                         }
@@ -203,15 +253,13 @@
 
             <div class="row">
                 <div class="col-md-6">
-                    <p class="mb-2"><strong>Rental Cost:</strong> --</p>
-                    <p class="mb-2"><strong>Deposit:</strong> --</p>
-                    <p class="mb-2"><strong>Delivery Fee:</strong> --</p>
+                    <p class="mb-2"><strong>Rental Cost:</strong> @rentalCost.ToString("0.00")</p>
+                    <p class="mb-2"><strong>Deposit:</strong> @depositAmount.ToString("0.00")</p>
+                    <p class="mb-2"><strong>Delivery Fee:</strong> @deliveryCost.ToString("0.00")</p>
                     <hr />
-                    <p class="mb-0"><strong>Total:</strong> --</p>
+                    <p class="mb-0"><strong>Total:</strong> @totalCost.ToString("0.00")</p>
                 </div>
             </div>
-
-            <small class="text-muted">Cost summary UI only. Calculation logic not connected yet.</small>
         </div>
     </div>
 

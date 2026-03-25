@@ -230,8 +230,8 @@ public partial class AppDbContext
 
         modelBuilder.Entity<RouteLeg>(entity =>
         {
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         // ==========================================
@@ -239,11 +239,11 @@ public partial class AppDbContext
         // ==========================================
         modelBuilder.Entity<ShippingOption>(entity =>
         {
-            entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("preferencetype").HasColumnType("preference_type");
+            //entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("preferencetype").HasColumnType("preference_type");
 
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<Staffaccesslog>(entity =>

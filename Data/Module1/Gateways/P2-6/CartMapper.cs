@@ -17,28 +17,43 @@ public class CartMapper : ICartMapper
 
     public Cart? FindById(int cartId)
     {
-        return _context.Set<Cart>()
+        var cart = _context.Set<Cart>()
             .Include(c => c.Cartitems)
+                .ThenInclude(ci => ci.Product)
             .FirstOrDefault(c => EF.Property<int>(c, "Cartid") == cartId);
+
+        HydrateCartProducts(cart);
+        return cart;
     }
 
     public Cart? FindActiveByCustomerId(int customerId)
     {
-        return _context.Set<Cart>()
+        var cart = _context.Set<Cart>()
             .Include(c => c.Cartitems)
+                .ThenInclude(ci => ci.Product)
+                    .ThenInclude(p => p.Productdetail)
             .FirstOrDefault(c =>
                 EF.Property<int?>(c, "Customerid") == customerId &&
                 EF.Property<CartStatus>(c, "Status") == CartStatus.ACTIVE);
+
+        HydrateCartProducts(cart);
+        return cart;
     }
 
     public Cart? FindActiveBySessionId(int sessionId)
     {
-        return _context.Set<Cart>()
+        var cart = _context.Set<Cart>()
             .Include(c => c.Cartitems)
+                .ThenInclude(ci => ci.Product)
+                    .ThenInclude(p => p.Productdetail)
             .FirstOrDefault(c =>
                 EF.Property<int?>(c, "Sessionid") == sessionId &&
                 EF.Property<CartStatus>(c, "Status") == CartStatus.ACTIVE);
+
+        HydrateCartProducts(cart);
+        return cart;
     }
+
     public void Insert(Cart cart)
     {
         _context.Set<Cart>().Add(cart);
@@ -60,6 +75,19 @@ public class CartMapper : ICartMapper
         {
             _context.Set<Cart>().Remove(cart);
             _context.SaveChanges();
+        }
+    }
+
+    private static void HydrateCartProducts(Cart? cart)
+    {
+        if (cart == null) return;
+
+        foreach (var item in cart.GetItems())
+        {
+            if (item.Product != null)
+            {
+                item.SetProduct(item.Product);
+            }
         }
     }
 }

@@ -1,10 +1,11 @@
-using ProRental.Domain.Entities;
+namespace ProRental.Domain.Entities;
+
 public class CartItemCost
 {
-    public CartItem Item { get; set; }
+    public Cartitem Item { get; set; }
     public decimal Cost { get; set; }
 
-    public CartItemCost(CartItem item, decimal cost)
+    public CartItemCost(Cartitem item, decimal cost)
     {
         Item = item;
         Cost = cost;
