@@ -187,8 +187,14 @@ builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationServic
 builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
 builder.Services.AddScoped<ICartMapper, ProRental.Data.Module1.Gateways.CartMapper>();
 builder.Services.AddScoped<ICheckoutMapper, ProRental.Data.Module1.Gateways.CheckoutMapper>();
+builder.Services.AddSingleton<IPaymentProviderClient, MockPaymentProviderClient>();
+builder.Services.AddScoped<IPaymentAdaptors, StripeAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, PayPalAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, AdyenAdapter>();
  
 // Domain (controls — pure business logic, no DB dependency)
+builder.Services.AddScoped<IPaymentAdaptorSelector, PaymentAdaptorSelector>();
+builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayControl>();
 
 // Domain
 builder.Services.AddScoped<CatalogueControl>();
@@ -208,9 +214,9 @@ builder.Services.AddScoped<CheckoutShippingControl>();
 builder.Services.AddScoped<CheckoutPaymentControl>();
 builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
 builder.Services.AddScoped<CheckoutCostControl>();
+builder.Services.AddScoped<OrderBuilderControl>();
 // builder.Services.AddScoped<CheckoutNotificationControl>();
 // builder.Services.AddScoped<CheckoutCarbonControl>();
-// builder.Services.AddScoped<OrderBuilderControl>();
 
 // Auth
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();

@@ -20,6 +20,7 @@ public class CartMapper : ICartMapper
         var cart = _context.Set<Cart>()
             .Include(c => c.Cartitems)
                 .ThenInclude(ci => ci.Product)
+                    .ThenInclude(p => p.Productdetail)
             .FirstOrDefault(c => EF.Property<int>(c, "Cartid") == cartId);
 
         HydrateCartProducts(cart);

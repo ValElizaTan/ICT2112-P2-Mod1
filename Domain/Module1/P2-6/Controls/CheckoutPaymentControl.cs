@@ -1,3 +1,4 @@
+using ProRental.Data;
 using ProRental.Interfaces.Data;
 using ProRental.Interfaces.Domain;
 using ProRental.Domain.Entities;
@@ -8,18 +9,14 @@ namespace ProRental.Domain.Controls;
 public class CheckoutPaymentControl
 {
     private readonly ICheckoutMapper _checkoutMapper;
-
-    // REAL FUTURE PAYMENT FLOW
-    // Uncomment when payment feature is ready
-    // private readonly IPaymentGatewayService _paymentGateway;
+    private readonly IPaymentGatewayService _paymentGateway;
 
     public CheckoutPaymentControl(
-        ICheckoutMapper checkoutMapper
-        // , IPaymentGatewayService paymentGateway
-    )
+        ICheckoutMapper checkoutMapper,
+        IPaymentGatewayService paymentGateway)
     {
         _checkoutMapper = checkoutMapper;
-        // _paymentGateway = paymentGateway;
+        _paymentGateway = paymentGateway;
     }
 
     public void SubmitPaymentDetails(
@@ -40,12 +37,18 @@ public class CheckoutPaymentControl
             throw new InvalidOperationException("Please enter all payment details.");
         }
 
-        if (cardNumber.Length < 12 || cardNumber.Length > 19)
+        var normalizedCardNumber = cardNumber.Replace(" ", "").Replace("-", "");
+
+        if (!normalizedCardNumber.All(char.IsDigit) ||
+            normalizedCardNumber.Length < 12 ||
+            normalizedCardNumber.Length > 19)
         {
             throw new InvalidOperationException("Card number is invalid.");
         }
 
-        if (securityCode.Length < 3 || securityCode.Length > 4)
+        if (!securityCode.All(char.IsDigit) ||
+            securityCode.Length < 3 ||
+            securityCode.Length > 4)
         {
             throw new InvalidOperationException("Security code is invalid.");
         }
@@ -55,75 +58,51 @@ public class CheckoutPaymentControl
             throw new InvalidOperationException("Expiration date is invalid.");
         }
 
-        if (expiry < DateOnly.FromDateTime(DateTime.Today))
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (expiry < today)
         {
             throw new InvalidOperationException("Card has expired.");
         }
 
-        // =========================
-        // REAL FUTURE PAYMENT FLOW
-        // Uncomment when payment feature is ready
-        // =========================
-        /*
-        var details = new CreditCardPaymentDetails(
-            cardNumber,
-            expiry,
-            int.Parse(securityCode),
-            nameOnCard
-        );
-
-        checkout.SetPaymentMethodType(details.GetMethodType());
         _checkoutMapper.Update(checkout);
-        */
     }
 
-    public bool ProcessPayment(
-        int checkoutId,
+    public TransactionResponse ProcessPayment(
+        int paymentReferenceId,
+        decimal amount,
         string nameOnCard,
         string cardNumber,
         string expirationDate,
         string securityCode)
     {
-        var checkout = _checkoutMapper.FindById(checkoutId)
-            ?? throw new InvalidOperationException($"Checkout {checkoutId} was not found.");
-
-        // =========================
-        // ACTIVE TEST FLOW
-        // simulated payment logic for now
-        // =========================
-        if (cardNumber == "0000000000000000")
+        if (amount <= 0)
         {
-            throw new InvalidOperationException("Simulated payment failure.");
+            throw new InvalidOperationException("Payment amount is invalid.");
         }
 
-        if (securityCode == "000")
+        var normalizedCardNumber = cardNumber.Replace(" ", "").Replace("-", "");
+
+        if (!DateOnly.TryParse(expirationDate, out var expiry))
         {
-            throw new InvalidOperationException("Simulated payment rejected.");
+            throw new InvalidOperationException("Expiration date is invalid.");
         }
 
-        return true;
-    }
+        if (!int.TryParse(securityCode, out var parsedSecurityCode))
+        {
+            throw new InvalidOperationException("Security code is invalid.");
+        }
 
-    // =========================
-    // REAL FUTURE PAYMENT FLOW
-    // Uncomment when payment feature is ready
-    // =========================
-    /*
-    public Transaction ProcessPayment(
-        int checkoutId,
-        int orderId,
-        decimal totalAmount,
-        decimal depositAmount,
-        PaymentMethodDetails details)
-    {
-        var checkout = _checkoutMapper.FindById(checkoutId)
-            ?? throw new InvalidOperationException($"Checkout {checkoutId} was not found.");
+        PaymentMethodDetails details = new CreditCardPaymentDetails(
+            normalizedCardNumber,
+            expiry,
+            parsedSecurityCode,
+            nameOnCard
+        );
 
         var transaction = _paymentGateway.MakePayment(
-            orderId,
-            totalAmount,
-            depositAmount,
-            TransactionPurpose.DEPOSIT,
+            paymentReferenceId,
+            amount,
+            TransactionPurpose.ORDER,
             details
         );
 
@@ -132,7 +111,15 @@ public class CheckoutPaymentControl
             throw new InvalidOperationException("Payment transaction was not created.");
         }
 
+        if (transaction.Status != TransactionStatus.COMPLETED)
+        {
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(transaction.Message)
+                    ? "Payment failed."
+                    : transaction.Message
+            );
+        }
+
         return transaction;
     }
-    */
 }

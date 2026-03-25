@@ -110,13 +110,15 @@ public class CheckoutShippingControl
 
         _selectedOptionByOrderId[orderId] = optionId;
 
-        // Persist selected option into Checkout so CheckoutCostControl can read it
-        var checkout = _checkoutMapper.FindById(checkoutId);
-        if (checkout != null)
-        {
-            checkout.SetShippingOption(optionId);
-            _checkoutMapper.Update(checkout);
-        }
+        // TEMP ONLY:
+        // Do not persist fake hardcoded option ids into Checkout.OptionId yet,
+        // because these ids do not exist in the real ShippingOption table.
+        // var checkout = _checkoutMapper.FindById(checkoutId);
+        // if (checkout != null)
+        // {
+        //     checkout.SetShippingOption(optionId);
+        //     _checkoutMapper.Update(checkout);
+        // }
 
         return new OkObjectResult($"Shipping option '{optionId}' selected.");
     }
