@@ -4,9 +4,9 @@ namespace ProRental.Domain.Entities;
 
 public partial class Transaction
 {
-    private TransactionType type;
-    private TransactionPurpose purpose;
-    private TransactionStatus status;
+    private TransactionType _type;
+    private TransactionPurpose _purpose;
+    private TransactionStatus _status;
 
     public static Transaction Create(
         int transactionId,
@@ -17,9 +17,9 @@ public partial class Transaction
     {
         var transaction = new Transaction
         {
-            type = type,
-            purpose = purpose,
-            status = TransactionStatus.PENDING,
+            _type = type,
+            _purpose = purpose,
+            _status = TransactionStatus.PENDING,
             Transactionid = transactionId,
             Amount = amount,
             Providertransactionid = providerTransactionId,
@@ -31,25 +31,25 @@ public partial class Transaction
 
     public void Initiate()
     {
-        status = TransactionStatus.PENDING;
+        _status = TransactionStatus.PENDING;
         // Logic to initiate the transaction, e.g., call payment gateway API
     }
 
     public void MarkSuccessful()
     {
-        status = TransactionStatus.COMPLETED;
+        _status = TransactionStatus.COMPLETED;
         // Additional logic for successful transaction
     }
 
     public void MarkFailed()
     {
-        status = TransactionStatus.FAILED;
+        _status = TransactionStatus.FAILED;
         // Additional logic for failed transaction
     }
 
     public void Cancel()
     {
-        status = TransactionStatus.CANCELLED;
+        _status = TransactionStatus.CANCELLED;
         // Additional logic for cancelled transaction
     }
 }
