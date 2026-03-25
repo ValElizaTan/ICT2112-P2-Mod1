@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 
@@ -124,7 +125,7 @@ public class CheckoutControl : ICheckoutService
             throw new InvalidOperationException("Total payment amount is invalid.");
         }
 
-        _paymentCtrl.ProcessPayment(
+        var transactionResponse = _paymentCtrl.ProcessPayment(
             checkoutId,
             amountToCharge,
             nameOnCard,
@@ -139,7 +140,7 @@ public class CheckoutControl : ICheckoutService
         var itemData = _orderBuilderCtrl.BuildOrderItems(cart);
         var productQuantities = _orderBuilderCtrl.BuildProductQuantities(cart);
 
-        var order = _orderService.CreateOrder(
+        var order = _orderService.CreateOrder( // to add in transactionId here
             checkout.GetCustomerId(),
             checkoutId,
             itemData,
@@ -155,7 +156,15 @@ public class CheckoutControl : ICheckoutService
             _cartService.RemoveItem(cart.GetCartId(), item.GetProductId());
         }
 
-        return order.OrderId.ToString();
+        
+        return JsonSerializer.Serialize(new
+        {
+            OrderId = order.OrderId.ToString(),
+            TransactionAmount = amountToCharge,
+            TransactionProviderName = transactionResponse.providerName,
+            TransactionProviderTransactionId = transactionResponse.providerTransactionId,
+            TransactionStatus = transactionResponse.status.ToString()
+        });
     }
 
     public void CancelCheckout(int checkoutId)

@@ -9,5 +9,15 @@
 <p><strong>Order Number:</strong> @ViewBag.OrderNumber</p>
 <p><strong>Checkout ID:</strong> @ViewBag.CheckoutId</p>
 
+@if (ViewBag.TxnAmount != null || ViewBag.TxnProviderName != null || ViewBag.TxnProviderTransactionId != null || ViewBag.TxnStatus != null)
+{
+    <hr />
+    <h5>Payment Details</h5>
+    <p><strong>Amount:</strong> @ViewBag.TxnAmount</p>
+    <p><strong>Provider:</strong> @ViewBag.TxnProviderName</p>
+    <p><strong>Provider Transaction ID:</strong> @ViewBag.TxnProviderTransactionId</p>
+    <p><strong>Status:</strong> @ViewBag.TxnStatus</p>
+}
+
 <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back to Home</a>
 <a asp-controller="Cart" asp-action="Index" class="btn btn-secondary">Back to Cart</a>

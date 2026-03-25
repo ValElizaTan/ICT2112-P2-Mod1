@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using ProRental.Interfaces.Domain;
 
@@ -85,18 +86,24 @@ public class CheckoutController : Controller
     {
         try
         {
-            var orderNumber = _checkoutService.ConfirmCheckout(
+            var result = _checkoutService.ConfirmCheckout(
                 checkoutId,
                 nameOnCard,
                 cardNumber,
                 expirationDate,
                 securityCode
             );
+            var deserializedResult = JsonSerializer.Deserialize<Dictionary<string, object>>(result);
+
+            TempData["TxnAmount"] = deserializedResult?["TransactionAmount"]?.ToString();
+            TempData["TxnProviderName"] = deserializedResult?["TransactionProviderName"]?.ToString();
+            TempData["TxnProviderTransactionId"] = deserializedResult?["TransactionProviderTransactionId"]?.ToString();
+            TempData["TxnStatus"] = deserializedResult?["TransactionStatus"]?.ToString();
 
             return RedirectToAction(nameof(Success), new
             {
                 checkoutId,
-                orderNumber
+                orderNumber = deserializedResult?["OrderId"]?.ToString(),
             });
         }
         catch (Exception ex)
@@ -111,6 +118,10 @@ public class CheckoutController : Controller
     {
         ViewBag.CheckoutId = checkoutId;
         ViewBag.OrderNumber = orderNumber;
+        ViewBag.TxnAmount = TempData["TxnAmount"];
+        ViewBag.TxnProviderName = TempData["TxnProviderName"];
+        ViewBag.TxnProviderTransactionId = TempData["TxnProviderTransactionId"];
+        ViewBag.TxnStatus = TempData["TxnStatus"];
         return View("~/Views/Module1/P2-6/CheckoutSuccess.cshtml");
     }
 
