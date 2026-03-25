@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "Checkout Success";
+}
+
+<h2>Checkout Successful</h2>
+
+<p>Your order has been placed successfully.</p>
+
+<p><strong>Order Number:</strong> @ViewBag.OrderNumber</p>
+<p><strong>Checkout ID:</strong> @ViewBag.CheckoutId</p>
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back to Home</a>
+<a asp-controller="Cart" asp-action="Index" class="btn btn-secondary">Back to Cart</a>
