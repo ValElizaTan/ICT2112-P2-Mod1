@@ -44,4 +44,18 @@ public partial class Cartitem
     {
         _loadedProduct = product;
     }
+    public decimal GetUnitPrice()
+{
+    var product = GetProduct();
+
+    if (product == null)
+        return 0m;
+
+    if (product.Productdetail != null)
+    {
+        return product.Productdetail.GetPrice();
+    }
+
+    return product.GetPrice();
+}
 }
