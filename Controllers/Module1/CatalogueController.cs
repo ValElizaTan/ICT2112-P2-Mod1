@@ -113,9 +113,16 @@ public class CatalogueController : Controller
     // GET: /Catalogue/Detail/5
     public IActionResult Detail(int id)
     {
-        var product = _catalogueControl.GetProductById(id); // ✅ was "GetProduct"
+        var product = _catalogueControl.GetProductById(id);
         if (product == null) return NotFound();
 
-        return View("~/Views/Module1/P2-6/CatalogDetail.cshtml", product);
+        var vm = new ProductDetailViewModel
+        {
+            Product = product,
+            Availability = _catalogueControl.GetAvailability(id),
+            Carbon = _catalogueControl.GetCarbonFootprint(id)
+        };
+
+        return View("~/Views/Module1/P2-6/ProductDetail.cshtml", vm);
     }
 }
