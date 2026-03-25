@@ -27,14 +27,15 @@ public class CartController : Controller
 
     private int GetCartId()
     {
-        var customerId = GetResolvedCustomerId();
-        var sessionId = HttpContext.Session.GetInt32("SessionId");
+        var customerId = HttpContext.Session.GetInt32("CustomerId")
+            ?? HttpContext.Session.GetInt32("ValidatedCustomerId");
 
-        if (customerId.HasValue)
+        if (!customerId.HasValue)
         {
-            return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
+            throw new InvalidOperationException("Please log in to access your cart.");
         }
-        throw new InvalidOperationException("No active cart session found.");
+
+        return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
     }
 
     [HttpGet]
