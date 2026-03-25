@@ -221,7 +221,6 @@ builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
 builder.Services.AddScoped<CheckoutCostControl>();
 builder.Services.AddScoped<OrderBuilderControl>();
 builder.Services.AddScoped<CheckoutNotificationControl>();
-// builder.Services.AddScoped<CheckoutCarbonControl>();
 
 // Auth
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();

@@ -25,11 +25,7 @@ public class CartControl : ICartService
         _cartCheckoutCtrl = cartCheckoutCtrl;
     }
 
-    public int GetOrCreateActiveCartIdBySessionId(int sessionId) => _cartSessionCtrl.GetOrCreateActiveCartIdBySession(sessionId);
-
     public int GetOrCreateActiveCartIdByCustomerId(int customerId) => _cartSessionCtrl.GetOrCreateActiveCartIdByCustomer(customerId);
-
-    public int MergeSessionCartToCustomerCart(int sessionId, int customerId) => _cartSessionCtrl.MergeSessionCartToCustomerCart(sessionId, customerId);
 
     public Cart GetCart(int cartId) => _cartItemCtrl.GetCart(cartId);
     

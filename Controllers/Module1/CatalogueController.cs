@@ -68,11 +68,6 @@ public class CatalogueController : Controller
             return _cartService.GetOrCreateActiveCartIdByCustomerId(customerId.Value);
         }
 
-        if (sessionId.HasValue)
-        {
-            return _cartService.GetOrCreateActiveCartIdBySessionId(sessionId.Value);
-        }
-
         throw new InvalidOperationException("No active cart session found.");
     }
 
