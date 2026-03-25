@@ -2,33 +2,37 @@ using ProRental.Domain.Enums;
 
 namespace ProRental.Domain.Entities;
 
-
 public partial class Product
 {
-    private string _name = "";
-
-    public string GetName() => _name;
-
-    public void SetName(string name)
-    {
-        _name = name;
-    }
     private ProductStatus _status;
     private ProductStatus Status { get => _status; set => _status = value; }
-    private decimal _price;
 
-    public decimal GetPrice() => _price;
-
-    public void SetPrice(decimal price)
-    {
-        _price = price;
-    }
     public void UpdateStatus(ProductStatus status) => _status = status;
 
-    // Add these:
-
-    // for testing
-    // public Productdetail? ProductDetail { get; set; }
     public Product GetProduct() => this;
+
+    // =========================
+    // ✅ CORRECT: Read from Productdetail
+    // =========================
+
+    public decimal GetPrice()
+    {
+        return Productdetail?.GetPrice() ?? 0m;
+    }
+
+    public string GetProductName()
+    {
+        return Productdetail?.GetName() ?? "(unnamed)";
+    }
+
+    public string? GetDescription()
+    {
+        return Productdetail?.GetDescription();
+    }
+
+    public string? GetImageUrl()
+    {
+        return Productdetail?.GetImage();
+    }
 
 }
