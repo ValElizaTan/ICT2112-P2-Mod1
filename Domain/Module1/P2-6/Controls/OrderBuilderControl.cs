@@ -33,13 +33,13 @@ public class OrderBuilderControl
             .Where(x => x.IsSelected())
             .Select(x =>
             {
-                var product = _context.Set<Product>()
+                var product = x.GetProduct() ?? _context.Set<Product>()
                     .Include(p => p.Productdetail)
                     .First(p => EF.Property<int>(p, "Productid") == x.GetProductId());
 
-                decimal unitPrice = product.Productdetail == null
-                    ? 0m
-                    : EF.Property<decimal>(product.Productdetail, "Price");
+                decimal unitPrice = product.Productdetail != null
+                    ? product.Productdetail.GetPrice()
+                    : product.GetPrice();
 
                 return (
                     productId: x.GetProductId(),
@@ -55,17 +55,6 @@ public class OrderBuilderControl
     public List<string> ValidateBeforeConfirm(Checkout checkout)
     {
         var warnings = new List<string>();
-
-        // if (checkout.GetInternalStatus() != CheckoutStatus.IN_PROGRESS)
-        // {
-        //     warnings.Add("Checkout is not in progress.");
-        // }
-
-        // if (string.IsNullOrWhiteSpace(checkout.GetShippingOptionId()))
-        // {
-        //     warnings.Add("Shipping option has not been selected.");
-        // }
-
         return warnings;
     }
 
@@ -83,7 +72,7 @@ public class OrderBuilderControl
             return DeliveryDuration.OneWeek;
         }
 
-        int days = EF.Property<int?>(selectedOption, "DeliveryDays") ?? 7;
+        int days = selectedOption.GetDeliveryDays();
 
         if (days <= 1) return DeliveryDuration.NextDay;
         if (days <= 3) return DeliveryDuration.ThreeDays;

@@ -8,11 +8,16 @@ public class CartQueryControl
 {
     private readonly ICartMapper _cartMapper;
     private readonly ICostCalculation _costCalculation;
+    private readonly ICatalogueService _catalogueService;
 
-    public CartQueryControl(ICartMapper cartMapper, ICostCalculation costCalculation)
+    public CartQueryControl(
+        ICartMapper cartMapper,
+        ICostCalculation costCalculation,
+        ICatalogueService catalogueService)
     {
         _cartMapper = cartMapper;
         _costCalculation = costCalculation;
+        _catalogueService = catalogueService;
     }
 
     public CostSummary GetCartDisplaySummary(int cartId)
@@ -29,14 +34,11 @@ public class CartQueryControl
             };
         }
 
-        var selectedItems = cart.GetItems()
-            .Where(x => x.IsSelected() && x.GetProduct() != null)
-            .Select(ci => new SelectedItem(ci.GetProduct()!, ci.GetQuantity()))
+        var cartItems = cart.GetItems()
+            .Where(x => x.IsSelected())
             .ToList();
 
-        int rentalDays = GetRentalDays(cart);
-
-        if (!selectedItems.Any() || rentalDays <= 0)
+        if (!cartItems.Any())
         {
             return new CostSummary
             {
@@ -46,13 +48,23 @@ public class CartQueryControl
             };
         }
 
-        var summary = _costCalculation.CalculateRentalCost(selectedItems, rentalDays);
+        foreach (var item in cartItems)
+        {
+            var product = item.GetProduct() ?? _catalogueService.GetProductById(item.GetProductId());
+            if (product != null)
+            {
+                item.SetProduct(product);
+            }
+        }
+
+        var itemCosts = _costCalculation.CalculateCartItemCosts(cartItems);
+        decimal totalItemCost = itemCosts.Sum(x => x.Cost);
 
         return new CostSummary
         {
-            RentalCost = summary.RentalCost,
-            DepositAmount = summary.DepositAmount,
-            TotalCost = summary.RentalCost
+            RentalCost = 0m,
+            DepositAmount = 0m,
+            TotalCost = totalItemCost
         };
     }
 
@@ -66,40 +78,33 @@ public class CartQueryControl
         }
 
         int rentalDays = GetRentalDays(cart);
-        var itemCosts = _costCalculation.CalculateCartItemCosts(cart.GetItems());
 
         return cart.GetItems()
-            .Where(ci => ci.GetProduct() != null)
             .OrderBy(ci => ci.GetProductId())
             .Select(ci =>
             {
-                var product = ci.GetProduct()!;
-                var matchedCost = itemCosts.FirstOrDefault(x => x.Item.GetProductId() == ci.GetProductId());
+                var product = ci.GetProduct() ?? _catalogueService.GetProductById(ci.GetProductId());
 
-                decimal itemPrice = 0m;
-
-                if (product.Productdetail != null)
+                if (product != null)
                 {
-                    itemPrice = product.Productdetail.GetPrice();
-                }
-                else
-                {
-                    itemPrice = product.GetPrice();
+                    ci.SetProduct(product);
                 }
 
-                decimal subtotal = matchedCost?.Cost ?? 0m;
+                decimal itemPrice = product?.Productdetail?.GetPrice()
+                                    ?? product?.GetPrice()
+                                    ?? 0m;
 
                 return new CartDisplayItem
                 {
                     ProductId = ci.GetProductId(),
-                    ProductName = product.GetProductName(),
+                    ProductName = product?.GetProductName() ?? $"Product {ci.GetProductId()}",
                     Quantity = ci.GetQuantity(),
                     IsSelected = ci.IsSelected(),
                     IsObtainable = true,
                     AvailableQuantity = null,
                     RentalDays = rentalDays,
                     CartItemPrice = itemPrice,
-                    Subtotal = subtotal
+                    Subtotal = 0m
                 };
             })
             .ToList();
@@ -115,7 +120,11 @@ public class CartQueryControl
             return 0;
         }
 
-        var days = (end.Date - start.Date).Days;
-        return days > 0 ? days : 0;
+        if (end < start)
+        {
+            return 0;
+        }
+
+        return Math.Max(1, (end.Date - start.Date).Days + 1);
     }
 }

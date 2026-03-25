@@ -134,18 +134,33 @@ public partial class AppDbContext
         // ==========================================
         modelBuilder.Entity<Notification>(entity =>
         {
-            //entity.Property("NotificationType").HasField("_notificationType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  //.HasColumnName("notificationtype").HasColumnType("notification_type_enum");
+            entity.Property("NotificationType").HasField("_notificationType").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("notificationtype").HasColumnType("notification_type_enum");
         });
 
-        modelBuilder.Entity<Notificationpreference>(entity =>
-        {
-      //       entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
-      //             .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
+      //   modelBuilder.Entity<Notificationpreference>(entity =>
+      //   {
+      //        entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
+      //              .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
 
-      //       entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
-      //             .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
-         });
+      //        entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
+      //              .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
+      //    });
+      
+      modelBuilder.Entity<Notificationpreference>(entity =>
+            {
+            entity.Property("Notificationfrequency")
+                  .HasField("_notificationfrequency")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("frequency")
+                  .HasColumnType("notification_frequency_enum");
+
+            entity.Property("NotificationGranularity")
+                  .HasField("_notificationGranularity")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("granularity")
+                  .HasColumnType("notification_granularity_enum");
+            });
 
         modelBuilder.Entity<Order>(entity =>
         {

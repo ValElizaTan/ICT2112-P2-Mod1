@@ -95,12 +95,6 @@ public class CheckoutLifecycleControl
         var checkout = GetCheckout(checkoutId);
         var cart = _cartService.GetCart(checkout.GetCartId());
 
-        // TEMP DISABLED
-        // if (checkout.GetInternalStatus() != CheckoutStatus.IN_PROGRESS)
-        // {
-        //     warnings.Add("Checkout is not in progress.");
-        // }
-
         if (cart == null || cart.IsEmpty())
         {
             warnings.Add("Cart is empty.");
@@ -121,12 +115,6 @@ public class CheckoutLifecycleControl
         {
             warnings.Add("Please select at least one item.");
         }
-
-        // TEMP DISABLED
-        // if (string.IsNullOrWhiteSpace(checkout.GetShippingOptionId()))
-        // {
-        //     warnings.Add("Please select a delivery method.");
-        // }
 
         return warnings;
     }

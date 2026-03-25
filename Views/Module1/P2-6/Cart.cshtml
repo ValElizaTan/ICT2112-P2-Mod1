@@ -124,6 +124,15 @@ else
                         string productName = "";
                         decimal price = 0m;
 
+                        decimal subtotal = 0m;
+
+                        var subtotalProp = itemType.GetProperty("Subtotal");
+                        if (subtotalProp != null)
+                        {
+                            var raw = subtotalProp.GetValue(item);
+                            if (raw != null) subtotal = Convert.ToDecimal(raw);
+                        }
+
                         var productIdProp = itemType.GetProperty("ProductId");
                         if (productIdProp != null)
                         {

@@ -170,18 +170,17 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mb-4">
+    <div class="row g-3 mb-4">
         @foreach (var product in Model.PagedProducts.Items)
         {
-            var avail  = Model.Availability.GetValueOrDefault(product.GetProductId());
+            var avail = Model.Availability.GetValueOrDefault(product.GetProductId());
             var carbon = Model.CarbonData.GetValueOrDefault(product.GetProductId());
 
-            <div class="col">
+            <div class="col product-col">
                 <div class="card h-100 border-0 shadow-sm product-card">
 
                     @* Product image *@
-                    <div class="position-relative overflow-hidden"
-                         style="height:200px; background:#f8f9fa;">
+                    <div class="position-relative overflow-hidden" style="height:150px; background:#f8f9fa;">
                         @{
                             var img = product.GetImageUrl();
                         }
@@ -193,36 +192,39 @@ else
                         else
                         {
                             <div class="d-flex align-items-center justify-content-center h-100">
-                                <i class="bi bi-camera2 display-4 text-muted"></i>
+                                <i class="bi bi-camera2 display-6 text-muted"></i>
                             </div>
                         }
 
-                        @* Availability badge – top-right corner *@
+                        @* Availability badge *@
                         @if (avail != null)
                         {
-                            <span class="badge @avail.BadgeClass position-absolute top-0 end-0 m-2">
+                            <span class="badge @avail.BadgeClass position-absolute top-0 end-0 m-1">
                                 @avail.Label
                             </span>
                         }
                     </div>
 
-                    <div class="card-body d-flex flex-column">
-                        @* Category chip *@
+                    <div class="card-body d-flex flex-column p-2">
+
+                        @* Category *@
                         <small class="text-muted mb-1">
                             <i class="bi bi-tag me-1"></i>@product.GetCategoryName()
                         </small>
 
-                        <h6 class="card-title fw-bold mb-1">@product.GetProductName()</h6>
+                        <h6 class="card-title fw-bold mb-1 small">
+                            @product.GetProductName()
+                        </h6>
 
                         @if (!string.IsNullOrWhiteSpace(product.GetDescription()))
                         {
                             <p class="card-text text-muted small mb-2"
-                               style="overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                                   style="overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
                                 @product.GetDescription()
                             </p>
                         }
 
-                        @* Carbon badge *@
+                        @* Carbon *@
                         @if (carbon != null && carbon.TotalCo2Kg > 0)
                         {
                             <span class="badge @carbon.BadgeClass mb-2" style="width:fit-content;">
@@ -231,49 +233,51 @@ else
                         }
 
                         <div class="mt-auto">
-                            @* Price — FIX (CS0121): GetPrice() is now defined only once in Product.cs *@
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <span class="fs-5 fw-bold" style="color:#2d7a4f;">
-                                    $@product.GetPrice().ToString("0.00")<small class="text-muted fs-6 fw-normal">/day</small>
+
+                            @* Price *@
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold small" style="color:#2d7a4f;">
+                                    $@product.GetPrice().ToString("0.00")
                                 </span>
                                 <small class="text-muted">
-                                    <i class="bi bi-box-seam me-1"></i>@(avail?.AvailableCount ?? 0) avail.
+                                    @(avail?.AvailableCount ?? 0)
                                 </small>
                             </div>
 
                             @* Actions *@
-                            <div class="d-grid gap-2">
-                                <a asp-controller="Catalogue" asp-action="Detail"
-                                   asp-route-id="@product.GetProductId()"
-                                   class="btn btn-outline-dark btn-sm">
-                                    <i class="bi bi-eye me-1"></i>View Details
+                            <div class="d-grid gap-1">
+                                <a asp-controller="Catalogue" asp-action="Detail" asp-route-id="@product.GetProductId()"
+                                       class="btn btn-outline-dark btn-sm">
+                                    View
                                 </a>
 
                                 @if (avail?.IsAvailable == true)
                                 {
-                                    <form asp-controller="Catalogue" asp-action="AddToOrder"
-                                          method="post">
+                                    <form asp-controller="Catalogue" asp-action="AddToOrder" method="post">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="productId" value="@product.GetProductId()" />
-                                        <input type="hidden" name="quantity"  value="1" />
+                                        <input type="hidden" name="quantity" value="1" />
                                         <button type="submit" class="btn btn-dark btn-sm w-100">
-                                            <i class="bi bi-cart-plus me-1"></i>Add to Order
+                                            Add
                                         </button>
                                     </form>
                                 }
                                 else
                                 {
                                     <button class="btn btn-secondary btn-sm" disabled>
-                                        <i class="bi bi-slash-circle me-1"></i>Unavailable
+                                        Unavailable
                                     </button>
                                 }
                             </div>
+
                         </div>
                     </div>
+
                 </div>
             </div>
         }
     </div>
+}
 
     @* ── Pagination ────────────────────────────────────────────────────────── *@
     @if (Model.PagedProducts.TotalPages > 1)

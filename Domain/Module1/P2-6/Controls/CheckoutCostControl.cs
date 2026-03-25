@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Data;
 using ProRental.Interfaces.Domain;
@@ -9,23 +7,20 @@ namespace ProRental.Domain.Controls;
 public class CheckoutCostControl
 {
     private readonly ICostCalculation _costCalculation;
-    private readonly IInventoryService _inventorySvc;
+    private readonly ICatalogueService _catalogueService;
     private readonly ICheckoutMapper _checkoutMapper;
     private readonly ICartService _cartService;
-    private readonly AppDbContext _context;
 
     public CheckoutCostControl(
         ICostCalculation costCalculation,
-        IInventoryService inventorySvc,
+        ICatalogueService catalogueService,
         ICheckoutMapper checkoutMapper,
-        ICartService cartService,
-        AppDbContext context)
+        ICartService cartService)
     {
         _costCalculation = costCalculation;
-        _inventorySvc = inventorySvc;
+        _catalogueService = catalogueService;
         _checkoutMapper = checkoutMapper;
         _cartService = cartService;
-        _context = context;
     }
 
     public CostSummary GetCostSummary(int checkoutId)
@@ -33,24 +28,54 @@ public class CheckoutCostControl
         var checkout = _checkoutMapper.FindById(checkoutId)
             ?? throw new InvalidOperationException($"Checkout {checkoutId} was not found.");
 
-        var summary = _cartService.GetCartDisplaySummary(checkout.GetCartId());
+        var cart = _cartService.GetCart(checkout.GetCartId());
+        var selectedCartItems = cart.GetItems()
+            .Where(x => x.IsSelected())
+            .ToList();
 
-        var optionId = checkout.GetShippingOptionId();
-
-        if (optionId.HasValue)
+        if (!selectedCartItems.Any())
         {
-            var shippingOption = _context.Set<ShippingOption>()
-                .FirstOrDefault(x => EF.Property<int?>(x, "OptionId") == optionId.Value);
+            return new CostSummary();
+        }
 
-            if (shippingOption != null)
+        int rentalDays = GetRentalDays(cart);
+        if (rentalDays <= 0)
+        {
+            return new CostSummary();
+        }
+
+        var selectedItems = new List<SelectedItem>();
+
+        foreach (var cartItem in selectedCartItems)
+        {
+            try
             {
-                summary.DeliveryCost = shippingOption.GetCost();
+                var product = cartItem.GetProduct() ?? _catalogueService.GetProductById(cartItem.GetProductId());
+                if (product != null)
+                {
+                    selectedItems.Add(new SelectedItem(product, cartItem.GetQuantity()));
+                }
+            }
+            catch
+            {
+                // skip invalid product
             }
         }
 
-        summary.FinalOrderCost =
-            summary.RentalCost + summary.DepositAmount + summary.DeliveryCost;
+        if (!selectedItems.Any())
+        {
+            return new CostSummary();
+        }
 
+        int shippingOptionId = checkout.GetShippingOptionId() ?? 0;
+
+        var summary = _costCalculation.CalculateFinalOrderCost(
+            selectedItems,
+            rentalDays,
+            shippingOptionId
+        );
+
+        summary.UnobtainableItems = GetUnobtainableItems(checkoutId);
         return summary;
     }
 
@@ -60,13 +85,47 @@ public class CheckoutCostControl
             ?? throw new InvalidOperationException($"Checkout {checkoutId} was not found.");
 
         var cart = _cartService.GetCart(checkout.GetCartId());
+        var selectedItems = cart.GetItems()
+            .Where(x => x.IsSelected())
+            .ToList();
 
-        // Replace this with real inventory-based logic when UnobtainableItemInfo is ready.
-        return new List<UnobtainableItemInfo>();
+        var unobtainableItems = new List<UnobtainableItemInfo>();
+
+        foreach (var item in selectedItems)
+        {
+            try
+            {
+                var availability = _catalogueService.GetProductAvailability(item.GetProductId());
+
+                if (!availability.IsAvailable)
+                {
+                    unobtainableItems.Add(new UnobtainableItemInfo());
+                }
+            }
+            catch
+            {
+                unobtainableItems.Add(new UnobtainableItemInfo());
+            }
+        }
+
+        return unobtainableItems;
     }
 
-    public decimal GetDepositAmount(int checkoutId)
+    private int GetRentalDays(Cart cart)
     {
-        return GetCostSummary(checkoutId).DepositAmount;
+        var start = cart.GetRentalStart();
+        var end = cart.GetRentalEnd();
+
+        if (start == DateTime.MinValue || end == DateTime.MinValue)
+        {
+            return 0;
+        }
+
+        if (end < start)
+        {
+            return 0;
+        }
+
+        return Math.Max(1, (end.Date - start.Date).Days + 1);
     }
 }

@@ -23,6 +23,13 @@ public class SelectedItem
 
     public decimal GetUnitPrice()
     {
-        return GetProduct().Productdetail?.GetPrice() ?? 0;
+        var product = GetProduct();
+
+        if (product.Productdetail != null)
+        {
+            return product.Productdetail.GetPrice();
+        }
+
+        return product.GetPrice();
     }
 }

@@ -9,17 +9,26 @@ public class CheckoutControl : ICheckoutService
     private readonly CheckoutShippingControl _shippingCtrl;
     private readonly CheckoutPaymentControl _paymentCtrl;
     private readonly CheckoutCostControl _costCtrl;
+    private readonly CheckoutNotificationControl _notifCtrl;
+    private readonly IOrderService _orderService;
+    private readonly OrderBuilderControl _orderBuilderCtrl;
 
     public CheckoutControl(
         CheckoutLifecycleControl lifecycleCtrl,
         CheckoutShippingControl shippingCtrl,
         CheckoutPaymentControl paymentCtrl,
-        CheckoutCostControl costCtrl)
+        CheckoutCostControl costCtrl,
+        CheckoutNotificationControl notifCtrl,
+        IOrderService orderService,
+        OrderBuilderControl orderBuilderCtrl)
     {
         _lifecycleCtrl = lifecycleCtrl;
         _shippingCtrl = shippingCtrl;
         _paymentCtrl = paymentCtrl;
         _costCtrl = costCtrl;
+        _notifCtrl = notifCtrl;
+        _orderService = orderService;
+        _orderBuilderCtrl = orderBuilderCtrl;
     }
 
     public string StartCheckout(int customerId, List<int> selectedProductIds)
@@ -48,6 +57,11 @@ public class CheckoutControl : ICheckoutService
         _shippingCtrl.SelectShippingOption(checkoutId, optionId);
     }
 
+    public void SetOrderNotificationOptIn(int checkoutId, bool optIn)
+    {
+        _notifCtrl.SetOrderNotificationOptIn(checkoutId, optIn);
+    }
+
     public List<string> ValidateCheckout(int checkoutId)
     {
         var warnings = _lifecycleCtrl.ValidateCheckout(checkoutId);
@@ -72,6 +86,14 @@ public class CheckoutControl : ICheckoutService
             throw new InvalidOperationException(string.Join(" ", warnings));
         }
 
+        var checkout = _lifecycleCtrl.GetCheckout(checkoutId);
+        var cart = _lifecycleCtrl.GetCartSnapshot(checkoutId);
+
+        if (checkout.GetShippingOptionId() == null)
+        {
+            throw new InvalidOperationException("Please select a shipping option before confirming checkout.");
+        }
+
         _paymentCtrl.SubmitPaymentDetails(
             checkoutId,
             nameOnCard,
@@ -90,19 +112,6 @@ public class CheckoutControl : ICheckoutService
             throw new InvalidOperationException("Total payment amount is invalid.");
         }
 
-        /*
-        // =========================
-        // SIMULATED PAYMENT VERSION
-        // =========================
-        bool paymentSuccessful = !string.IsNullOrWhiteSpace(cardNumber)
-                                 && cardNumber.Replace(" ", "").Length >= 12;
-
-        if (!paymentSuccessful)
-        {
-            throw new InvalidOperationException("Payment failed. Please check your card details.");
-        }
-        */
-
         _paymentCtrl.ProcessPayment(
             checkoutId,
             amountToCharge,
@@ -112,9 +121,29 @@ public class CheckoutControl : ICheckoutService
             securityCode
         );
 
+        var selectedShippingOption = _shippingCtrl.GetSelectedShippingOption(checkoutId);
+        var deliveryType = _orderBuilderCtrl.ResolveDeliveryDuration(selectedShippingOption);
+
+        var itemData = _orderBuilderCtrl.BuildOrderItems(cart);
+        if (!itemData.Any())
+        {
+            throw new InvalidOperationException("No selected items found to create the order.");
+        }
+
+        var productQuantities = _orderBuilderCtrl.BuildProductQuantities(cart);
+
+        var order = _orderService.CreateOrder(
+            checkout.GetCustomerId(),
+            checkoutId,
+            itemData,
+            deliveryType,
+            amountToCharge,
+            productQuantities
+        );
+
         _lifecycleCtrl.ConfirmCheckout(checkoutId);
 
-        return $"CHK-{checkoutId}";
+        return order.OrderId.ToString();
     }
 
     public void CancelCheckout(int checkoutId)

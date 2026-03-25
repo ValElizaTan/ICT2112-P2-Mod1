@@ -56,6 +56,11 @@ public partial class Checkout
         Notifyoptin = optIn;
     }
 
+    public bool GetNotifyOptIn()
+    {
+        return Notifyoptin ?? false;
+    }
+
     internal void Initialize(int customerId, int cartId)
     {
         Customerid = customerId;

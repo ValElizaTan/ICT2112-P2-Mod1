@@ -1,59 +1,32 @@
-using ProRental.Domain.Entities;
-using ProRental.Domain.Enums;
-using ProRental.Interfaces.Domain;
 using Microsoft.AspNetCore.Mvc;
+using ProRental.Data.UnitOfWork;
+using ProRental.Domain.Entities;
+using ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Services;
 
 public class FakeShippingService : IShippingOptionService
 {
-    public string Name => "Fake Shipping";
+    private readonly AppDbContext _context;
 
-    // ✅ SINGLE OPTION (used sometimes)
-    public ShippingOption GetShippingOption(DeliveryDuration duration)
+    public FakeShippingService(AppDbContext context)
     {
-        var opt = new ShippingOption();
-
-        switch (duration)
-        {
-            case DeliveryDuration.NextDay:
-                opt.Init(1, 10, "Next Day");
-                break;
-
-            case DeliveryDuration.ThreeDays:
-                opt.Init(2, 5, "Three Days");
-                break;
-
-            case DeliveryDuration.OneWeek:
-                opt.Init(3, 2, "One Week");
-                break;
-
-            default:
-                opt.Init(0, 0, "Unknown");
-                break;
-        }
-
-        return opt;
+        _context = context;
     }
 
-    // ✅ LIST OF OPTIONS (used by cost calculation)
+    public string Name => "Fake Shipping";
+
     public List<ShippingOption> GetShippingOptions(string orderId)
     {
-        var opt1 = new ShippingOption();
-        opt1.Init(1, 10, "Next Day");
-
-        var opt2 = new ShippingOption();
-        opt2.Init(2, 5, "Three Days");
-
-        var opt3 = new ShippingOption();
-        opt3.Init(3, 2, "One Week");
-
-        return new List<ShippingOption> { opt1, opt2, opt3 };
+        return _context.ShippingOptions
+            .ToList()
+            .OrderBy(x => x.GetOptionId())
+            .ToList();
     }
 
     public void ApplyCustomerSelection(string orderId, string optionId, string preference)
     {
-        // no-op
+        // no-op for now
     }
 
     public List<ShippingOption> BuildOptionSet(Order order)
@@ -63,12 +36,26 @@ public class FakeShippingService : IShippingOptionService
 
     public IActionResult SelectShippingOption(string orderId, string optionId)
     {
+        if (!int.TryParse(optionId, out var parsedOptionId))
+        {
+            return new BadRequestObjectResult("Invalid shipping option id.");
+        }
+
+        var exists = _context.ShippingOptions
+            .ToList()
+            .Any(x => x.GetOptionId() == parsedOptionId);
+
+        if (!exists)
+        {
+            return new NotFoundObjectResult($"Shipping option '{optionId}' was not found.");
+        }
+
         return new OkResult();
     }
 
     public IActionResult CompareOptions(string orderId)
     {
-        return new OkResult();
+        return new OkObjectResult(GetShippingOptions(orderId));
     }
 
     public decimal CalculateCost(decimal subtotal, int rentalDays)

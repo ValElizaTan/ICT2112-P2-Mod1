@@ -22,35 +22,14 @@ public class CheckoutController : Controller
             var summary = _checkoutService.GetCostSummary(checkoutId);
 
             ViewBag.Checkout = checkout;
-            ViewBag.SelectedCart = _checkoutService.GetSelectedCartSnapshot(checkoutId);
+            ViewBag.SelectedCart = cart;
             ViewBag.ShippingOptions = _checkoutService.GetShippingOptions(checkoutId);
             ViewBag.Warnings = _checkoutService.ValidateCheckout(checkoutId);
             ViewBag.Customer = _checkoutService.LoadCustomerInfo(checkoutId);
             ViewBag.CheckoutId = checkoutId;
+            ViewBag.Summary = summary;
+            ViewBag.NotifyOptIn = checkout.GetNotifyOptIn();
             ViewBag.SelectedShippingOptionId = checkout.GetShippingOptionId();
-
-            int? selectedShippingOptionId = null;
-
-            if (TempData.Peek("SelectedShippingOptionId") != null)
-            {
-                if (int.TryParse(TempData.Peek("SelectedShippingOptionId")?.ToString(), out var tempOptionId))
-                {
-                    selectedShippingOptionId = tempOptionId;
-                }
-            }
-            else
-            {
-                try
-                {
-                    selectedShippingOptionId = checkout?.GetShippingOptionId();
-                }
-                catch
-                {
-                    selectedShippingOptionId = null;
-                }
-            }
-
-            ViewBag.SelectedShippingOptionId = selectedShippingOptionId;
 
             return View("~/Views/Module1/P2-6/Checkout.cshtml");
         }
@@ -69,7 +48,23 @@ public class CheckoutController : Controller
         {
             _checkoutService.SelectShippingOption(checkoutId, optionId);
             TempData["Message"] = "Shipping option selected.";
-            TempData["SelectedShippingOptionId"] = optionId;
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
+        return RedirectToAction(nameof(Index), new { checkoutId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult UpdateNotificationPreference(int checkoutId, bool notifyOptIn = false)
+    {
+        try
+        {
+            _checkoutService.SetOrderNotificationOptIn(checkoutId, notifyOptIn);
+            TempData["Message"] = "Notification preference saved.";
         }
         catch (Exception ex)
         {
@@ -135,43 +130,4 @@ public class CheckoutController : Controller
             return RedirectToAction(nameof(Index), new { checkoutId });
         }
     }
-
-    // =========================
-    // REAL FUTURE PAYMENT FLOW
-    // Uncomment when payment feature is ready
-    // =========================
-    /*
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult ConfirmCheckoutWithRealPayment(
-        int checkoutId,
-        string nameOnCard,
-        string cardNumber,
-        string expirationDate,
-        string securityCode)
-    {
-        try
-        {
-            var details = new CreditCardPaymentDetails(
-                cardNumber,
-                DateOnly.Parse(expirationDate),
-                int.Parse(securityCode),
-                nameOnCard
-            );
-
-            var orderNumber = _checkoutService.ConfirmCheckout(checkoutId, details);
-
-            return RedirectToAction(nameof(Success), new
-            {
-                checkoutId,
-                orderNumber
-            });
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = ex.Message;
-            return RedirectToAction(nameof(Index), new { checkoutId });
-        }
-    }
-    */
 }
