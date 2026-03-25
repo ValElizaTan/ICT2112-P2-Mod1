@@ -1,0 +1,111 @@
+@model List<ProRental.Domain.Entities.Customer>
+@{
+    ViewData["Title"] = "Select Customer";
+}
+
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 fw-semibold mb-0">Select Existing Customer</h1>
+            <p class="text-muted small mb-0">Search by name, email, or ID</p>
+        </div>
+    </div>
+
+    <!-- Search box -->
+    <div class="mb-3">
+        <div class="input-group">
+            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+            <input type="text"
+                   id="customerSearch"
+                   class="form-control"
+                   placeholder="Type to filter customers..."
+                   autocomplete="off" />
+        </div>
+        <div class="form-text" id="resultCount">
+            Showing @(Model?.Count ?? 0) customer(s)
+        </div>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>No customers found in the database.
+        </div>
+    }
+    else
+    {
+        <form asp-action="SelectExistingCustomer" method="post" id="selectForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="customerId" id="selectedCustomerId" />
+
+            <div class="list-group" id="customerList">
+                @foreach (var customer in Model)
+                {
+                    var info = customer.GetCustomerInfo();
+                    var userInfo = info.User;
+                    <button type="button"
+                            class="list-group-item list-group-item-action customer-row"
+                            data-id="@info.CustomerId"
+                            data-name="@userInfo.Name.ToLower()"
+                            data-email="@userInfo.Email.ToLower()"
+                            onclick="selectCustomer(@info.CustomerId)">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">@userInfo.Name</div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-envelope me-1"></i>@userInfo.Email
+                                    @if (!string.IsNullOrEmpty(userInfo.PhoneNumber))
+                                    {
+                                        <span class="ms-2"><i class="bi bi-telephone me-1"></i>@userInfo.PhoneNumber</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-geo-alt me-1"></i>@info.Address
+                                </div>
+                            </div>
+                            <span class="badge bg-light text-dark border">#@info.CustomerId</span>
+                        </div>
+                    </button>
+                }
+            </div>
+
+            <div id="noResults" class="text-center text-muted py-4 d-none">
+                <i class="bi bi-person-x fs-3 d-block mb-2"></i>No customers match your search.
+            </div>
+        </form>
+    }
+
+</div>
+
+@section Scripts {
+    <script>
+        function selectCustomer(id) {
+            document.getElementById('selectedCustomerId').value = id;
+            document.getElementById('selectForm').submit();
+        }
+
+        document.getElementById('customerSearch')?.addEventListener('input', function () {
+            const query = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.customer-row');
+            let visible = 0;
+
+            rows.forEach(row => {
+                const name  = row.dataset.name  ?? '';
+                const email = row.dataset.email ?? '';
+                const id    = row.dataset.id    ?? '';
+                const match = !query || name.includes(query) || email.includes(query) || id.includes(query);
+                row.classList.toggle('d-none', !match);
+                if (match) visible++;
+            });
+
+            document.getElementById('resultCount').textContent =
+                `Showing ${visible} customer(s)`;
+            document.getElementById('noResults')?.classList.toggle('d-none', visible > 0);
+        });
+    </script>
+}

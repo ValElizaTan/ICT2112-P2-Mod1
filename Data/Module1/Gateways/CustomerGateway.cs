@@ -14,6 +14,13 @@ public class CustomerGateway : ICustomerGateway
         _context = context;
     }
 
+    public List<Customer> FindAll()
+    {
+        return _context.Customers
+            .Include(c => c.User)
+            .ToList();
+    }
+
     public Customer? FindById(int customerId)
     {
         var customer = _context.Customers.Find(customerId);

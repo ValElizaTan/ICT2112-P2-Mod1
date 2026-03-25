@@ -70,7 +70,6 @@ public class CustomerControl : ICustomerService
 
     public List<Customer> GetCustomers()
     {
-        // Will be expanded with ICustomerGateway.FindAll() when needed
-        return new List<Customer>();
+        return _customerGateway.FindAll();
     }
 }

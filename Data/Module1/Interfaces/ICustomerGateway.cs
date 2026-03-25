@@ -4,6 +4,7 @@ namespace ProRental.Data.Module1.Interfaces;
 
 public interface ICustomerGateway
 {
+    List<Customer> FindAll();
     Customer? FindById(int customerId);
     Customer? FindByEmail(string email);
     void InsertCustomer(Customer customer);

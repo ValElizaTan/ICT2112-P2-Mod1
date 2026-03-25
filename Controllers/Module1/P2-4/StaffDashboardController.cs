@@ -40,7 +40,7 @@ public class StaffDashboardController : Controller
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
 
         if (type == "existing")
-            return RedirectToAction("Index", "WalkInOrder");
+            return RedirectToAction("SelectExistingCustomer", "WalkInOrder");
 
         return RedirectToAction("EnterCustomerDetails", "WalkInOrder");
     }

@@ -1,70 +1,72 @@
 @{
-    ViewData["Title"] = "Enter Customer Details";
+    ViewData["Title"] = "New Walk-in Customer";
 }
 
-<style>
-    .wio-step-dot { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0; }
-    .wio-step-dot.done  { background:#2d7a4f;color:#fff; }
-    .wio-step-dot.active{ background:#2d7a4f;color:#fff;box-shadow:0 0 0 4px rgba(45,122,79,.18); }
-    .wio-step-dot.idle  { background:#dee2e6;color:#6c757d; }
-    .wio-step-line      { flex-grow:1;height:2px;margin:0 4px;margin-bottom:18px; }
-    .wio-step-line.done { background:#2d7a4f; }
-    .wio-step-line.idle { background:#dee2e6; }
-    .wio-step-label     { font-size:.7rem;margin-top:4px;white-space:nowrap; }
-</style>
+<div class="container py-4">
 
-<div class="d-flex align-items-center gap-2 mt-4 mb-3">
-    <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i>Dashboard
-    </a>
-    <h4 class="mb-0 fw-bold"><i class="bi bi-person-walking me-2" style="color:#2d7a4f;"></i>Walk-In Order</h4>
-</div>
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="h4 fw-semibold mb-0">New Walk-in Customer</h1>
+            <p class="text-muted small mb-0">Enter the customer's details to proceed</p>
+        </div>
+    </div>
 
-<div class="d-flex align-items-start mb-4">
-    <div class="text-center"><div class="wio-step-dot active">1</div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Details</div></div>
-    <div class="wio-step-line idle"></div>
-    <div class="text-center"><div class="wio-step-dot idle">2</div><div class="wio-step-label text-muted">Products</div></div>
-    <div class="wio-step-line idle"></div>
-    <div class="text-center"><div class="wio-step-dot idle">3</div><div class="wio-step-label text-muted">Review</div></div>
-    <div class="wio-step-line idle"></div>
-    <div class="text-center"><div class="wio-step-dot idle"><i class="bi bi-check-lg"></i></div><div class="wio-step-label text-muted">Confirmed</div></div>
-</div>
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
 
-<div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="fw-bold mb-0"><i class="bi bi-person me-2" style="color:#2d7a4f;"></i>Customer Details</h6>
-            </div>
-            <div class="card-body p-4">
-                <form asp-action="EnterCustomerDetails" method="post">
-                    <div class="mb-3">
-                        <label for="customerName" class="form-label fw-semibold small">Full Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" id="customerName" name="customerName" class="form-control" placeholder="e.g. John Smith" required />
+                    <form asp-action="EnterCustomerDetails" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="customerName">
+                                <i class="bi bi-person me-1 text-primary"></i>Full Name
+                            </label>
+                            <input type="text"
+                                   id="customerName"
+                                   name="customerName"
+                                   class="form-control"
+                                   placeholder="e.g. John Tan"
+                                   required />
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="customerEmail" class="form-label fw-semibold small">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" id="customerEmail" name="customerEmail" class="form-control" placeholder="e.g. john@example.com" required />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="customerEmail">
+                                <i class="bi bi-envelope me-1 text-primary"></i>Email Address
+                            </label>
+                            <input type="email"
+                                   id="customerEmail"
+                                   name="customerEmail"
+                                   class="form-control"
+                                   placeholder="e.g. john@example.com"
+                                   required />
                         </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="customerAddress" class="form-label fw-semibold small">Delivery Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                            <input type="text" id="customerAddress" name="customerAddress" class="form-control" placeholder="e.g. 123 Main Street, Singapore 123456" required />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold" for="customerAddress">
+                                <i class="bi bi-geo-alt me-1 text-primary"></i>Address
+                            </label>
+                            <input type="text"
+                                   id="customerAddress"
+                                   name="customerAddress"
+                                   class="form-control"
+                                   placeholder="e.g. 123 Orchard Road, Singapore" />
                         </div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">Next: Select Products <i class="bi bi-arrow-right ms-1"></i></button>
-                        <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                    </div>
-                </form>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-arrow-right me-2"></i>Continue to Select Products
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
         </div>
     </div>
+
 </div>
