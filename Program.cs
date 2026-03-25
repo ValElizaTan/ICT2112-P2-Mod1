@@ -175,12 +175,15 @@ builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IStaffGateway, ProR
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IShipmentGateway, ProRental.Data.Module1.Gateways.ShipmentGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationGateway, ProRental.Data.Module1.Gateways.NotificationGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationPreferenceGateway, ProRental.Data.Module1.Gateways.NotificationPreferenceGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderMapper, ProRental.Data.Module1.Gateways.OrderMapper>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderStatusHistory, ProRental.Data.Module1.Gateways.OrderStatusHistoryGateway>();
 
 // Domain
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.ICustomerService, ProRental.Domain.Module1.P24.Controls.CustomerControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService, ProRental.Domain.Module1.P24.Controls.StaffControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IShipmentBuilder, ProRental.Domain.Module1.P24.Controls.ShipmentBuilder>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationPreferenceService, ProRental.Domain.Module1.P24.Controls.NotificationPreferenceControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IOrderTrackingService, ProRental.Domain.Module1.P24.Controls.OrderTrackingControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.NotificationManager>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationSubject>(provider => provider.GetRequiredService<ProRental.Domain.Module1.P24.Controls.NotificationManager>());
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();
