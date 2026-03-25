@@ -54,4 +54,10 @@ public class StaffDashboardControl
     {
         _orderService.UpdateOrderStatus(orderId, OrderStatus.CONFIRMED);
     }
+
+    public List<Order> DisplayOrderList()
+    {
+        // return _orderService?.GetOrders();
+        return new List<Order>();
+    }
 }

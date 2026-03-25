@@ -53,6 +53,6 @@ public class StaffGateway : IStaffGateway
 
     public List<Staff> FindAll()
     {
-        return _context.Staff.ToList();
+        return _context.Staff.Include(s => s.User).ToList();
     }
 }
