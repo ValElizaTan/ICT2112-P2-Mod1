@@ -6,12 +6,8 @@ namespace ProRental.Interfaces.Domain;
 
 public interface ICartService
 {
-    int GetOrCreateActiveCartIdBySessionId(int sessionId);
     int GetOrCreateActiveCartIdByCustomerId(int customerId);
-    int MergeSessionCartToCustomerCart(int sessionId, int customerId);
-
     Cart GetCart(int cartId);
-
     void AddToCart(int cartId, int productId, int qty);
     void UpdateQuantity(int cartId, int productId, int qty);
     void RemoveItem(int cartId, int productId);

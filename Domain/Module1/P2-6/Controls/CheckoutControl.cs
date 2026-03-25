@@ -5,30 +5,33 @@ namespace ProRental.Domain.Controls;
 
 public class CheckoutControl : ICheckoutService
 {
-    private readonly CheckoutLifecycleControl _lifecycleCtrl;
     private readonly CheckoutShippingControl _shippingCtrl;
     private readonly CheckoutPaymentControl _paymentCtrl;
     private readonly CheckoutCostControl _costCtrl;
     private readonly CheckoutNotificationControl _notifCtrl;
+    private readonly CheckoutLifecycleControl _lifecycleCtrl;
     private readonly IOrderService _orderService;
     private readonly OrderBuilderControl _orderBuilderCtrl;
+    private readonly ICartService _cartService;
 
     public CheckoutControl(
-        CheckoutLifecycleControl lifecycleCtrl,
         CheckoutShippingControl shippingCtrl,
         CheckoutPaymentControl paymentCtrl,
         CheckoutCostControl costCtrl,
         CheckoutNotificationControl notifCtrl,
+        CheckoutLifecycleControl lifecycleCtrl,
         IOrderService orderService,
-        OrderBuilderControl orderBuilderCtrl)
+        OrderBuilderControl orderBuilderCtrl,
+        ICartService cartService)
     {
-        _lifecycleCtrl = lifecycleCtrl;
         _shippingCtrl = shippingCtrl;
         _paymentCtrl = paymentCtrl;
         _costCtrl = costCtrl;
         _notifCtrl = notifCtrl;
+        _lifecycleCtrl = lifecycleCtrl;
         _orderService = orderService;
         _orderBuilderCtrl = orderBuilderCtrl;
+        _cartService = cartService;
     }
 
     public string StartCheckout(int customerId, List<int> selectedProductIds)
@@ -94,6 +97,15 @@ public class CheckoutControl : ICheckoutService
             throw new InvalidOperationException("Please select a shipping option before confirming checkout.");
         }
 
+        var selectedCartItems = cart.GetItems()
+            .Where(x => x.IsSelected())
+            .ToList();
+
+        if (!selectedCartItems.Any())
+        {
+            throw new InvalidOperationException("No selected items found to create the order.");
+        }
+
         _paymentCtrl.SubmitPaymentDetails(
             checkoutId,
             nameOnCard,
@@ -125,11 +137,6 @@ public class CheckoutControl : ICheckoutService
         var deliveryType = _orderBuilderCtrl.ResolveDeliveryDuration(selectedShippingOption);
 
         var itemData = _orderBuilderCtrl.BuildOrderItems(cart);
-        if (!itemData.Any())
-        {
-            throw new InvalidOperationException("No selected items found to create the order.");
-        }
-
         var productQuantities = _orderBuilderCtrl.BuildProductQuantities(cart);
 
         var order = _orderService.CreateOrder(
@@ -142,6 +149,11 @@ public class CheckoutControl : ICheckoutService
         );
 
         _lifecycleCtrl.ConfirmCheckout(checkoutId);
+
+        foreach (var item in selectedCartItems)
+        {
+            _cartService.RemoveItem(cart.GetCartId(), item.GetProductId());
+        }
 
         return order.OrderId.ToString();
     }

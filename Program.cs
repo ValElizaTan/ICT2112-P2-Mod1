@@ -185,7 +185,7 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotification
 // Data source
 builder.Services.AddScoped<ICatalogueService, CatalogueService>();
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
-builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
@@ -221,7 +221,6 @@ builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
 builder.Services.AddScoped<CheckoutCostControl>();
 builder.Services.AddScoped<OrderBuilderControl>();
 builder.Services.AddScoped<CheckoutNotificationControl>();
-// builder.Services.AddScoped<CheckoutCarbonControl>();
 
 // Auth
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
