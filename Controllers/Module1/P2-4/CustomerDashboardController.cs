@@ -129,7 +129,10 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
+        var refunds = _control.GetCustomerRefunds(customerId);
+        ViewData["Refunds"] = refunds;
         ViewData["CustomerId"] = customerId;
+        ViewData["Control"] = _control;
         return View();
     }
 

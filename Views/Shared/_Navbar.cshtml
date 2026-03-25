@@ -1,5 +1,10 @@
     @inject IHttpContextAccessor HttpContextAccessor
-    
+    @{
+        var _navRole = HttpContextAccessor.HttpContext!.Session.GetString("UserRole") ?? "";
+        bool _isStaff = _navRole.Equals("STAFF", StringComparison.OrdinalIgnoreCase)
+                     || _navRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
+    }
+
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
             <div class="container">
     
@@ -23,14 +28,25 @@
                             <i class="bi bi-cart3 me-1"></i>Order Processing
                         </a>
                         <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Module 1</h6></li>
+                            <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Team 4</h6></li>
+                            <li><a class="dropdown-item" asp-controller="OrderManagement" asp-action="Index"><i class="bi bi-clipboard-check me-2" style="color: #2d7a4f;"></i>Manage Orders</a></li>
+                            @if (!_isStaff)
+                            {
+                                <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="1"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
+                            }
+                            @if (_isStaff)
+                            {
+                                <li><a class="dropdown-item" asp-controller="Shipping" asp-action="DisplayShipmentList"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
+                                <li><a class="dropdown-item" asp-controller="NotificationDisplay" asp-action="Index" asp-route-userId="1"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
+                            }
+                            <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Team 6</h6></li>
+                            @if (_isStaff)
+                            {
+                                <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
+                            }
                             <li><a class="dropdown-item" asp-controller="Catalogue" asp-action="Index"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
-                            <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
-                            <li><a class="dropdown-item" asp-controller="Shipping" asp-action="DisplayShipmentList"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
-                            <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
-                            <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="1"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
-                            <li><a class="dropdown-item" asp-controller="NotificationDisplay" asp-action="Index" asp-route-userId="1"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
-                            <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
                             <li><a class="dropdown-item" asp-controller="Module1" asp-action="Orders" asp-route-customerId="@Context.Session.GetInt32("CustomerId")"><i class="bi bi-list me-2" style="color: #2d7a4f;"></i>My Orders</a></li>
                         </ul>
                     </li>
@@ -61,7 +77,10 @@
                         <ul class="dropdown-menu">
                             <li><h6 class="dropdown-header text-uppercase" style="color: #0a9396; font-size: 0.7rem;">Module 3</h6></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-calculator me-2" style="color: #0a9396;"></i>Product Carbon Calculator</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck-flatbed me-2" style="color: #0a9396;"></i>Shipment Carbon Tracker</a></li>
+                            @if (_isStaff)
+                            {
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-truck-flatbed me-2" style="color: #0a9396;"></i>Shipment Carbon Tracker</a></li>
+                            }
                             <li><a class="dropdown-item" href="#"><i class="bi bi-signpost-2 me-2" style="color: #0a9396;"></i>Route Distance Determination</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-building me-2" style="color: #0a9396;"></i>Warehouse Storage Emissions</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-recycle me-2" style="color: #0a9396;"></i>Return Process Carbon Lifecycle</a></li>

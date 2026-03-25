@@ -9,13 +9,16 @@ public class CustomerDashboardControl
 {
     private readonly IOrderService? _orderService;
     private readonly ICustomerService? _customerService;
+    private readonly IRefundService? _refundService;
 
     public CustomerDashboardControl(
         IOrderService? orderService = null,
-        ICustomerService? customerService = null)
+        ICustomerService? customerService = null,
+        IRefundService? refundService = null)
     {
         _orderService = orderService;
         _customerService = customerService;
+        _refundService = refundService;
     }
 
     // Helper method to get private field value using reflection
@@ -163,6 +166,14 @@ public class CustomerDashboardControl
         return GetPrivatePropertyValue<OrderStatus>(order, "OrderStatus");
     }
 
+    public List<Refund> GetCustomerRefunds(int customerId)
+    {
+        if (_refundService == null)
+            return new List<Refund>();
+
+        return _refundService.GetCustomerRefunds(customerId);
+    }
+
     public List<Returnrequest> GetCustomerReturns(int customerId)
     {
         return new List<Returnrequest>();
@@ -181,5 +192,36 @@ public class CustomerDashboardControl
     public void UpdateNotificationPreferences(int customerId, bool emailEnabled, bool smsEnabled)
     {
         // TODO: Implement when notification service is available
+    }
+
+    // Helper methods for refund properties
+    public int GetRefundId(Refund refund)
+    {
+        if (refund == null) return 0;
+        return GetPrivatePropertyValue<int>(refund, "Refundid");
+    }
+
+    public int GetRefundOrderId(Refund refund)
+    {
+        if (refund == null) return 0;
+        return GetPrivatePropertyValue<int>(refund, "Orderid");
+    }
+
+    public DateTime GetRefundDate(Refund refund)
+    {
+        if (refund == null) return DateTime.MinValue;
+        return GetPrivatePropertyValue<DateTime>(refund, "Returndate");
+    }
+
+    public decimal GetRefundAmount(Refund refund)
+    {
+        if (refund == null) return 0;
+        return GetPrivatePropertyValue<decimal>(refund, "Depositrefundamount");
+    }
+
+    public string GetRefundMethod(Refund refund)
+    {
+        if (refund == null) return "Unknown";
+        return GetPrivatePropertyValue<string>(refund, "Returnmethod") ?? "Unknown";
     }
 }

@@ -326,28 +326,4 @@
             }
         </div>
     </div>
-
-    <div class="row mb-4 g-3">
-        <div class="col-md-4">
-            <div class="card section-card h-100">
-                <div class="card-body text-center">
-                    <i class="bi bi-search fs-1" style="color: #2d7a4f;"></i>
-                    <h6 class="mt-2">Track Order</h6>
-                    <p class="small text-muted">Enter your order ID to track its status</p>
-
-                    <form asp-action="CustomerOrderTracking" method="get">
-                        <input type="hidden" name="customerId" value="@customerId" />
-                        <div class="input-group">
-                            <input type="number"
-                                name="timelineOrderId"
-                                class="form-control form-control-sm"
-                                placeholder="Order ID"
-                                required />
-                            <button type="submit" class="btn btn-primary btn-sm">Track</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>

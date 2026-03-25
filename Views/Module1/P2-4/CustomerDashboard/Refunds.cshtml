@@ -1,6 +1,10 @@
+@using ProRental.Domain.Module1.P24.Controls;
+@inject CustomerDashboardControl control;
+
 @{
     ViewData["Title"] = "Deposit Refunds";
     var customerId = ViewData["CustomerId"] as int? ?? 0;
+    var refunds = ViewData["Refunds"] as List<ProRental.Domain.Entities.Refund> ?? new List<ProRental.Domain.Entities.Refund>();
 }
 
 <div class="container py-4">
@@ -24,16 +28,36 @@
                             <th>Order ID</th>
                             <th>Refund Date</th>
                             <th>Amount</th>
-                            <th>Status</th>
+                            <th>Return Method</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                No refunds found.
-                            </td>
-                        </tr>
+                        @if (refunds.Count > 0)
+                        {
+                            @foreach (var refund in refunds)
+                            {
+                                <tr>
+                                    <td class="ps-3">@control.GetRefundId(refund)</td>
+                                    <td>@control.GetRefundOrderId(refund)</td>
+                                    <td>@control.GetRefundDate(refund).ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            $@control.GetRefundAmount(refund).ToString("0.00")
+                                        </span>
+                                    </td>
+                                    <td>@control.GetRefundMethod(refund)</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No refunds found.
+                                </td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>

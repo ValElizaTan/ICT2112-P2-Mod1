@@ -35,7 +35,7 @@ public class CustomerProfileController : Controller
             Customer? customer = null;
             try
             {
-                customer = _control.GetCustomerInformation(customerId);
+                customer = _control?.GetCustomerInformation(customerId);
                 Console.WriteLine($"Customer found: {customer != null}");
             }
             catch (Exception ex)

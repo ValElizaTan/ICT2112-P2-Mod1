@@ -122,7 +122,11 @@ public class Module1Controller : Controller
     // ── Staff Login ──────────────────────────────────────────────────────
 
     // GET /Module1/StaffLogin
-    public IActionResult StaffLogin() => View("P2-6/StaffLogin");
+    public IActionResult StaffLogin()
+    {
+        ViewBag.ActiveTab = "staff";
+        return View("P2-6/Login");
+    }
 
     // POST /Module1/StaffLogin
     [HttpPost]
@@ -134,7 +138,8 @@ public class Module1Controller : Controller
         if (!result.IsSuccess)
         {
             ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Staff login failed.");
-            return View("P2-6/StaffLogin");
+            ViewBag.ActiveTab = "staff";
+            return View("P2-6/Login");
         }
 
         var roleString = result.Session!.RoleString;
@@ -143,7 +148,8 @@ public class Module1Controller : Controller
         {
             ModelState.AddModelError(string.Empty,
                 "Access denied. This portal is for staff and administrators only.");
-            return View("P2-6/StaffLogin");
+            ViewBag.ActiveTab = "staff";
+            return View("P2-6/Login");
         }
 
         HttpContext.Session.SetInt32("SessionId", result.Session.SessionId);
