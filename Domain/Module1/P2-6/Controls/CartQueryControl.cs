@@ -68,47 +68,50 @@ public class CartQueryControl
         };
     }
 
-    public List<CartDisplayItem> GetCartDisplayItems(int cartId)
+public List<CartDisplayItem> GetCartDisplayItems(int cartId)
+{
+    var cart = _cartMapper.FindById(cartId);
+
+    if (cart == null)
     {
-        var cart = _cartMapper.FindById(cartId);
-
-        if (cart == null)
-        {
-            return new List<CartDisplayItem>();
-        }
-
-        int rentalDays = GetRentalDays(cart);
-
-        return cart.GetItems()
-            .OrderBy(ci => ci.GetProductId())
-            .Select(ci =>
-            {
-                var product = ci.GetProduct() ?? _catalogueService.GetProductById(ci.GetProductId());
-
-                if (product != null)
-                {
-                    ci.SetProduct(product);
-                }
-
-                decimal itemPrice = product?.Productdetail?.GetPrice()
-                                    ?? product?.GetPrice()
-                                    ?? 0m;
-
-                return new CartDisplayItem
-                {
-                    ProductId = ci.GetProductId(),
-                    ProductName = product?.GetProductName() ?? $"Product {ci.GetProductId()}",
-                    Quantity = ci.GetQuantity(),
-                    IsSelected = ci.IsSelected(),
-                    IsObtainable = true,
-                    AvailableQuantity = null,
-                    RentalDays = rentalDays,
-                    CartItemPrice = itemPrice,
-                    Subtotal = 0m
-                };
-            })
-            .ToList();
+        return new List<CartDisplayItem>();
     }
+
+    int rentalDays = GetRentalDays(cart);
+
+    return cart.GetItems()
+        .OrderBy(ci => ci.GetProductId())
+        .Select(ci =>
+        {
+            var product = ci.GetProduct() ?? _catalogueService.GetProductById(ci.GetProductId());
+
+            if (product != null)
+            {
+                ci.SetProduct(product);
+            }
+
+            // ✅ ALWAYS use this (single source of truth)
+            decimal unitPrice = ci.GetUnitPrice();
+            int qty = ci.GetQuantity();
+
+            decimal subtotal = unitPrice * qty;
+
+            return new CartDisplayItem
+            {
+                ProductId = ci.GetProductId(),
+                ProductName = product?.GetProductName() ?? $"Product {ci.GetProductId()}",
+                Quantity = qty,
+                IsSelected = ci.IsSelected(),
+                IsObtainable = true,
+                AvailableQuantity = null,
+                RentalDays = rentalDays,
+
+                CartItemPrice = unitPrice,
+                Subtotal = subtotal
+            };
+        })
+        .ToList();
+}
 
     private int GetRentalDays(Cart cart)
     {
