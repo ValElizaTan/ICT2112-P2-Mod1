@@ -154,6 +154,7 @@ public class Module1Controller : Controller
 
         HttpContext.Session.SetInt32("SessionId", result.Session.SessionId);
         HttpContext.Session.SetString("UserName", result.UserName ?? StaffEmail);
+        HttpContext.Session.SetString("UserEmail", StaffEmail);
         HttpContext.Session.SetString("UserRole", roleString);
 
         return RedirectToAction("StaffLoginSuccess");
@@ -268,9 +269,9 @@ public class Module1Controller : Controller
     }
 
     // GET /Module1/OrderDetail/5
-    public IActionResult OrderDetail(int orderId)
+    public IActionResult OrderDetail(int id)
     {
-        var order = _orderService.GetOrder(orderId);
+        var order = _orderService.GetOrder(id);
         return View("P2-6/OrderDetail", order);
     }
 
@@ -317,6 +318,6 @@ public class Module1Controller : Controller
         TempData["CreatedOrderId"]     = order.OrderId;
         TempData["CreatedOrderStatus"] = order.CurrentStatus?.ToString();
 
-        return RedirectToAction("OrderDetail", new { orderId = order.OrderId });
+        return RedirectToAction("OrderDetail", new { id = order.OrderId });
     }
 }

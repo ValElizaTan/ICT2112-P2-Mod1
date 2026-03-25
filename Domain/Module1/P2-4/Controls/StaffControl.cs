@@ -73,6 +73,11 @@ public class StaffControl : IStaffService
         return staff;
     }
 
+    public Staff? GetStaffByEmail(string email)
+    {
+        return _staffGateway.FindByEmail(email);
+    }
+
     public List<Staff> GetStaff()
     {
         return _staffGateway.FindAll();

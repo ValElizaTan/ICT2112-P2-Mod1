@@ -40,6 +40,9 @@ public class FakeInventoryService : IInventoryService
     public List<Product>? GetProductsByStatus(ProductStatus status)
         => GetAllProducts();
 
+    public bool TriggerReturnProcess(int orderId)
+        => true;
+
     // ── Helper ────────────────────────────────────────
 
     private Product CreateProduct(int id, string name, decimal price, string desc,

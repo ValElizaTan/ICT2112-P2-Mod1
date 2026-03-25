@@ -17,7 +17,15 @@ public class StaffProfileController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        return ViewProfile(1);
+        var email = HttpContext.Session.GetString("UserEmail");
+        if (string.IsNullOrEmpty(email))
+            return RedirectToAction("StaffLogin", "Module1");
+
+        var staff = _control.GetStaffByEmail(email);
+        if (staff == null)
+            return RedirectToAction("StaffLogin", "Module1");
+
+        return ViewProfile(staff.GetStaffInfo().StaffId);
     }
 
     public IActionResult ViewProfile(int staffId)
@@ -34,7 +42,6 @@ public class StaffProfileController : Controller
             PhoneNumber = info.User.PhoneNumber
         };
         return View("Index");
-
     }
     [HttpPost]
     public IActionResult UpdateStaffDetails(int staffId, string name, string email,

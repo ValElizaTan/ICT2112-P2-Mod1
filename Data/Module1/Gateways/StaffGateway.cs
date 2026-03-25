@@ -24,7 +24,9 @@ public class StaffGateway : IStaffGateway
     public Staff? FindByEmail(string email)
     {
         return _context.Staff
-            .FirstOrDefault(s => s.User.GetUserInfo().Email == email);
+            .Include(s => s.User)
+            .AsEnumerable()
+            .FirstOrDefault(s => s.User?.GetUserInfo()?.Email == email);
     }
 
     public void InsertStaff(Staff staff)

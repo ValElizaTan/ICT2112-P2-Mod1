@@ -180,7 +180,8 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IShipmentBuilder, ProRental.Domain.Module1.P24.Controls.ShipmentBuilder>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationPreferenceService, ProRental.Domain.Module1.P24.Controls.NotificationPreferenceControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IOrderTrackingService, ProRental.Domain.Module1.P24.Controls.OrderTrackingControl>();
-builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IRefundService, ProRental.Domain.Module1.P24.Controls.RefundControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.RefundControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IRefundService>(provider => provider.GetRequiredService<ProRental.Domain.Module1.P24.Controls.RefundControl>());
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.NotificationManager>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationSubject>(provider => provider.GetRequiredService<ProRental.Domain.Module1.P24.Controls.NotificationManager>());
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();

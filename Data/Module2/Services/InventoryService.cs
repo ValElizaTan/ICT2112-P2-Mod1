@@ -139,4 +139,15 @@ public class InventoryService : IInventoryService
         // Implement when Module 1 order processing wires this up
         return true;
     }
+
+    /// <summary>
+    /// Triggers the return/refund process for an order on Module 2's side.
+    /// Module 2 will handle inspection, cleaning, restocking, etc.
+    /// Stub — returns true until Module 2 implements real logic.
+    /// </summary>
+    public bool TriggerReturnProcess(int orderId)
+    {
+        // Awaiting Module 2 implementation for return pipeline processing
+        return true;
+    }
 }

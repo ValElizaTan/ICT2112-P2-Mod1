@@ -32,23 +32,25 @@
                             <li><a class="dropdown-item" asp-controller="OrderManagement" asp-action="Index"><i class="bi bi-clipboard-check me-2" style="color: #2d7a4f;"></i>Manage Orders</a></li>
                             @if (!_isStaff)
                             {
-                                <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
-                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
+                                <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-geo-alt me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-box-arrow-in-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
                                 <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="1"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Index"><i class="bi bi-person-walking me-2" style="color: #2d7a4f;"></i>Customer Dashboard</a></li>
                             }
                             @if (_isStaff)
                             {
                                 <li><a class="dropdown-item" asp-controller="Shipping" asp-action="DisplayShipmentList"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
                                 <li><a class="dropdown-item" asp-controller="NotificationDisplay" asp-action="Index" asp-route-userId="1"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
                                 <li><a class="dropdown-item" asp-controller="WalkInOrder" asp-action="Index"><i class="bi bi-person-walking me-2" style="color: #2d7a4f;"></i>Walk-in Orders</a></li>
+                                <li><a class="dropdown-item" asp-controller="StaffDashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2" style="color: #2d7a4f;"></i>Staff Dashboard</a></li>
                             }
                             <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Team 6</h6></li>
                             @if (_isStaff)
                             {
                                 <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
                             }
-                            <li><a class="dropdown-item" asp-controller="Catalogue" asp-action="Index"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
-                            <li><a class="dropdown-item" asp-controller="Module1" asp-action="Orders" asp-route-customerId="@Context.Session.GetInt32("CustomerId")"><i class="bi bi-list me-2" style="color: #2d7a4f;"></i>My Orders</a></li>
+                            <li><a class="dropdown-item" asp-controller="Catalogue" asp-action="Index"><i class="bi bi-cart-plus me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
+                            <li><a class="dropdown-item" asp-controller="Module1" asp-action="Orders" asp-route-customerId="@Context.Session.GetInt32("CustomerId")"><i class="bi bi-receipt me-2" style="color: #2d7a4f;"></i>My Orders</a></li>
                         </ul>
                     </li>
 
@@ -107,7 +109,7 @@
                             }
                             else if (navRole.Equals("STAFF", StringComparison.OrdinalIgnoreCase) || navRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
                             {
-                                <a asp-controller="StaffDashboard" asp-action="Index"
+                                <a asp-controller="StaffProfile" asp-action="Index"
                                    class="text-white-50 text-decoration-none">@HttpContextAccessor.HttpContext!.Session.GetString("UserName")</a>
                             }
                             else

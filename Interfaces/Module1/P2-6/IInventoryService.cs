@@ -22,4 +22,7 @@ public interface IInventoryService
     ProductStatus           CheckProductStatus(int productId);
     List<Inventoryitem>?    GetInventoryItemByStatus(InventoryStatus status);
     List<Product>?          GetProductsByStatus(ProductStatus status);
+
+    // ── Write (used by Module 1 Return/Refund Processing) ──────────
+    bool TriggerReturnProcess(int orderId);
 }

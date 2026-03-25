@@ -300,13 +300,11 @@ public partial class AppDbContext
                   .HasColumnName("hubtype").HasColumnType("hub_type");
         });
 
-        // User role mapping for the User entity is handled by generated AppDbContext mapping.
-        // The custom field mapping for UserRole has been removed to avoid conflicts with automatic property names.
-        // modelBuilder.Entity<User>(entity =>
-        // {
-        //     entity.Property<UserRole>("UserRole").HasField("_userRole").UsePropertyAccessMode(PropertyAccessMode.Field)
-        //           .HasColumnName("userrole").HasColumnType("user_role_enum");
-        // });
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.Property<UserRole>("UserRole").HasField("_userRole").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("userrole").HasColumnType("user_role_enum");
+        });
 
         modelBuilder.Entity<Vettingrecord>(entity =>
         {
