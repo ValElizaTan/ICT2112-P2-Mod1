@@ -135,32 +135,17 @@ public partial class AppDbContext
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.Property("NotificationType").HasField("_notificationType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationtype").HasColumnType("notification_type_enum");
+                  .HasColumnName("type").HasColumnType("notification_type_enum");
         });
 
-      //   modelBuilder.Entity<Notificationpreference>(entity =>
-      //   {
-      //        entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
-      //              .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
+        modelBuilder.Entity<Notificationpreference>(entity =>
+        {
+            entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("frequency").HasColumnType("notification_frequency_enum");
 
-      //        entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
-      //              .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
-      //    });
-      
-      modelBuilder.Entity<Notificationpreference>(entity =>
-            {
-            entity.Property("Notificationfrequency")
-                  .HasField("_notificationfrequency")
-                  .UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("frequency")
-                  .HasColumnType("notification_frequency_enum");
-
-            entity.Property("NotificationGranularity")
-                  .HasField("_notificationGranularity")
-                  .UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("granularity")
-                  .HasColumnType("notification_granularity_enum");
-            });
+            entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("granularity").HasColumnType("notification_granularity_enum");
+        });
 
         modelBuilder.Entity<Order>(entity =>
         {
@@ -169,6 +154,15 @@ public partial class AppDbContext
 
             entity.Property("DeliveryType").HasField("_deliveryType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("deliverytype").HasColumnType("delivery_duration_enum");
+        });
+
+        modelBuilder.Entity<Orderstatushistory>(entity =>
+        {
+            entity.Property("Status")
+                  .HasField("_status")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("status")
+                  .HasColumnType("order_history_status_enum");
         });
 
         modelBuilder.Entity<Payment>(entity =>
@@ -305,6 +299,14 @@ public partial class AppDbContext
             entity.Property("HubType").HasField("_hubType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("hubtype").HasColumnType("hub_type");
         });
+
+        // User role mapping for the User entity is handled by generated AppDbContext mapping.
+        // The custom field mapping for UserRole has been removed to avoid conflicts with automatic property names.
+        // modelBuilder.Entity<User>(entity =>
+        // {
+        //     entity.Property<UserRole>("UserRole").HasField("_userRole").UsePropertyAccessMode(PropertyAccessMode.Field)
+        //           .HasColumnName("userrole").HasColumnType("user_role_enum");
+        // });
 
         modelBuilder.Entity<Vettingrecord>(entity =>
         {

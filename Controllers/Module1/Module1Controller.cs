@@ -1,7 +1,9 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using ProRental.Domain.Controls;
 using ProRental.Domain.Enums;
 using ProRental.Interfaces.Domain;
+using ProRental.Data.Module1.Interfaces;
 using ProRental.Domain.Entities;
 
 namespace ProRental.Controllers.Module1;
@@ -14,33 +16,28 @@ public class Module1Controller : Controller
 {
     private readonly AuthenticationControl _authControl;
     private readonly CustomerIDValidationControl _customerIdValidationControl;
-
     private readonly IOrderService _orderService;
-    private readonly ProRental.Data.Module1.Interfaces.ICustomerGateway _customerGateway;
+    private readonly IShippingOptionService _shippingService;
+    private readonly ICustomerGateway _customerGateway;
 
-private readonly IShippingOptionService _shippingService;
-
-public Module1Controller(
-    AuthenticationControl authControl,
-    CustomerIDValidationControl customerIdValidationControl,
-    IOrderService orderService,
-    IShippingOptionService shippingService,
-    ProRental.Data.Module1.Interfaces.ICustomerGateway customerGateway)
-{
-    _authControl = authControl;
-    _customerIdValidationControl = customerIdValidationControl;
-    _orderService = orderService;
-    _shippingService = shippingService;
-    _customerGateway = customerGateway;
-}
+    public Module1Controller(
+        AuthenticationControl authControl,
+        CustomerIDValidationControl customerIdValidationControl,
+        IOrderService orderService,
+        IShippingOptionService shippingService,
+        ICustomerGateway customerGateway)
+    {
+        _authControl = authControl;
+        _customerIdValidationControl = customerIdValidationControl;
+        _orderService = orderService;
+        _shippingService = shippingService;
+        _customerGateway = customerGateway;
+    }
 
     // ── Login ────────────────────────────────────────────────────────────
 
     // GET /Module1/Login
-    public IActionResult Login()
-    {
-        return View("P2-6/Login");
-    }
+    public IActionResult Login() => View("P2-6/Login");
 
     // POST /Module1/Login
     [HttpPost]
@@ -58,18 +55,7 @@ public Module1Controller(
         HttpContext.Session.SetInt32("SessionId", result.Session!.SessionId);
         HttpContext.Session.SetString("UserName", result.UserName ?? email);
         HttpContext.Session.SetString("UserRole", result.Session.RoleString);
-        
-        if (result.Session.RoleString.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
-        {
-            var customer = _customerGateway.FindByEmail(email);
 
-            if (customer != null)
-            {
-                HttpContext.Session.SetInt32("CustomerId", customer.GetCustomerInfo().CustomerId);
-            }
-        }
-        
-        // Redirect to customer success page; action guard handles fallback to Home.
         return RedirectToAction("CustomerLoginSuccess");
     }
 
@@ -91,7 +77,7 @@ public Module1Controller(
     // GET /Module1/CustomerIdEntry
     public IActionResult CustomerIdEntry()
     {
-        return View("P2-6/_CustomerIdEntry");
+        return View("P2-6/CustomerIdEntry");
     }
 
     // POST /Module1/CustomerIdEntry
@@ -107,7 +93,6 @@ public Module1Controller(
             return View("P2-6/CustomerIdEntry");
         }
 
-        // Store the validated customer ID for the downstream checkout flow.
         HttpContext.Session.SetInt32("ValidatedCustomerId", result.CustomerId);
         return RedirectToAction("Index", "Cart");
     }
@@ -117,7 +102,6 @@ public Module1Controller(
     // GET /Module1/CustomerLoginSuccess
     public IActionResult CustomerLoginSuccess()
     {
-        // Guard: only accessible if a valid customer session exists.
         var role = HttpContext.Session.GetString("UserRole");
         if (string.IsNullOrEmpty(role) ||
             !role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
@@ -125,12 +109,8 @@ public Module1Controller(
             return RedirectToAction("Login");
         }
 
-        // Attempt to serve the dedicated success view; fall back to Home/Index
-        // if the view file has not been created yet.
         var viewPath = "P2-6/CustomerLoginSuccess";
-        var viewExists = ViewExists(viewPath);
-
-        return viewExists
+        return ViewExists(viewPath)
             ? View(viewPath)
             : RedirectToAction("Index", "Home");
     }
@@ -138,10 +118,7 @@ public Module1Controller(
     // ── Staff Login ──────────────────────────────────────────────────────
 
     // GET /Module1/StaffLogin
-    public IActionResult StaffLogin()
-    {
-        return View("P2-6/StaffLogin");
-    }
+    public IActionResult StaffLogin() => View("P2-6/StaffLogin");
 
     // POST /Module1/StaffLogin
     [HttpPost]
@@ -156,7 +133,6 @@ public Module1Controller(
             return View("P2-6/StaffLogin");
         }
 
-        // Reject non-staff accounts that attempt to use the staff portal.
         var roleString = result.Session!.RoleString;
         if (!Enum.TryParse<UserRole>(roleString, ignoreCase: true, out var role) ||
             (role != UserRole.STAFF && role != UserRole.ADMIN))
@@ -170,14 +146,12 @@ public Module1Controller(
         HttpContext.Session.SetString("UserName", result.UserName ?? StaffEmail);
         HttpContext.Session.SetString("UserRole", roleString);
 
-        // Redirect staff to the staff success / dashboard page.
         return RedirectToAction("StaffLoginSuccess");
     }
 
     // GET /Module1/StaffLoginSuccess
     public IActionResult StaffLoginSuccess()
     {
-        // Guard: only accessible if a valid staff session exists.
         var role = HttpContext.Session.GetString("UserRole");
         if (string.IsNullOrEmpty(role) ||
             (!role.Equals("STAFF", StringComparison.OrdinalIgnoreCase) &&
@@ -235,10 +209,6 @@ public Module1Controller(
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Returns true if the Razor view at the given path can be located by the view engine.
-    /// Used to enable graceful fallback when an optional view has not yet been created.
-    /// </summary>
     private bool ViewExists(string viewPath)
     {
         var result = HttpContext.RequestServices
@@ -248,121 +218,89 @@ public Module1Controller(
         return result.Success;
     }
 
-    // ── Order Management ──────────────────────────────────────────────────────
+    // ── Order Management ─────────────────────────────────────────────────
 
-// GET /Module1/Orders?customerId=1&status=all
-public IActionResult Orders(int customerId = 1, string status = "all")
-{
-    var orders = _orderService.GetOrdersByCustomer(customerId);
-
-    // Filter by status tab
-    var filtered = status.ToLower() switch
+    // GET /Module1/Orders?customerId=1&status=all
+    public IActionResult Orders(int customerId = 1, string status = "all")
     {
-        "pending"   => orders.Where(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.PENDING).ToList(),
-        "confirmed" => orders.Where(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.CONFIRMED ||
-                                         o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.PROCESSING).ToList(),
-        "dispatch"  => orders.Where(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.READY_FOR_DISPATCH ||
-                                         o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.DISPATCHED).ToList(),
-        "delivered" => orders.Where(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.DELIVERED).ToList(),
-        "cancelled" => orders.Where(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.CANCELLED).ToList(),
-        _           => orders
-    };
+        var orders = _orderService.GetOrdersByCustomer(customerId);
 
-    ViewBag.CustomerId  = customerId;
-    ViewBag.ActiveTab   = status;
-    ViewBag.AllCount        = orders.Count;
-    ViewBag.PendingCount    = orders.Count(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.PENDING);
-    ViewBag.ConfirmedCount  = orders.Count(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.CONFIRMED ||
-                                                 o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.PROCESSING);
-    ViewBag.DispatchCount   = orders.Count(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.READY_FOR_DISPATCH ||
-                                                 o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.DISPATCHED);
-    ViewBag.DeliveredCount  = orders.Count(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.DELIVERED);
-    ViewBag.CancelledCount  = orders.Count(o => o.CurrentStatus == ProRental.Domain.Enums.OrderStatus.CANCELLED);
+        var filtered = status.ToLower() switch
+        {
+            "pending"   => orders.Where(o => o.CurrentStatus == OrderStatus.PENDING).ToList(),
+            "confirmed" => orders.Where(o => o.CurrentStatus == OrderStatus.CONFIRMED ||
+                                             o.CurrentStatus == OrderStatus.PROCESSING).ToList(),
+            "dispatch"  => orders.Where(o => o.CurrentStatus == OrderStatus.READY_FOR_DISPATCH ||
+                                             o.CurrentStatus == OrderStatus.DISPATCHED).ToList(),
+            "delivered" => orders.Where(o => o.CurrentStatus == OrderStatus.DELIVERED).ToList(),
+            "cancelled" => orders.Where(o => o.CurrentStatus == OrderStatus.CANCELLED).ToList(),
+            _           => orders
+        };
 
-    return View("P2-6/Orders", filtered);
-}
+        ViewBag.CustomerId     = customerId;
+        ViewBag.ActiveTab      = status;
+        ViewBag.AllCount       = orders.Count;
+        ViewBag.PendingCount   = orders.Count(o => o.CurrentStatus == OrderStatus.PENDING);
+        ViewBag.ConfirmedCount = orders.Count(o => o.CurrentStatus == OrderStatus.CONFIRMED ||
+                                                    o.CurrentStatus == OrderStatus.PROCESSING);
+        ViewBag.DispatchCount  = orders.Count(o => o.CurrentStatus == OrderStatus.READY_FOR_DISPATCH ||
+                                                    o.CurrentStatus == OrderStatus.DISPATCHED);
+        ViewBag.DeliveredCount = orders.Count(o => o.CurrentStatus == OrderStatus.DELIVERED);
+        ViewBag.CancelledCount = orders.Count(o => o.CurrentStatus == OrderStatus.CANCELLED);
 
-// GET /Module1/OrderDetail/5
-public IActionResult OrderDetail(int orderId)
-{
-    var order = _orderService.GetOrder(orderId);
-    return View("P2-6/OrderDetail", order);
-}
+        return View("P2-6/Orders", filtered);
+    }
 
-// POST /Module1/CancelOrder
-[HttpPost]
-[ValidateAntiForgeryToken]
-public IActionResult CancelOrder(int orderId, int customerId = 1)
-{
-    _orderService.CancelOrder(orderId);
-    return RedirectToAction("Orders", new { customerId, status = "cancelled" });
-}
-
-// GET /Module1/CreateOrderTest
-public IActionResult CreateOrderTest()
-{
-    return View("P2-6/CreateOrderTest");
-}
-
-// POST /Module1/CreateOrderTest
-[HttpPost]
-[ValidateAntiForgeryToken]
-public IActionResult CreateOrderTest(int customerId, int checkoutId,
-    string deliveryType, decimal totalAmount,
-    int productId1, int quantity1, decimal unitPrice1,
-    int productId2, int quantity2, decimal unitPrice2)
-{
-    var itemData = new List<(int, int, decimal, DateTime, DateTime)>
+    // GET /Module1/OrderDetail/5
+    public IActionResult OrderDetail(int orderId)
     {
-        (productId1, quantity1, unitPrice1, DateTime.UtcNow, DateTime.UtcNow.AddDays(7)),
-        (productId2, quantity2, unitPrice2, DateTime.UtcNow, DateTime.UtcNow.AddDays(7)),
-    };
+        var order = _orderService.GetOrder(orderId);
+        return View("P2-6/OrderDetail", order);
+    }
 
-    var productQuantities = new Dictionary<int, int>
+    // POST /Module1/CancelOrder
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CancelOrder(int orderId, int customerId = 1)
     {
-        { productId1, quantity1 },
-        { productId2, quantity2 }
-    };
+        _orderService.CancelOrder(orderId);
+        return RedirectToAction("Orders", new { customerId, status = "cancelled" });
+    }
 
-    var delivery = Enum.Parse<ProRental.Domain.Enums.DeliveryDuration>(deliveryType);
+    // GET /Module1/CreateOrderTest
+    public IActionResult CreateOrderTest()
+    {
+        return View("P2-6/CreateOrderTest");
+    }
 
-    var order = _orderService.CreateOrder(customerId, checkoutId, itemData,
-                                           delivery, totalAmount, productQuantities);
+    // POST /Module1/CreateOrderTest
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CreateOrderTest(int customerId, int checkoutId,
+        string deliveryType, decimal totalAmount,
+        int productId1, int quantity1, decimal unitPrice1,
+        int productId2, int quantity2, decimal unitPrice2)
+    {
+        var itemData = new List<(int, int, decimal, DateTime, DateTime)>
+        {
+            (productId1, quantity1, unitPrice1, DateTime.UtcNow, DateTime.UtcNow.AddDays(7)),
+            (productId2, quantity2, unitPrice2, DateTime.UtcNow, DateTime.UtcNow.AddDays(7)),
+        };
 
-    TempData["CreatedOrderId"]     = order.OrderId;
-    TempData["CreatedOrderStatus"] = order.CurrentStatus?.ToString();
+        var productQuantities = new Dictionary<int, int>
+        {
+            { productId1, quantity1 },
+            { productId2, quantity2 }
+        };
 
-    return RedirectToAction("OrderDetail", new { orderId = order.OrderId });
-}
-// ── Fake Cart Test ─────────────────────────────────────────────
+        var delivery = Enum.Parse<DeliveryDuration>(deliveryType);
 
-// GET /Module1/FakeCart
-// public IActionResult FakeCart()
-// {
-//     var product1 = new Product();
-//     product1.SetPrice(10);
+        var order = _orderService.CreateOrder(customerId, checkoutId, itemData,
+                                               delivery, totalAmount, productQuantities);
 
-//     var product2 = new Product();
-//     product2.SetPrice(25);
+        TempData["CreatedOrderId"]     = order.OrderId;
+        TempData["CreatedOrderStatus"] = order.CurrentStatus?.ToString();
 
-//     var items = new List<SelectedItem>
-//     {
-//         new SelectedItem(product1, 2),
-//         new SelectedItem(product2, 1)
-//     };
-
-//     var costControl = new CostCalculationControl(_shippingService);
-
-//     // 🔥 STEP 1: Rental cost
-//     var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
-
-//     // 🔥 STEP 2: Final cost (shipping)
-//     summary = costControl.CalculateFinalOrderCost(
-//         items,
-//         3, // rental period
-//         DeliveryDuration.NextDay.ToString()
-// );
-
-//     return View("P2-6/FakeCart", summary);
-// }
+        return RedirectToAction("OrderDetail", new { orderId = order.OrderId });
+    }
 }

@@ -1,0 +1,196 @@
+<div id="orders" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h6 class="fw-bold mb-0"><i class="bi bi-cart3 me-2" style="color:#2d7a4f;"></i>Order List</h6>
+        <ul class="nav nav-pills gap-1" id="orderTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active py-1 px-2" data-bs-toggle="pill" data-bs-target="#tab-all" type="button" style="font-size:.78rem;">All</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-1 px-2" data-bs-toggle="pill" data-bs-target="#tab-pending" type="button" style="font-size:.78rem;">Pending</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-1 px-2" data-bs-toggle="pill" data-bs-target="#tab-dispatched" type="button" style="font-size:.78rem;">Dispatched</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link py-1 px-2" data-bs-toggle="pill" data-bs-target="#tab-overdue" type="button" style="font-size:.78rem;color:#dc3545;">Overdue</button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="tab-all" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 tbl">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Rental Period</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.Orders != null && ((IEnumerable<dynamic>)ViewBag.Orders).Any())
+                            {
+                                foreach (var order in ViewBag.Orders)
+                                {
+                                    var badgeClass = order.Status switch {
+                                        "Pending"    => "badge-pending",
+                                        "Dispatched" => "badge-dispatched",
+                                        "Returned"   => "badge-returned",
+                                        "Overdue"    => "badge-overdue",
+                                        _            => "bg-secondary text-white"
+                                    };
+                                    <tr>
+                                        <td class="ps-3 fw-semibold small">#@order.OrderId</td>
+                                        <td class="small">@order.CustomerName</td>
+                                        <td class="small text-muted">@order.ItemCount item(s)</td>
+                                        <td class="small text-muted">@order.StartDate.ToString("d MMM") - @order.EndDate.ToString("d MMM yy")</td>
+                                        <td class="small fw-semibold">$@order.Total.ToString("0.00")</td>
+                                        <td><span class="badge @badgeClass rounded-pill badge-xs">@order.Status</span></td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a asp-controller="Module1" asp-action="OrderDetail" asp-route-id="@order.OrderId" class="btn btn-outline-secondary btn-sm py-0"><i class="bi bi-eye"></i></a>
+                                                @if (order.Status == "Pending")
+                                                {
+                                                    <form asp-controller="StaffDashboard" asp-action="NotifyReadyForDispatch" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                                                        <button type="submit" class="btn btn-success btn-sm py-0" title="Mark ready for dispatch"><i class="bi bi-truck"></i></button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="7" class="text-center text-muted py-4 small"><i class="bi bi-inbox fs-4 d-block mb-1"></i>No orders found.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-pending" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 tbl">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Order ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Due</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.PendingOrders != null && ((IEnumerable<dynamic>)ViewBag.PendingOrders).Any())
+                            {
+                                foreach (var order in ViewBag.PendingOrders)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-semibold small">#@order.OrderId</td>
+                                        <td class="small">@order.CustomerName</td>
+                                        <td class="small text-muted">@order.ItemCount item(s)</td>
+                                        <td class="small text-muted">@order.StartDate.ToString("d MMM yy")</td>
+                                        <td>
+                                            <form asp-controller="StaffDashboard" asp-action="NotifyReadyForDispatch" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="orderId" value="@order.OrderId" />
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="bi bi-truck me-1"></i>Mark Ready</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4 small"><i class="bi bi-check-circle fs-4 d-block mb-1 text-success"></i>No pending orders.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-dispatched" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 tbl">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Order ID</th>
+                                <th>Customer</th>
+                                <th>Dispatched On</th>
+                                <th>Expected Return</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.DispatchedOrders != null && ((IEnumerable<dynamic>)ViewBag.DispatchedOrders).Any())
+                            {
+                                foreach (var order in ViewBag.DispatchedOrders)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-semibold small">#@order.OrderId</td>
+                                        <td class="small">@order.CustomerName</td>
+                                        <td class="small text-muted">@order.DispatchedOn.ToString("d MMM yy")</td>
+                                        <td class="small text-muted">@order.EndDate.ToString("d MMM yy")</td>
+                                        <td><a asp-controller="Module1" asp-action="OrderDetail" asp-route-id="@order.OrderId" class="btn btn-outline-secondary btn-sm py-0"><i class="bi bi-eye"></i></a></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4 small"><i class="bi bi-inbox fs-4 d-block mb-1"></i>No dispatched orders.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-overdue" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 tbl">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Order ID</th>
+                                <th>Customer</th>
+                                <th>Was Due</th>
+                                <th>Days Overdue</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (ViewBag.OverdueOrders != null && ((IEnumerable<dynamic>)ViewBag.OverdueOrders).Any())
+                            {
+                                foreach (var order in ViewBag.OverdueOrders)
+                                {
+                                    <tr class="table-danger-subtle">
+                                        <td class="ps-3 fw-semibold small text-danger">#@order.OrderId</td>
+                                        <td class="small">@order.CustomerName</td>
+                                        <td class="small text-danger">@order.EndDate.ToString("d MMM yy")</td>
+                                        <td><span class="badge bg-danger rounded-pill badge-xs">@order.DaysOverdue day(s)</span></td>
+                                        <td><a asp-controller="Module1" asp-action="ContactCustomer" asp-route-id="@order.OrderId" class="btn btn-danger btn-sm py-0"><i class="bi bi-bell me-1"></i>Notify</a></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="5" class="text-center text-muted py-4 small"><i class="bi bi-check-circle fs-4 d-block mb-1 text-success"></i>No overdue orders.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="card-footer bg-white border-top d-flex justify-content-end py-2">
+        <a asp-controller="Module1" asp-action="AllOrders" class="btn btn-sm btn-outline-secondary">View All Orders <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+</div>

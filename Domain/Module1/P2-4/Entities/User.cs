@@ -15,7 +15,7 @@ public partial class User
 {
     private UserRole _userRole;
     private UserRole UserRole { get => _userRole; set => _userRole = value; }
-    private User() { }
+    protected User() { }
     public User(int userId, UserRole userRole, string name, string email, string passwordHash, int phoneCountry, string phoneNumber)
     {
         _userid = userId;
@@ -41,7 +41,7 @@ public partial class User
 
     public UserInfo GetUserInfo() => new(
         GetUserId(),
-        UserRole,
+        _userRole,
         GetName(),
         GetEmail(),
         GetPhoneCountry(),

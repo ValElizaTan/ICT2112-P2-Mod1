@@ -1,0 +1,337 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Staff Update Order Status";
+
+    var orders = ViewBag.Orders as List<Order> ?? new List<Order>();
+    var selectedTimelineOrderId = ViewBag.SelectedTimelineOrderId as int?;
+    var selectedTimeline = ViewBag.SelectedTimeline as List<Orderstatushistory> ?? new List<Orderstatushistory>();
+
+    var allStatuses = new List<OrderStatus>
+    {
+        OrderStatus.PENDING,
+        OrderStatus.CONFIRMED,
+        OrderStatus.PROCESSING,
+        OrderStatus.READY_FOR_DISPATCH,
+        OrderStatus.DISPATCHED,
+        OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED
+    };
+
+    var selectedOrder = selectedTimelineOrderId.HasValue
+        ? orders.FirstOrDefault(o => o.GetOrderId() == selectedTimelineOrderId.Value)
+        : null;
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus? status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "badge-pending",
+            OrderStatus.CONFIRMED => "badge-confirmed",
+            OrderStatus.PROCESSING => "badge-processing",
+            OrderStatus.READY_FOR_DISPATCH => "badge-ready",
+            OrderStatus.DISPATCHED => "badge-dispatched",
+            OrderStatus.DELIVERED => "badge-delivered",
+            OrderStatus.CANCELLED => "badge-cancelled",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    public bool IsStatusReached(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return false;
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED;
+        }
+
+        var sequence = new List<OrderStatus>
+        {
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.READY_FOR_DISPATCH,
+            OrderStatus.DISPATCHED,
+            OrderStatus.DELIVERED
+        };
+
+        var stepIndex = sequence.IndexOf(step);
+        var currentIndex = sequence.IndexOf(current.Value);
+
+        if (step == OrderStatus.CANCELLED) return false;
+        if (stepIndex < 0 || currentIndex < 0) return false;
+
+        return stepIndex <= currentIndex;
+    }
+
+    public string GetStepClass(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return "step step-muted";
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED
+                ? "step step-active step-cancelled"
+                : "step step-muted";
+        }
+
+        return IsStatusReached(step, current) ? "step step-active" : "step step-muted";
+    }
+}
+
+<style>
+    .tracking-card,
+    .section-card,
+    .queue-card {
+        border-radius: 18px;
+        box-shadow: 0 .125rem .5rem rgba(0,0,0,.08);
+        border: 0;
+    }
+
+    .queue-card {
+        border: 1px solid #e9ecef;
+        padding: 1rem;
+        background: #fff;
+        height: 100%;
+    }
+
+    .badge-pending { background: #fff3cd; color: #856404; }
+    .badge-confirmed { background: #cff4fc; color: #055160; }
+    .badge-processing { background: #ffe5b4; color: #7a4b00; }
+    .badge-ready { background: #d1e7dd; color: #0a3622; }
+    .badge-dispatched { background: #cfe2ff; color: #084298; }
+    .badge-delivered { background: #d1e7dd; color: #0a3622; }
+    .badge-cancelled { background: #f8d7da; color: #842029; }
+
+    .timeline-wrapper {
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .timeline-horizontal {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        min-width: 900px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .step {
+        position: relative;
+        flex: 1 1 0;
+        text-align: center;
+        padding: 0 8px;
+    }
+
+    .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 100%;
+        height: 3px;
+        background: #dee2e6;
+        z-index: 1;
+    }
+
+    .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        margin: 0 auto 10px auto;
+        position: relative;
+        z-index: 2;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+        background: #adb5bd;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .step-active .step-dot {
+        background: #0d6efd;
+    }
+
+    .step-cancelled .step-dot {
+        background: #dc3545;
+    }
+
+    .step-active .step-label {
+        color: #212529;
+    }
+
+    .step-muted .step-label {
+        color: #adb5bd;
+    }
+</style>
+
+<div class="container py-4">
+    @if (selectedOrder == null)
+    {
+        <div class="alert alert-danger">Order not found.</div>
+    }
+    else
+    {
+        var currentStatus = selectedOrder.GetStatus();
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Update Order #@selectedOrder.GetOrderId()</h2>
+                <div class="text-muted">View timeline and update this order status.</div>
+            </div>
+            <a asp-action="StaffOrderTracking"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to Orders
+            </a>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(ViewBag.Message as string))
+        {
+            <div class="alert alert-success shadow-sm">
+                @ViewBag.Message
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+        {
+            <div class="alert alert-danger shadow-sm">
+                @ViewBag.ErrorMessage
+            </div>
+        }
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="queue-card">
+                    <div class="text-muted small">Order ID</div>
+                    <div class="fw-semibold">#@selectedOrder.GetOrderId()</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="queue-card">
+                    <div class="text-muted small">Customer ID</div>
+                    <div class="fw-semibold">#@selectedOrder.GetCustomerId()</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="queue-card">
+                    <div class="text-muted small">Order Date</div>
+                    <div class="fw-semibold">@selectedOrder.GetOrderDate().ToString("dd MMM yyyy, hh:mm tt")</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="queue-card">
+                    <div class="text-muted small">Total Amount</div>
+                    <div class="fw-semibold">$@selectedOrder.GetTotalAmount().ToString("0.00")</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card tracking-card mb-4">
+            <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">Order Status</h5>
+                <span class="badge @GetBadgeClass(currentStatus) rounded-pill fs-6">
+                    @currentStatus
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="timeline-wrapper">
+                    <ul class="timeline-horizontal">
+                        @foreach (var step in allStatuses)
+                        {
+                            <li class="@GetStepClass(step, currentStatus)">
+                                <div class="step-dot"></div>
+                                <div class="step-label">@step</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="card section-card mb-4">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold">Single Update Status</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="UpdateOrderStatus" method="post">
+                    <input type="hidden" name="orderId" value="@selectedOrder.GetOrderId()" />
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">New Status</label>
+                            <select name="newStatus" class="form-select" required>
+                                @foreach (var s in allStatuses)
+                                {
+                                    <option value="@s">@s</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Remark</label>
+                            <input name="remark" class="form-control" placeholder="Remark" />
+                        </div>
+
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" type="submit">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card section-card">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold">Timeline History</h5>
+            </div>
+            <div class="card-body">
+                @if (!selectedTimeline.Any())
+                {
+                    <div class="alert alert-secondary mb-0">
+                        No timeline records found for this order.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Timestamp</th>
+                                    <th>Updated By</th>
+                                    <th>Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in selectedTimeline.OrderByDescending(t => t.GetTimestamp()))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge @GetBadgeClass((OrderStatus?)(int?)item.GetStatus()) rounded-pill">
+                                                @item.GetStatus()
+                                            </span>
+                                        </td>
+                                        <td>@item.GetTimestamp().ToString("dd MMM yyyy, hh:mm tt")</td>
+                                        <td>@item.GetUpdatedBy()</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.GetRemark()) ? "—" : item.GetRemark())</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

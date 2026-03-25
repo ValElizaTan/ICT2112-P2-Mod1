@@ -101,7 +101,7 @@
                             <li><a class="dropdown-item" href="#"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
                             <li><a class="dropdown-item" href="#"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
+                            <li><a class="dropdown-item" asp-controller="NotificationDisplay" asp-action="Index" asp-route-userId="1"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
                             <li><a class="dropdown-item" href="/Cart"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
                         </ul>
                     </li>
@@ -360,14 +360,17 @@
                                     class="list-group-item list-group-item-action border-0 px-0 py-2">
                                         <i class="bi bi-cart-plus me-2" style="color: #2d7a4f;"></i>Place Order
                                 </a>
-                                <a href="/Module1/TrackOrder" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                <a asp-controller="CustomerDashboard" asp-action="TrackOrder" asp-route-customerId="1" class="list-group-item list-group-item-action border-0 px-0 py-2">
                                     <i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Track Order
                                 </a>
-                                <a href="/Module1/MyReturns" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                <a asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1" class="list-group-item list-group-item-action border-0 px-0 py-2">
                                     <i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>My Returns
                                 </a>
-                                <a href="/Module1/Notifications" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                <a asp-controller="CustomerDashboard" asp-action="Notifications" asp-route-customerId="1" class="list-group-item list-group-item-action border-0 px-0 py-2">
                                     <i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Notifications
+                                </a>
+                                <a asp-controller="CustomerDashboard" asp-action="Index" asp-route-customerId="1" class="list-group-item list-group-item-action border-0 px-0 py-2 fw-semibold" style="color: #2d7a4f;">
+                                    <i class="bi bi-speedometer2 me-2"></i>My Dashboard
                                 </a>
                             </div>
                         </div>
@@ -385,7 +388,7 @@
                                 <small class="text-muted">Operations &amp; inventory</small>
                             </div>
                             <div class="list-group list-group-flush">
-                                <a href="/Module1/ProcessWalkInOrder" class="list-group-item list-group-item-action border-0 px-0 py-2">
+                                <a asp-controller="WalkInOrder" asp-action="Index" class="list-group-item list-group-item-action border-0 px-0 py-2">
                                     <i class="bi bi-person-check me-2" style="color: #fd7e14;"></i>Process Walk-in Order
                                 </a>
                                 <a href="/Module2/ManageInventory" class="list-group-item list-group-item-action border-0 px-0 py-2">
@@ -544,6 +547,8 @@
     <!-- Scripts: jQuery → Bootstrap JS (required for dropdowns & navbar collapse) -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
+ 
+    @await Html.PartialAsync("_GlobalNotificationToast")
+    <script src="~/js/global-notifications.js"></script>
 </body>
 </html>

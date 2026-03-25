@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "Select Products";
+}
+
+<style>
+    .wio-step-dot { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0; }
+    .wio-step-dot.done  { background:#2d7a4f;color:#fff; }
+    .wio-step-dot.active{ background:#2d7a4f;color:#fff;box-shadow:0 0 0 4px rgba(45,122,79,.18); }
+    .wio-step-dot.idle  { background:#dee2e6;color:#6c757d; }
+    .wio-step-line      { flex-grow:1;height:2px;margin:0 4px;margin-bottom:18px; }
+    .wio-step-line.done { background:#2d7a4f; }
+    .wio-step-line.idle { background:#dee2e6; }
+    .wio-step-label     { font-size:.7rem;margin-top:4px;white-space:nowrap; }
+</style>
+
+<div class="d-flex align-items-center gap-2 mt-4 mb-3">
+    <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Dashboard
+    </a>
+    <h4 class="mb-0 fw-bold"><i class="bi bi-person-walking me-2" style="color:#2d7a4f;"></i>Walk-In Order</h4>
+</div>
+
+<div class="d-flex align-items-start mb-4">
+    <div class="text-center"><div class="wio-step-dot done"><i class="bi bi-check-lg"></i></div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Details</div></div>
+    <div class="wio-step-line done"></div>
+    <div class="text-center"><div class="wio-step-dot active">2</div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Products</div></div>
+    <div class="wio-step-line idle"></div>
+    <div class="text-center"><div class="wio-step-dot idle">3</div><div class="wio-step-label text-muted">Review</div></div>
+    <div class="wio-step-line idle"></div>
+    <div class="text-center"><div class="wio-step-dot idle"><i class="bi bi-check-lg"></i></div><div class="wio-step-label text-muted">Confirmed</div></div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-grid me-2" style="color:#2d7a4f;"></i>Select Products</h6>
+    </div>
+    <div class="card-body">
+        <form asp-action="ReviewOrder" method="get">
+            <div id="product-list" class="text-center py-5 text-muted">
+                <i class="bi bi-box-seam fs-1 d-block mb-3 text-secondary"></i>
+                <p class="mb-1 fw-semibold">No products loaded yet</p>
+                <p class="small">Product selection will be populated from the inventory service.</p>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary">Next: Review Order <i class="bi bi-arrow-right ms-1"></i></button>
+                <a asp-action="EnterCustomerDetails" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+            </div>
+        </form>
+    </div>
+</div>

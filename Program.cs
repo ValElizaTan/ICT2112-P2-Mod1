@@ -7,8 +7,6 @@ using ProRental.Domain.Entities;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
 using ProRental.Domain.Services;
-
-// uncomment when ready to code
 using ProRental.Data;
 using ProRental.Domain.Controls;
 using ProRental.Interfaces.Domain;
@@ -20,6 +18,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.Razor.RazorViewEngineOptions>(options =>
+{
+    options.ViewLocationFormats.Add("/Views/Module1/{1}/{0}.cshtml");
+});
 
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
@@ -158,20 +166,29 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Data source
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.ICustomerGateway, ProRental.Data.Module1.Gateways.CustomerGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IStaffGateway, ProRental.Data.Module1.Gateways.StaffGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IShipmentGateway, ProRental.Data.Module1.Gateways.ShipmentGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationGateway, ProRental.Data.Module1.Gateways.NotificationGateway>();
 builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationPreferenceGateway, ProRental.Data.Module1.Gateways.NotificationPreferenceGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderMapper, ProRental.Data.Module1.Gateways.OrderMapper>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IOrderStatusHistory, ProRental.Data.Module1.Gateways.OrderStatusHistoryGateway>();
 
 // Domain
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.ICustomerService, ProRental.Domain.Module1.P24.Controls.CustomerControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService, ProRental.Domain.Module1.P24.Controls.StaffControl>();
-builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
-builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IShipmentBuilder, ProRental.Domain.Module1.P24.Controls.ShipmentBuilder>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationPreferenceService, ProRental.Domain.Module1.P24.Controls.NotificationPreferenceControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IOrderTrackingService, ProRental.Domain.Module1.P24.Controls.OrderTrackingControl>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.NotificationManager>();
 builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationSubject>(provider => provider.GetRequiredService<ProRental.Domain.Module1.P24.Controls.NotificationManager>());
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.WalkInOrderControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffDashboardControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.ShipmentControl>();
 
 // Presentation/Controllers
-
+builder.Services.AddScoped<ProRental.Controllers.Module1.P24.CustomerProfileController>();
 
 //Team P2-5
 // Data source
@@ -196,7 +213,7 @@ builder.Services.AddSingleton<IPaymentProviderClient, MockPaymentProviderClient>
 builder.Services.AddScoped<IPaymentAdaptors, StripeAdapter>();
 builder.Services.AddScoped<IPaymentAdaptors, PayPalAdapter>();
 builder.Services.AddScoped<IPaymentAdaptors, AdyenAdapter>();
- 
+
 // Domain (controls — pure business logic, no DB dependency)
 builder.Services.AddScoped<IPaymentAdaptorSelector, PaymentAdaptorSelector>();
 builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayControl>();
@@ -221,10 +238,6 @@ builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
 builder.Services.AddScoped<CheckoutCostControl>();
 builder.Services.AddScoped<OrderBuilderControl>();
 builder.Services.AddScoped<CheckoutNotificationControl>();
-
-// Auth
-builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
-builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
 
 // Presentation/Controllers
 builder.Services.AddScoped<CatalogueController>();
@@ -252,7 +265,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseSession();      
+app.UseSession();
 app.UseRouting();
 app.UseAuthorization();
 

@@ -1,7 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using ProRental.Data.Module1.Interfaces;
 using ProRental.Data.UnitOfWork;
 using ProRental.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace ProRental.Data.Module1.Gateways;
 

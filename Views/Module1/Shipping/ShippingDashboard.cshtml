@@ -1,0 +1,150 @@
+@model ProRental.Domain.Entities.Shipment?
+
+@{
+    ViewData["Title"] = "Shipping Dashboard";
+}
+
+<style>
+    .stat-card { border-left: 4px solid transparent; transition: box-shadow .2s; }
+    .stat-card:hover { box-shadow: 0 .5rem 1.25rem rgba(0,0,0,.12) !important; }
+    .stat-card-blue   { border-left-color: #0d6efd; }
+    .stat-card-green  { border-left-color: #2d7a4f; }
+    .stat-card-orange { border-left-color: #fd7e14; }
+    .badge-dispatched { background: #cfe2ff; color: #084298; }
+    .badge-pending    { background: #fff3cd; color: #856404; }
+    .badge-ready      { background: #d1e7dd; color: #0a3622; }
+    .info-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; font-weight: 600; }
+    .info-value { font-size: .92rem; }
+    .tbl thead th { font-size: .78rem; }
+    .badge-xs { font-size: .7rem; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <a asp-controller="StaffDashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+        <h5 class="mb-0 fw-bold"><i class="bi bi-truck me-2 text-primary"></i>Shipping Dashboard</h5>
+    </div>
+    <form asp-controller="Shipping" asp-action="UpdateManualStatus" method="post">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-send me-1"></i>Process Dispatch
+        </button>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card stat-card-blue shadow-sm border-0 h-100">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small">Tracking ID</span>
+                    <i class="bi bi-upc-scan text-primary fs-5"></i>
+                </div>
+                @if (Model != null)
+                {
+                    var info = Model.GetShipmentInfo();
+                    <p class="fs-4 fw-bold mb-0 text-primary">#@info.TrackingId</p>
+                }
+                else
+                {
+                    <p class="fs-4 fw-bold mb-0 text-muted">—</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card stat-card-green shadow-sm border-0 h-100">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small">Dispatch Status</span>
+                    <i class="bi bi-check-circle text-success fs-5"></i>
+                </div>
+                @if (Model != null)
+                {
+                    var info = Model.GetShipmentInfo();
+                    <p class="fs-5 fw-bold mb-0">
+                        @if (info.DispatchStatus)
+                        {
+                            <span class="badge badge-dispatched rounded-pill">Dispatched</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pending rounded-pill">Pending</span>
+                        }
+                    </p>
+                }
+                else
+                {
+                    <p class="fs-5 fw-bold mb-0 text-muted">—</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card stat-card-orange shadow-sm border-0 h-100">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small">Weight</span>
+                    <i class="bi bi-box-seam text-warning fs-5"></i>
+                </div>
+                @if (Model != null)
+                {
+                    var info = Model.GetShipmentInfo();
+                    <p class="fs-4 fw-bold mb-0 text-warning">@info.Weight <small class="fs-6 fw-normal text-muted">kg</small></p>
+                }
+                else
+                {
+                    <p class="fs-4 fw-bold mb-0 text-muted">—</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white border-bottom py-3">
+        <h6 class="fw-bold mb-0"><i class="bi bi-list-ul me-2 text-primary"></i>Current Shipment Details</h6>
+    </div>
+    <div class="card-body">
+        @if (Model != null)
+        {
+            var info = Model.GetShipmentInfo();
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <p class="info-label mb-1">Tracking ID</p>
+                    <p class="info-value mb-3">#@info.TrackingId</p>
+
+                    <p class="info-label mb-1">Destination Address</p>
+                    <p class="info-value mb-3">@info.DestinationAddress</p>
+
+                    <p class="info-label mb-1">Batch ID</p>
+                    <p class="info-value mb-0">#@info.BatchId</p>
+                </div>
+                <div class="col-md-6">
+                    <p class="info-label mb-1">Weight</p>
+                    <p class="info-value mb-3">@info.Weight kg</p>
+
+                    <p class="info-label mb-1">Dispatch Status</p>
+                    <p class="info-value mb-0">
+                        @if (info.DispatchStatus)
+                        {
+                            <span class="badge badge-dispatched rounded-pill">Dispatched</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pending rounded-pill">Pending Dispatch</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-muted py-5 small">
+                <i class="bi bi-inbox fs-3 d-block mb-2"></i>No active shipment loaded.
+            </div>
+        }
+    </div>
+</div>
