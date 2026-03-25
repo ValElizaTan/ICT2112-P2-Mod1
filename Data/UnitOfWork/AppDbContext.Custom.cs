@@ -73,10 +73,10 @@ public partial class AppDbContext
         });
 
         modelBuilder.Entity<Cart>(entity =>
-        {
-            entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("status").HasColumnType("cart_status_enum");
-        });
+      {
+            entity.Property<CartStatus>("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("status").HasColumnType("cart_status_enum");
+      });
 
         modelBuilder.Entity<Checkout>(entity =>
         {
@@ -138,14 +138,29 @@ public partial class AppDbContext
                   .HasColumnName("notificationtype").HasColumnType("notification_type_enum");
         });
 
-        modelBuilder.Entity<Notificationpreference>(entity =>
-        {
-            entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
+      //   modelBuilder.Entity<Notificationpreference>(entity =>
+      //   {
+      //        entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
+      //              .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
 
-            entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
-        });
+      //        entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
+      //              .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
+      //    });
+      
+      modelBuilder.Entity<Notificationpreference>(entity =>
+            {
+            entity.Property("Notificationfrequency")
+                  .HasField("_notificationfrequency")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("frequency")
+                  .HasColumnType("notification_frequency_enum");
+
+            entity.Property("NotificationGranularity")
+                  .HasField("_notificationGranularity")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("granularity")
+                  .HasColumnType("notification_granularity_enum");
+            });
 
         modelBuilder.Entity<Order>(entity =>
         {
@@ -230,8 +245,8 @@ public partial class AppDbContext
 
         modelBuilder.Entity<RouteLeg>(entity =>
         {
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         // ==========================================
@@ -239,11 +254,11 @@ public partial class AppDbContext
         // ==========================================
         modelBuilder.Entity<ShippingOption>(entity =>
         {
-            entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("preferencetype").HasColumnType("preference_type");
+            //entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("preferencetype").HasColumnType("preference_type");
 
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<Staffaccesslog>(entity =>

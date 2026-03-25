@@ -4,22 +4,17 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
-using ProRental.Interfaces.Data;
-using ProRental.Data;
-using ProRental.Interfaces.Domain;
-using ProRental.Domain.Controls;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
 using ProRental.Domain.Services;
 
-
 // uncomment when ready to code
 using ProRental.Data;
 using ProRental.Domain.Controls;
-//using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
 using ProRental.Controllers;
+using ProRental.Domain.Module6.Controls;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -161,8 +156,19 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-4
 // Data source
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.ICustomerGateway, ProRental.Data.Module1.Gateways.CustomerGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.IStaffGateway, ProRental.Data.Module1.Gateways.StaffGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationGateway, ProRental.Data.Module1.Gateways.NotificationGateway>();
+builder.Services.AddScoped<ProRental.Data.Module1.Interfaces.INotificationPreferenceGateway, ProRental.Data.Module1.Gateways.NotificationPreferenceGateway>();
 
 // Domain
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.ICustomerService, ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.IStaffService, ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.StaffControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.CustomerControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationPreferenceService, ProRental.Domain.Module1.P24.Controls.NotificationPreferenceControl>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Controls.NotificationManager>();
+builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotificationSubject>(provider => provider.GetRequiredService<ProRental.Domain.Module1.P24.Controls.NotificationManager>());
 
 // Presentation/Controllers
 
@@ -177,40 +183,63 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 //Team P2-6
 // Data source
+builder.Services.AddScoped<ICatalogueService, CatalogueService>();
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
-builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<IInventoryService, FakeInventoryService>();
 builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
-// Domain
-
-// Presentation/Controllers
-builder.Services.AddScoped<IOrderService, OrderManagementControl>();
-
-// Data source (mappers / DB-backed service implementations)
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();
 builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
 builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
-
+builder.Services.AddScoped<ICartMapper, ProRental.Data.Module1.Gateways.CartMapper>();
+builder.Services.AddScoped<ICheckoutMapper, ProRental.Data.Module1.Gateways.CheckoutMapper>();
+builder.Services.AddSingleton<IPaymentProviderClient, MockPaymentProviderClient>();
+builder.Services.AddScoped<IPaymentAdaptors, StripeAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, PayPalAdapter>();
+builder.Services.AddScoped<IPaymentAdaptors, AdyenAdapter>();
+ 
 // Domain (controls — pure business logic, no DB dependency)
+builder.Services.AddScoped<IPaymentAdaptorSelector, PaymentAdaptorSelector>();
+builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayControl>();
+
+// Domain
+builder.Services.AddScoped<CatalogueControl>();
+builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<ISessionService, SessionControl>();
 builder.Services.AddScoped<AuthenticationControl>();
 builder.Services.AddScoped<CustomerIDValidationControl>();
+builder.Services.AddScoped<ICartService, CartControl>();
+builder.Services.AddScoped<CartSessionControl>();
+builder.Services.AddScoped<CartItemControl>();
+builder.Services.AddScoped<CartSelectionControl>();
+builder.Services.AddScoped<CartQueryControl>();
+builder.Services.AddScoped<CartCheckoutControl>();
+builder.Services.AddScoped<ICheckoutService, CheckoutControl>();
+builder.Services.AddScoped<CheckoutLifecycleControl>();
+builder.Services.AddScoped<CheckoutShippingControl>();
+builder.Services.AddScoped<CheckoutPaymentControl>();
+builder.Services.AddScoped<ICostCalculation, CostCalculationControl>();
+builder.Services.AddScoped<CheckoutCostControl>();
+builder.Services.AddScoped<OrderBuilderControl>();
+builder.Services.AddScoped<CheckoutNotificationControl>();
+// builder.Services.AddScoped<CheckoutCarbonControl>();
 
-// HTTP context accessor (required for session access in Razor layouts)
-builder.Services.AddHttpContextAccessor();
-
-// Session middleware (required for HttpContext.Session)
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromHours(2);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-});
+// Auth
+builder.Services.AddScoped<IAuthenticationService, ProRentalAuthenticationService>();
+builder.Services.AddScoped<ICustomerValidationService, CustomerValidationService>();
 
 // Presentation/Controllers
+builder.Services.AddScoped<CatalogueController>();
 builder.Services.AddScoped<Module1Controller>();
 
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
+
+builder.Services.AddHttpContextAccessor();
 var app = builder.Build();
 
 

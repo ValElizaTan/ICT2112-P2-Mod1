@@ -1,0 +1,95 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "User Notifications";
+    int userId = ViewData["UserId"] as int? ?? 1;
+    var notifications = ViewData["Notifications"] as List<Notification> ?? new List<Notification>();
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Notifications (@userId)</h2>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
+    </div>
+
+    @if (!notifications.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            No notifications found for user @userId.
+        </div>
+    }
+    else
+    {
+        <div class="row gx-3 gy-3">
+            @foreach (var n in notifications.OrderByDescending(x => x.GetNotificationInfo().DateSent))
+            {
+                var info = n.GetNotificationInfo();
+                <div class="col-md-6">
+                    <div class="card @(info.IsRead ? "border-secondary" : "border-primary")">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">@info.Type</span>
+                            <form method="post" asp-controller="NotificationDisplay" asp-action="MarkAsRead" class="mb-0">
+                                <input type="hidden" name="id" value="@info.NotificationId" />
+                                <input type="hidden" name="userId" value="@userId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Mark as read">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                                @Html.AntiForgeryToken()
+                            </form>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">@info.Message</p>
+                        </div>
+                        <div class="card-footer text-muted small d-flex justify-content-between">
+                            <span>@info.DateSent.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                            <span class="badge @(info.IsRead ? "bg-secondary" : "bg-success")">@(info.IsRead ? "Read" : "Unread")</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<div aria-live="polite" aria-atomic="true" class="position-fixed top-0 end-0 p-3" style="z-index: 1100; min-width: 280px;">
+    <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">New Notification</strong>
+            <small>now</small>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="notificationToastBody"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const userId = @userId;
+            let lastSeenId = @(ViewData["LatestNotificationId"] is int lid ? lid : 0);
+            let toastEl = document.getElementById('notificationToast');
+            let toastBody = document.getElementById('notificationToastBody');
+            let bsToast = new bootstrap.Toast(toastEl, { delay: 5000 });
+
+            async function checkPopup() {
+                try {
+                    const response = await fetch(`/NotificationDisplay/CheckPopup?userId=${userId}&lastSeenId=${lastSeenId}`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    if (data.show && data.id > lastSeenId) {
+                        lastSeenId = data.id;
+                        toastBody.textContent = data.message;
+                        bsToast.show();
+                    }
+                } catch (e) {
+                    console.error('Popup check failed', e);
+                }
+            }
+
+            checkPopup();
+            setInterval(checkPopup, 5000);
+        })();
+    </script>
+}
+

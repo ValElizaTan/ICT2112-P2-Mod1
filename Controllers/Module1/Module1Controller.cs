@@ -16,6 +16,7 @@ public class Module1Controller : Controller
     private readonly CustomerIDValidationControl _customerIdValidationControl;
 
     private readonly IOrderService _orderService;
+    private readonly ProRental.Data.Module1.Interfaces.ICustomerGateway _customerGateway;
 
 private readonly IShippingOptionService _shippingService;
 
@@ -23,12 +24,14 @@ public Module1Controller(
     AuthenticationControl authControl,
     CustomerIDValidationControl customerIdValidationControl,
     IOrderService orderService,
-    IShippingOptionService shippingService)
+    IShippingOptionService shippingService,
+    ProRental.Data.Module1.Interfaces.ICustomerGateway customerGateway)
 {
     _authControl = authControl;
     _customerIdValidationControl = customerIdValidationControl;
     _orderService = orderService;
     _shippingService = shippingService;
+    _customerGateway = customerGateway;
 }
 
     // ── Login ────────────────────────────────────────────────────────────
@@ -55,7 +58,17 @@ public Module1Controller(
         HttpContext.Session.SetInt32("SessionId", result.Session!.SessionId);
         HttpContext.Session.SetString("UserName", result.UserName ?? email);
         HttpContext.Session.SetString("UserRole", result.Session.RoleString);
+        
+        if (result.Session.RoleString.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
+        {
+            var customer = _customerGateway.FindByEmail(email);
 
+            if (customer != null)
+            {
+                HttpContext.Session.SetInt32("CustomerId", customer.GetCustomerInfo().CustomerId);
+            }
+        }
+        
         // Redirect to customer success page; action guard handles fallback to Home.
         return RedirectToAction("CustomerLoginSuccess");
     }
@@ -324,28 +337,32 @@ public IActionResult CreateOrderTest(int customerId, int checkoutId,
 // ── Fake Cart Test ─────────────────────────────────────────────
 
 // GET /Module1/FakeCart
-public IActionResult FakeCart()
-{
-    var product1 = new Product();
-    product1.SetPrice(10);
+// public IActionResult FakeCart()
+// {
+//     var product1 = new Product();
+//     product1.SetPrice(10);
 
-    var product2 = new Product();
-    product2.SetPrice(25);
+//     var product2 = new Product();
+//     product2.SetPrice(25);
 
-    var items = new List<SelectedItem>
-    {
-        new SelectedItem(product1, 2),
-        new SelectedItem(product2, 1)
-    };
+//     var items = new List<SelectedItem>
+//     {
+//         new SelectedItem(product1, 2),
+//         new SelectedItem(product2, 1)
+//     };
 
-    var costControl = new CostCalculationControl(_shippingService);
+//     var costControl = new CostCalculationControl(_shippingService);
 
-    // 🔥 STEP 1: Rental cost
-    var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
+//     // 🔥 STEP 1: Rental cost
+//     var summary = costControl.CalculateRentalCost(items, rentalPeriod: 3);
 
-    // 🔥 STEP 2: Final cost (shipping)
-    summary = costControl.CalculateFinalOrderCost(summary, "TEST_ORDER");
+//     // 🔥 STEP 2: Final cost (shipping)
+//     summary = costControl.CalculateFinalOrderCost(
+//         items,
+//         3, // rental period
+//         DeliveryDuration.NextDay.ToString()
+// );
 
-    return View("P2-6/FakeCart", summary);
-}
+//     return View("P2-6/FakeCart", summary);
+// }
 }

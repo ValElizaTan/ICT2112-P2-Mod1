@@ -1,12 +1,16 @@
 using ProRental.Domain.Entities;
+using ProRental.Domain.Enums;
 
 namespace ProRental.Interfaces.Domain;
 
 public interface ICostCalculation
 {
     CostSummary CalculateRentalCost(List<SelectedItem> items, int rentalPeriod);
-    CostSummary CalculateFinalOrderCost(CostSummary summary, string orderId);
-
-//    List<CartItemCost> CalculateCartItemCosts(List<CartItem> items);
+    CostSummary CalculateFinalOrderCost(
+    List<SelectedItem> items,
+    int rentalPeriod,
+    int shippingOptionId
+);
+    List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items);
     decimal CalculateDepositAmount(decimal rentalCost);
 }

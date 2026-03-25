@@ -1,0 +1,83 @@
+@using ProRental.Domain.Enums
+@model ProRental.Domain.Entities.NotificationPreferenceInfo
+
+@{
+    ViewData["Title"] = "Notification Settings";
+    var userRole = (ViewData["Userrole"] as string)?.ToLower() ?? "customer";
+    var userId = (int)(ViewData["UserId"] ?? 1);
+    var selectedCustomer = userRole == "customer" ? "selected" : "";
+    var selectedStaff = userRole == "staff" ? "selected" : "";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">User Settings - @userRole.ToUpperInvariant()</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Current user ID: <strong>@userId</strong></p>
+
+                    <form method="get" class="row gy-2 g-2 align-items-end mb-4">
+                        <div class="col-auto">
+                            <label class="form-label small mb-0" for="userRole">Load as</label>
+                            <select class="form-select form-select-sm" id="userRole" name="role">
+                                <option value="customer" selected="@selectedCustomer">Customer</option>
+                            <option value="staff" selected="@selectedStaff">Staff</option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <label class="form-label small mb-0" for="userId">User ID</label>
+                            <input type="number" class="form-control form-control-sm" id="userId" name="userId" value="@userId" min="1" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-secondary btn-sm">Reload</button>
+                        </div>
+                    </form>
+
+                    <form asp-action="Save" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="PreferenceId" value="@Model.PreferenceId" />
+                        <input type="hidden" name="UserId" value="@userId" />
+                        <input type="hidden" name="role" value="@userRole" />
+
+                        <div class="mb-3">
+                            <label class="form-label" for="NotificationFrequency">Notification Frequency</label>
+                            <select asp-for="NotificationFrequency" asp-items="Html.GetEnumSelectList<NotificationFrequency>()" class="form-select"></select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="NotificationGranularity">Notification Granularity</label>
+                            <select asp-for="NotificationGranularity" asp-items="Html.GetEnumSelectList<NotificationGranularity>()" class="form-select"></select>
+                        </div>
+
+                        <div class="form-check mb-2">
+                            <input asp-for="EmailEnabled" class="form-check-input" />
+                            <label class="form-check-label" for="EmailEnabled">Email notifications enabled</label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="SmsEnabled" class="form-check-input" />
+                            <label class="form-check-label" for="SmsEnabled">SMS notifications enabled</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Save preferences</button>
+                    </form>
+
+                    <hr />
+
+                    <div class="alert alert-info">
+                        <p class="mb-1"><strong>Note:</strong> This page is built for immediate testing. Customer uses userId=1 by default; staff uses userId=12.</p>
+                        <p class="mb-0">Use the same project login form to reach this page once login flow is integrated.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a asp-controller="Module1" asp-action="Login" class="btn btn-outline-secondary">Back to Customer Login</a>
+                <a asp-controller="Module1" asp-action="StaffLogin" class="btn btn-outline-warning ms-2">Back to Staff Login</a>
+            </div>
+        </div>
+    </div>
+</div>
