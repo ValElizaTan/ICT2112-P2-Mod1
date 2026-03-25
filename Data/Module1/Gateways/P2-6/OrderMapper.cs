@@ -20,6 +20,12 @@ public class OrderMapper : IOrderMapper
         _db.SaveChanges();
     }
 
+    public void InsertHistory(Orderstatushistory history)
+    {
+        _db.Orderstatushistories.Add(history);
+        _db.SaveChanges();
+    }
+
     public void Update(Order order)
     {
         _db.Orders.Update(order);
