@@ -12,7 +12,7 @@ public class AdyenAdapter : IPaymentAdaptors
         _paymentProviderClient = paymentProviderClient;
     }
 
-    public int Priority => 30;
+    public int priority => 30;
 
     public bool CanHandle(decimal amount, TransactionPurpose purpose, PaymentMethodDetails? paymentMethodDetails)
     {

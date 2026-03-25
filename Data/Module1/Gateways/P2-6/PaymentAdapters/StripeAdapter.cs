@@ -12,7 +12,7 @@ public class StripeAdapter : IPaymentAdaptors
         _paymentProviderClient = paymentProviderClient;
     }
 
-    public int Priority => 20;
+    public int priority => 20;
 
     public bool CanHandle(decimal amount, TransactionPurpose purpose, PaymentMethodDetails? paymentMethodDetails)
     {

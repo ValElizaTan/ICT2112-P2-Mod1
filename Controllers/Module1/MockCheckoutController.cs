@@ -46,10 +46,10 @@ public class MockCheckoutController : Controller
             OrderId = model.OrderId,
             Amount = model.Amount,
             Purpose = model.Purpose,
-            ProviderName = result.ProviderName,
-            ProviderTransactionId = result.ProviderTransactionId,
-            Status = result.Status,
-            Message = result.Message
+            ProviderName = result.providerName,
+            ProviderTransactionId = result.providerTransactionId,
+            Status = result.status,
+            Message = result.message
         };
 
         return View("~/Views/Module1/P2-6/MockCheckoutResult.cshtml", resultViewModel);

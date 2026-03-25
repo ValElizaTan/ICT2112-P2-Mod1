@@ -19,7 +19,7 @@ public class PaymentAdaptorSelector : IPaymentAdaptorSelector
     {
         var adaptor = _paymentAdaptors
             .Where(a => a.CanHandle(amount, purpose, paymentMethodDetails))
-            .OrderByDescending(a => a.Priority)
+            .OrderByDescending(a => a.priority)
             .FirstOrDefault();
 
         if (adaptor != null)
@@ -27,7 +27,7 @@ public class PaymentAdaptorSelector : IPaymentAdaptorSelector
             return adaptor;
         }
 
-        var fallback = _paymentAdaptors.OrderByDescending(a => a.Priority).FirstOrDefault();
+        var fallback = _paymentAdaptors.OrderByDescending(a => a.priority).FirstOrDefault();
         if (fallback == null)
         {
             throw new InvalidOperationException("No payment adaptors registered.");
