@@ -24,13 +24,13 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Module 1</h6></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
-                            <li><a class="dropdown-item" href="/Cart"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
+                            <li><a class="dropdown-item" asp-controller="Catalogue" asp-action="Index"><i class="bi bi-plus-circle me-2" style="color: #2d7a4f;"></i>Place Order</a></li>
+                            <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-search me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
+                            <li><a class="dropdown-item" asp-controller="Shipping" asp-action="DisplayShipmentList"><i class="bi bi-truck me-2" style="color: #2d7a4f;"></i>Manage Dispatch</a></li>
+                            <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-arrow-return-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
+                            <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="1"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
+                            <li><a class="dropdown-item" asp-controller="NotificationDisplay" asp-action="Index" asp-route-userId="1"><i class="bi bi-bell me-2" style="color: #2d7a4f;"></i>Order Notifications</a></li>
+                            <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart me-2" style="color: #2d7a4f;"></i>View Cart</a></li>
                         </ul>
                     </li>
 
@@ -74,8 +74,25 @@
                 <div class="d-flex gap-2">
                     @if (HttpContextAccessor.HttpContext!.Session.GetInt32("SessionId") != null)
                     {
+                        var navRole = HttpContextAccessor.HttpContext!.Session.GetString("UserRole") ?? "";
+                        var navCustomerId = HttpContextAccessor.HttpContext!.Session.GetInt32("CustomerId");
+
                         <span class="navbar-text text-white-50 small me-1">
-                            <i class="bi bi-person-circle me-1"></i>@HttpContextAccessor.HttpContext!.Session.GetString("UserName")
+                            <i class="bi bi-person-circle me-1"></i>
+                            @if (navRole.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase) && navCustomerId.HasValue)
+                            {
+                                <a asp-controller="CustomerProfile" asp-action="Index" asp-route-customerId="@navCustomerId.Value"
+                                   class="text-white-50 text-decoration-none">@HttpContextAccessor.HttpContext!.Session.GetString("UserName")</a>
+                            }
+                            else if (navRole.Equals("STAFF", StringComparison.OrdinalIgnoreCase) || navRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <a asp-controller="StaffDashboard" asp-action="Index"
+                                   class="text-white-50 text-decoration-none">@HttpContextAccessor.HttpContext!.Session.GetString("UserName")</a>
+                            }
+                            else
+                            {
+                                @HttpContextAccessor.HttpContext!.Session.GetString("UserName")
+                            }
                             <span class="badge bg-secondary ms-1">@HttpContextAccessor.HttpContext!.Session.GetString("UserRole")</span>
                             </span>
                         <form asp-controller="Module1" asp-action="Logout" method="post" class="d-inline">

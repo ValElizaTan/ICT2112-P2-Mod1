@@ -13,9 +13,18 @@ public class CustomerDashboardController : Controller
         _control = control;
     }
 
+    private bool IsCustomer()
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        return !string.IsNullOrEmpty(role) &&
+               role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase);
+    }
+
     [HttpGet]
     public IActionResult Index(int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var orders = _control.GetCustomerOrders(customerId);
         var customer = _control.GetCustomerInformation(customerId);
 
@@ -53,6 +62,8 @@ public class CustomerDashboardController : Controller
     [HttpGet]
     public IActionResult OrderDetails(int orderId, int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var order = _control.GetOrderDetails(orderId, customerId);
         var status = order != null ? _control.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
         var canCancel = order != null && _control.IsOrderCancellable(orderId, customerId);
@@ -70,6 +81,8 @@ public class CustomerDashboardController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult CancelOrder(int orderId, int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var success = _control.CancelOrder(orderId, customerId);
 
         if (success)
@@ -87,6 +100,8 @@ public class CustomerDashboardController : Controller
     [HttpGet]
     public IActionResult TrackOrder(int orderId, int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var order = _control.GetOrderDetails(orderId, customerId);
         var status = order != null ? _control.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
 
@@ -101,6 +116,8 @@ public class CustomerDashboardController : Controller
     [HttpGet]
     public IActionResult Returns(int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var returns = _control.GetCustomerReturns(customerId);
         ViewData["Returns"] = returns;
         ViewData["CustomerId"] = customerId;
@@ -110,6 +127,8 @@ public class CustomerDashboardController : Controller
     [HttpGet]
     public IActionResult Refunds(int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         ViewData["CustomerId"] = customerId;
         return View();
     }
@@ -117,6 +136,8 @@ public class CustomerDashboardController : Controller
     [HttpGet]
     public IActionResult Notifications(int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         var notifications = _control.GetCustomerNotifications(customerId);
         var preferences = _control.GetNotificationPreferences(customerId);
 
@@ -131,12 +152,16 @@ public class CustomerDashboardController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult UpdatePreferences(int customerId, bool emailEnabled, bool smsEnabled)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         _control.UpdateNotificationPreferences(customerId, emailEnabled, smsEnabled);
         TempData["SuccessMessage"] = "Notification preferences updated.";
         return RedirectToAction(nameof(Notifications), new { customerId });
     }
     public IActionResult OnNavigateToCustomerProfile(int customerId)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         return RedirectToAction("Index", "CustomerProfile", new { customerId });
     }
 }

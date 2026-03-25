@@ -56,6 +56,10 @@ public class Module1Controller : Controller
         HttpContext.Session.SetString("UserName", result.UserName ?? email);
         HttpContext.Session.SetString("UserRole", result.Session.RoleString);
 
+        var customer = _customerGateway.FindByEmail(email);
+        if (customer != null)
+            HttpContext.Session.SetInt32("CustomerId", customer.GetCustomerInfo().CustomerId);
+
         return RedirectToAction("CustomerLoginSuccess");
     }
 

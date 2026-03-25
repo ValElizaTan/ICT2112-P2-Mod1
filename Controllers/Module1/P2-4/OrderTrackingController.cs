@@ -47,11 +47,11 @@ namespace ProRental.Controllers.Module1.P24
                 ViewBag.SelectedTimeline = _orderTrackingService.GetOrderTimeline(timelineOrderId.Value)
                                         ?? new List<Orderstatushistory>();
 
-                return View("~/Views/Module1/OrderTracking/CustomerOrderTimeline.cshtml");
+                return View("~/Views/Module1/P2-4/OrderTracking/CustomerOrderTimeline.cshtml");
             }
 
             ViewBag.SelectedTimeline = new List<Orderstatushistory>();
-            return View("~/Views/Module1/OrderTracking/CustomerOrderTracking.cshtml");
+            return View("~/Views/Module1/P2-4/OrderTracking/CustomerOrderTracking.cshtml");
         }
 
         // =========================================================
@@ -65,7 +65,7 @@ namespace ProRental.Controllers.Module1.P24
             if (!_orderTrackingService.HasUpdatePermission(staffId))
             {
                 TempData["ErrorMessage"] = "Staff does not have permission.";
-                return View("~/Views/Module1/OrderTracking/StaffOrderTracking.cshtml");
+                return View("~/Views/Module1/P2-4/OrderTracking/StaffOrderTracking.cshtml");
             }
 
             List<Order> orders;
@@ -98,11 +98,11 @@ namespace ProRental.Controllers.Module1.P24
                 ViewBag.SelectedTimeline = _orderTrackingService.GetOrderTimeline(timelineOrderId.Value)
                                         ?? new List<Orderstatushistory>();
 
-                return View("~/Views/Module1/OrderTracking/StaffUpdateOrderStatus.cshtml");
+                return View("~/Views/Module1/P2-4/OrderTracking/StaffUpdateOrderStatus.cshtml");
             }
 
             ViewBag.SelectedTimeline = new List<Orderstatushistory>();
-            return View("~/Views/Module1/OrderTracking/StaffOrderTracking.cshtml");
+            return View("~/Views/Module1/P2-4/OrderTracking/StaffOrderTracking.cshtml");
         }
 
         [HttpPost]

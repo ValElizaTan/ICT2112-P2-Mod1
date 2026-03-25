@@ -13,9 +13,18 @@ public class CustomerProfileController : Controller
         _control = control;
     }
 
+    private bool IsCustomer()
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        return !string.IsNullOrEmpty(role) &&
+               role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase);
+    }
+
     [HttpGet]
     public IActionResult Index(int customerId = 1)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         // Debug output to console
         Console.WriteLine($"CustomerProfileController.Index called with customerId: {customerId}");
         Console.WriteLine($"_control is null? {_control == null}");
@@ -93,6 +102,8 @@ public class CustomerProfileController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult UpdateCustomerDetails(int customerId, string name, string email, int phoneCountry, int phoneNumber, string passwordHash, string address, int customerType)
     {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
         try
         {
             var finalPasswordHash = string.IsNullOrEmpty(passwordHash) ? "" : passwordHash;

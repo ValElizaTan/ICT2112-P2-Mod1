@@ -27,6 +27,7 @@ builder.Services.AddSession(options =>
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.Razor.RazorViewEngineOptions>(options =>
 {
     options.ViewLocationFormats.Add("/Views/Module1/{1}/{0}.cshtml");
+    options.ViewLocationFormats.Add("/Views/Module1/P2-4/{1}/{0}.cshtml");
 });
 
 // builder.Services.AddDbContext<AppDbContext>(options =>

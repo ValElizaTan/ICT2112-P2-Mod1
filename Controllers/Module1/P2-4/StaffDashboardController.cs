@@ -13,9 +13,19 @@ public class StaffDashboardController : Controller
         _control = control;
     }
 
+    private bool IsStaff()
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        return !string.IsNullOrEmpty(role) &&
+               (role.Equals("STAFF", StringComparison.OrdinalIgnoreCase) ||
+                role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
+    }
+
     [HttpGet]
     public IActionResult Index()
     {
+        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
         var orders = _control.DisplayOrderList();
         var readyItems = _control.GetInventoryItemsByStatus(InventoryStatus.AVAILABLE);
 
@@ -25,10 +35,10 @@ public class StaffDashboardController : Controller
         return View();
     }
 
-    
-
     public IActionResult OnNavigateToWalkIn(string type = "new")
     {
+        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
         if (type == "existing")
             return RedirectToAction("Index", "WalkInOrder");
 
@@ -37,16 +47,21 @@ public class StaffDashboardController : Controller
 
     public IActionResult OnNavigateToShipping()
     {
+        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
         return RedirectToAction("DisplayShipmentList", "Shipping");
     }
+
     public IActionResult OnNavigateToStaffProfile()
     {
+        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
         return RedirectToAction("Index", "StaffProfile");
     }
 
     public IActionResult OnLogout()
     {
-        // Session clearing will be handled by ISessionService (Team 6)
+        HttpContext.Session.Clear();
         return RedirectToAction("Index", "Home");
     }
 }
