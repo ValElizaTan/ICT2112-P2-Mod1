@@ -45,13 +45,12 @@ namespace ProRental.Controllers.Module1.P24
                 }
 
                 ViewBag.SelectedTimeline = _orderTrackingService.GetOrderTimeline(timelineOrderId.Value)
-                                          ?? new List<Orderstatushistory>();
-            }
-            else
-            {
-                ViewBag.SelectedTimeline = new List<Orderstatushistory>();
+                                        ?? new List<Orderstatushistory>();
+
+                return View("~/Views/Module1/OrderTracking/CustomerOrderTimeline.cshtml");
             }
 
+            ViewBag.SelectedTimeline = new List<Orderstatushistory>();
             return View("~/Views/Module1/OrderTracking/CustomerOrderTracking.cshtml");
         }
 
@@ -97,13 +96,12 @@ namespace ProRental.Controllers.Module1.P24
             if (timelineOrderId.HasValue)
             {
                 ViewBag.SelectedTimeline = _orderTrackingService.GetOrderTimeline(timelineOrderId.Value)
-                                          ?? new List<Orderstatushistory>();
-            }
-            else
-            {
-                ViewBag.SelectedTimeline = new List<Orderstatushistory>();
+                                        ?? new List<Orderstatushistory>();
+
+                return View("~/Views/Module1/OrderTracking/StaffUpdateOrderStatus.cshtml");
             }
 
+            ViewBag.SelectedTimeline = new List<Orderstatushistory>();
             return View("~/Views/Module1/OrderTracking/StaffOrderTracking.cshtml");
         }
 
