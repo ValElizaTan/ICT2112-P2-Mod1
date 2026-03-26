@@ -118,6 +118,11 @@
                             }
                             <span class="badge bg-secondary ms-1">@HttpContextAccessor.HttpContext!.Session.GetString("UserRole")</span>
                             </span>
+                        <a asp-controller="NotificationDisplay" asp-action="Index"
+                           asp-route-userId="@HttpContextAccessor.HttpContext!.Session.GetInt32("UserId")"
+                           class="btn btn-outline-secondary btn-sm me-1" title="Notifications">
+                            <i class="bi bi-bell"></i>
+                        </a>
                         <form asp-controller="Module1" asp-action="Logout" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-danger btn-sm">

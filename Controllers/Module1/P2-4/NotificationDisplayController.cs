@@ -37,6 +37,7 @@ public class NotificationDisplayController : Controller, INotificationObserver
     public IActionResult ShowNotifications(int userId)
     {
         var notifications = _subject.GetUserNotifications(userId);
+        ViewData["UserId"] = userId;
         ViewData["Notifications"] = notifications;
         ViewData["LatestNotificationId"] = notifications.Any() ? notifications.Max(n => n.GetNotificationInfo().NotificationId) : 0;
         return View("~/Views/Module1/P2-4/NotificationDisplay/Index.cshtml");

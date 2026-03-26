@@ -1,5 +1,7 @@
 (function () {
-  const userId = parseInt(document.body.dataset.userId || "1", 10);
+  const userId = parseInt(document.body.dataset.userId || "0", 10);
+  if (!userId) return; // not logged in — skip notification polling
+
   const toastEl = document.getElementById("globalNotificationToast");
   const toastBody = document.getElementById("globalNotificationToastBody");
   const toastTime = document.getElementById("globalNotificationTime");

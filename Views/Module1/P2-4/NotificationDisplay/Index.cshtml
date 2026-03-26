@@ -8,14 +8,14 @@
 
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>User Notifications (@userId)</h2>
+        <h2>User Notifications</h2>
         <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
     </div>
 
     @if (!notifications.Any())
     {
         <div class="alert alert-info" role="alert">
-            No notifications found for user @userId.
+            No notifications for now!
         </div>
     }
     else
