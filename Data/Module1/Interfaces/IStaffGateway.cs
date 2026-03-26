@@ -6,8 +6,8 @@ public interface IStaffGateway
 {
     Staff? FindById(int staffId);
     Staff? FindByEmail(string email);
-    void InsertStaff(Staff staff);
+    void InsertStaffWithUser(User user, Staff staff);
     void UpdateStaff(Staff staff);
-    void DeleteStaff(int staffId);
+    void DeleteStaffAndUser(int staffId);
     List<Staff> FindAll();
 }

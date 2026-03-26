@@ -4,7 +4,7 @@ namespace ProRental.Domain.Module1.P24.Interfaces;
 
 public interface IStaffService
 {
-    bool CreateStaff(int staffId, string name, string email, int phoneCountry,
+    bool CreateStaff(string name, string email, int phoneCountry,
         int phoneNumber, string passwordHash);
     void DeleteStaff(int staffId);
     void UpdateStaff(int staffId, string name, string email, int phoneCountry, string phoneNumber, string? passwordHash);

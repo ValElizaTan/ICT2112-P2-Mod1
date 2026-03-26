@@ -105,12 +105,10 @@ public class StaffProfileController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult CreateStaff(int staffId, string name, string email,
+    public IActionResult CreateStaff(string name, string email,
         int phoneCountry, string phoneNumber, string passwordHash)
     {
-        if (staffId <= 0)
-            TempData["CrudError"] = "Staff ID must be a positive number.";
-        else if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name))
             TempData["CrudError"] = "Name cannot be empty.";
         else if (string.IsNullOrWhiteSpace(email))
             TempData["CrudError"] = "Email cannot be empty.";
@@ -129,11 +127,11 @@ public class StaffProfileController : Controller
                 if (!int.TryParse(phoneNumber.Replace(" ", ""), out int phoneInt))
                     phoneInt = 0;
 
-                bool created = _control.CreateStaff(staffId, name, email, phoneCountry,
+                bool created = _control.CreateStaff(name, email, phoneCountry,
                                                      phoneInt, passwordHash);
                 TempData[created ? "CrudSuccess" : "CrudError"] = created
-                    ? $"Staff member '{name}' (#{staffId}) created successfully."
-                    : $"A staff member with ID #{staffId} already exists.";
+                    ? $"Staff member '{name}' created successfully."
+                    : $"A staff member with this email already exists.";
             }
             catch (Exception ex)
             {

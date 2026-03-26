@@ -14,23 +14,25 @@ public class StaffControl : IStaffService
         _staffGateway = staffGateway;
     }
 
-    public bool CreateStaff(int staffId, string name, string email, int phoneCountry,
+    public bool CreateStaff(string name, string email, int phoneCountry,
         int phoneNumber, string passwordHash)
     {
-        var existingStaff = _staffGateway.FindById(staffId);
-        if (existingStaff != null)
+        // Check if a staff with this email already exists
+        var existing = _staffGateway.FindByEmail(email);
+        if (existing != null)
             return false;
 
-        var user = new User(staffId, UserRole.STAFF, name, email, passwordHash, phoneCountry, phoneNumber.ToString());
-        var staff = new Staff(staffId, "Default");
+        // Let the DB auto-generate IDs (GENERATED ALWAYS columns)
+        var user = new User(0, UserRole.STAFF, name, email, passwordHash, phoneCountry, phoneNumber.ToString());
+        var staff = new Staff(0, "Default");
 
-        _staffGateway.InsertStaff(staff);
+        _staffGateway.InsertStaffWithUser(user, staff);
         return true;
     }
 
     public void DeleteStaff(int staffId)
     {
-        _staffGateway.DeleteStaff(staffId);
+        _staffGateway.DeleteStaffAndUser(staffId);
     }
 
     public void UpdateStaff(int staffId, string name, string email, int phoneCountry,

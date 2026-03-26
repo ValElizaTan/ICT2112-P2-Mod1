@@ -29,8 +29,18 @@ public class StaffGateway : IStaffGateway
             .FirstOrDefault(s => s.User?.GetUserInfo()?.Email == email);
     }
 
-    public void InsertStaff(Staff staff)
+    public void InsertStaffWithUser(User user, Staff staff)
     {
+        _context.Users.Add(user);
+        _context.SaveChanges();
+
+        // Link staff to the newly created user via reflection (private field)
+        var useridField = typeof(Staff).GetField("_userid",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var newUserId = typeof(User).GetField("_userid",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(user);
+        useridField?.SetValue(staff, newUserId);
+
         _context.Staff.Add(staff);
         _context.SaveChanges();
     }
@@ -41,12 +51,23 @@ public class StaffGateway : IStaffGateway
         _context.SaveChanges();
     }
 
-    public void DeleteStaff(int staffId)
+    public void DeleteStaffAndUser(int staffId)
     {
-        var staff = _context.Staff.Find(staffId);
-        if (staff != null)
+        var staff = _context.Staff
+            .Include(s => s.User)
+            .FirstOrDefault(s => EF.Property<int>(s, "Staffid") == staffId);
+        if (staff == null) return;
+
+        var user = staff.User;
+
+        // Remove staff first (FK: staff → user)
+        _context.Staff.Remove(staff);
+        _context.SaveChanges();
+
+        // Then remove the user
+        if (user != null)
         {
-            _context.Staff.Remove(staff);
+            _context.Users.Remove(user);
             _context.SaveChanges();
         }
     }

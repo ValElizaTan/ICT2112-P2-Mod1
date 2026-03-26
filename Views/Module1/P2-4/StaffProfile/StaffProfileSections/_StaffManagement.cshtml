@@ -48,11 +48,6 @@
             <form asp-action="CreateStaff" method="post">
                 @Html.AntiForgeryToken()
                 <div class="row g-2">
-                    <div class="col-md-1">
-                        <label class="info-label mb-1">ID</label>
-                        <input type="number" name="staffId" class="form-control form-control-sm"
-                               placeholder="ID" required min="1" />
-                    </div>
                     <div class="col-md-3">
                         <label class="info-label mb-1">Full Name</label>
                         <input type="text" name="name" class="form-control form-control-sm"

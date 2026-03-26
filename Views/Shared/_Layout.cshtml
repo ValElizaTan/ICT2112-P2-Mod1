@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
 
     @await Html.PartialAsync("_Navbar")
 
@@ -26,7 +26,7 @@
        MAIN CONTENT — Individual view output is injected here via @RenderBody().
        Do NOT add additional containers or wrappers inside view files.
        ================================================================ *@
-    <div class="container py-4">
+    <div class="container py-4 flex-grow-1">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
