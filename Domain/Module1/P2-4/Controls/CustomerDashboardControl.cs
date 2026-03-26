@@ -15,17 +15,20 @@ public class CustomerDashboardControl
     private readonly IRefundService? _refundService;
     private readonly INotificationGateway _notificationGateway;
     private readonly INotificationPreferenceGateway _preferenceGateway;
+    private readonly INotificationSubject _notificationSubject;
 
     public CustomerDashboardControl(
         Team6.IOrderService orderService,
         INotificationGateway notificationGateway,
         INotificationPreferenceGateway preferenceGateway,
+        INotificationSubject notificationSubject,
         ICustomerService? customerService = null,
         IRefundService? refundService = null)
     {
         _orderService = orderService;
         _notificationGateway = notificationGateway;
         _preferenceGateway = preferenceGateway;
+        _notificationSubject = notificationSubject;
         _customerService = customerService;
         _refundService = refundService;
     }
@@ -183,6 +186,17 @@ public class CustomerDashboardControl
             return notifications.Where(n => !EF.Property<bool>(n, "Isread")).ToList();
         }
         return notifications;
+    }
+
+    public void MarkNotificationAsRead(int notificationId, int userId)
+    {
+        var notification = _notificationGateway.FindById(notificationId);
+        if (notification == null) return;
+
+        SetPrivateProperty(notification, "Isread", true);
+        _notificationGateway.UpdateNotification(notification);
+
+        _notificationSubject.ClearPendingPopup(userId);
     }
 
     public Notificationpreference? GetNotificationPreferences(int customerId)
