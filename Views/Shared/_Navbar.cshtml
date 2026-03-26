@@ -29,7 +29,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><h6 class="dropdown-header text-uppercase" style="color: #2d7a4f; font-size: 0.7rem;">Team 4</h6></li>
-                            <li><a class="dropdown-item" asp-controller="OrderManagement" asp-action="Index"><i class="bi bi-clipboard-check me-2" style="color: #2d7a4f;"></i>Manage Orders</a></li>
+                            <li><a class="dropdown-item" asp-controller="Module1" asp-action="Orders" asp-route-customerId="@Context.Session.GetInt32("CustomerId")"><i class="bi bi-clipboard-check me-2" style="color: #2d7a4f;"></i>Manage Orders</a></li>
                             @if (!_isStaff)
                             {
                                 <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-geo-alt me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
