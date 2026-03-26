@@ -9,11 +9,13 @@ namespace ProRental.Domain.Module1.P24.Controls
     {
         private readonly IOrderMapper _orderMapper;
         private readonly IOrderStatusHistory _orderStatusHistoryGateway;
+        private readonly INotificationSubject _notificationSubject;
 
-        public OrderTrackingControl(IOrderMapper orderMapper, IOrderStatusHistory orderStatusHistoryGateway)
+        public OrderTrackingControl(IOrderMapper orderMapper, IOrderStatusHistory orderStatusHistoryGateway, INotificationSubject notificationSubject)
         {
             _orderMapper = orderMapper;
             _orderStatusHistoryGateway = orderStatusHistoryGateway;
+            _notificationSubject = notificationSubject;
         }
 
         public OrderStatus GetCurrentOrderStatus(int orderId)
@@ -74,6 +76,11 @@ namespace ProRental.Domain.Module1.P24.Controls
             );
 
             _orderStatusHistoryGateway.InsertHistory(history);
+
+            // Notify customer about order status change
+            var customerId = order.GetCustomerId();
+            var notificationMessage = $"Your order #{orderId} status has been updated to {newStatus}.";
+            _notificationSubject.CreateNotification(customerId, notificationMessage, NotificationType.ORDER_UPDATE);
         }
 
         public List<string> BulkUpdateStatus(List<int> orderIds, OrderStatus newStatus, string? remark, int staffId)
