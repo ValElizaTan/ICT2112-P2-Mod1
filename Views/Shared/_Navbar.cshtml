@@ -33,9 +33,9 @@
                             @if (!_isStaff)
                             {
                                 <li><a class="dropdown-item" asp-controller="OrderTracking" asp-action="CustomerOrderTracking"><i class="bi bi-geo-alt me-2" style="color: #2d7a4f;"></i>Track Order</a></li>
-                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="1"><i class="bi bi-box-arrow-in-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
-                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="1"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
-                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Index"><i class="bi bi-person-walking me-2" style="color: #2d7a4f;"></i>Customer Dashboard</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Returns" asp-route-customerId="@HttpContextAccessor.HttpContext!.Session.GetInt32("CustomerId")"><i class="bi bi-box-arrow-in-left me-2" style="color: #2d7a4f;"></i>Handle Returns</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Refunds" asp-route-customerId="@HttpContextAccessor.HttpContext!.Session.GetInt32("CustomerId")"><i class="bi bi-cash-coin me-2" style="color: #2d7a4f;"></i>Deposit Refunds</a></li>
+                                <li><a class="dropdown-item" asp-controller="CustomerDashboard" asp-action="Index" asp-route-customerId="@HttpContextAccessor.HttpContext!.Session.GetInt32("CustomerId")"><i class="bi bi-person-walking me-2" style="color: #2d7a4f;"></i>Customer Dashboard</a></li>
                             }
                             @if (_isStaff)
                             {

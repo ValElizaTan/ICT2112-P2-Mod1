@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Controls;
 
@@ -7,10 +8,12 @@ namespace ProRental.Controllers.Module1.P24;
 public class CustomerDashboardController : Controller
 {
     private readonly CustomerDashboardControl _control;
+    private readonly RefundControl _refundControl;
 
-    public CustomerDashboardController(CustomerDashboardControl control)
+    public CustomerDashboardController(CustomerDashboardControl control, RefundControl refundControl)
     {
         _control = control;
+        _refundControl = refundControl;
     }
 
     private bool IsCustomer()
@@ -25,8 +28,18 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var orders = _control.GetCustomerOrders(customerId);
+        var allOrders = _control.GetCustomerOrders(customerId);
         var customer = _control.GetCustomerInformation(customerId);
+
+        // Get return request order IDs to filter them out
+        var returns = _control.GetCustomerReturns(customerId);
+        var returnOrderIds = new HashSet<int>(returns.Select(r =>
+        {
+            var field = r.GetType().GetField("_orderid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return field != null ? (int)(field.GetValue(r) ?? 0) : 0;
+        }));
+
+        var orders = allOrders?.Where(o => !returnOrderIds.Contains(o.OrderId)).ToList();
 
         // Calculate stats using reflection helper methods
         int activeOrders = 0;
@@ -68,9 +81,19 @@ public class CustomerDashboardController : Controller
         var status = order != null ? _control.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
         var canCancel = order != null && _control.IsOrderCancellable(orderId, customerId);
 
+        // Check if a return has already been initiated for this order
+        var hasReturn = _refundControl.GetRefundByOrderId(orderId) != null
+                        || _control.GetCustomerReturns(customerId)
+                            .Any(r =>
+                            {
+                                var f = r.GetType().GetField("_orderid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                                return f != null && (int)(f.GetValue(r) ?? 0) == orderId;
+                            });
+
         ViewData["Order"] = order;
         ViewData["OrderStatus"] = status;
         ViewData["CanCancel"] = canCancel;
+        ViewData["HasReturn"] = hasReturn;
         ViewData["CustomerId"] = customerId;
         ViewData["Control"] = _control;
 
@@ -97,6 +120,34 @@ public class CustomerDashboardController : Controller
         return RedirectToAction(nameof(OrderDetails), new { orderId, customerId });
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ReturnOrder(int orderId, int customerId)
+    {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
+        try
+        {
+            var order = _control.GetOrderDetails(orderId, customerId);
+            if (order == null)
+            {
+                TempData["ErrorMessage"] = "Order not found.";
+                return RedirectToAction(nameof(OrderDetails), new { orderId, customerId });
+            }
+
+            _refundControl.InitiateReturn(orderId, customerId, "Self-Ship");
+
+            TempData["SuccessMessage"] = $"Return initiated for Order #{orderId}. Items will be inspected and deposit refund will be processed upon completion.";
+        }
+        catch (Exception ex)
+        {
+            var innerMsg = ex.InnerException?.Message ?? ex.Message;
+            TempData["ErrorMessage"] = $"Failed to initiate return: {innerMsg}";
+        }
+
+        return RedirectToAction(nameof(OrderDetails), new { orderId, customerId });
+    }
+
     [HttpGet]
     public IActionResult TrackOrder(int orderId, int customerId)
     {
@@ -118,9 +169,16 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var returns = _control.GetCustomerReturns(customerId);
-        ViewData["Returns"] = returns;
+        var customerReturns = _control.GetCustomerReturns(customerId);
+        var allOrders = _control.GetCustomerOrders(customerId);
+
+        // Build a lookup of orders by ID for showing order details alongside returns
+        var orderLookup = allOrders?.ToDictionary(o => o.OrderId) ?? new Dictionary<int, ProRental.Domain.Entities.Order>();
+
+        ViewData["Returns"] = customerReturns;
+        ViewData["OrderLookup"] = orderLookup;
         ViewData["CustomerId"] = customerId;
+        ViewData["Control"] = _control;
         return View();
     }
 

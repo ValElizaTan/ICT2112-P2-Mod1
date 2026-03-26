@@ -2,17 +2,18 @@ using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Interfaces;
 using System.Reflection;
+using Team6 = ProRental.Interfaces.Domain;
 
 namespace ProRental.Domain.Module1.P24.Controls;
 
 public class CustomerDashboardControl
 {
-    private readonly IOrderService? _orderService;
+    private readonly Team6.IOrderService _orderService;
     private readonly ICustomerService? _customerService;
     private readonly IRefundService? _refundService;
 
     public CustomerDashboardControl(
-        IOrderService? orderService = null,
+        Team6.IOrderService orderService,
         ICustomerService? customerService = null,
         IRefundService? refundService = null)
     {
@@ -40,12 +41,9 @@ public class CustomerDashboardControl
 
     public List<Order> GetCustomerOrders(int customerId)
     {
-        if (_orderService == null)
-            return new List<Order>();
-
         try
         {
-            return _orderService.GetCustomerOrders(customerId);
+            return _orderService.GetOrdersByCustomer(customerId);
         }
         catch
         {
@@ -55,17 +53,9 @@ public class CustomerDashboardControl
 
     public Order? GetOrderDetails(int orderId, int customerId)
     {
-        if (_orderService == null)
-            return null;
-
         try
         {
-            var orders = _orderService.GetCustomerOrders(customerId);
-            return orders.FirstOrDefault(o =>
-            {
-                var id = GetPrivatePropertyValue<int>(o, "Orderid");
-                return id == orderId;
-            });
+            return _orderService.GetOrder(orderId);
         }
         catch
         {
@@ -75,23 +65,9 @@ public class CustomerDashboardControl
 
     public OrderStatus? GetOrderStatus(int orderId, int customerId)
     {
-        if (_orderService == null)
-            return null;
-
         try
         {
-            var orders = _orderService.GetCustomerOrders(customerId);
-            var order = orders.FirstOrDefault(o =>
-            {
-                var id = GetPrivatePropertyValue<int>(o, "Orderid");
-                return id == orderId;
-            });
-
-            if (order == null) return null;
-
-            // Try to get status from the order object
-            var status = GetPrivatePropertyValue<OrderStatus>(order, "OrderStatus");
-            return status;
+            return _orderService.GetOrderStatus(orderId);
         }
         catch
         {
@@ -107,15 +83,12 @@ public class CustomerDashboardControl
 
     public bool CancelOrder(int orderId, int customerId)
     {
-        if (_orderService == null)
-            return false;
-
         if (!IsOrderCancellable(orderId, customerId))
             return false;
 
         try
         {
-            return _orderService.CancelOrder(orderId, customerId);
+            return _orderService.CancelOrder(orderId);
         }
         catch
         {
@@ -138,32 +111,28 @@ public class CustomerDashboardControl
         }
     }
 
-    // Helper method to get OrderId from order (for use in views)
     public int GetOrderId(Order order)
     {
         if (order == null) return 0;
-        return GetPrivatePropertyValue<int>(order, "Orderid");
+        return order.OrderId;
     }
 
-    // Helper method to get OrderDate from order
     public DateTime GetOrderDate(Order order)
     {
         if (order == null) return DateTime.MinValue;
-        return GetPrivatePropertyValue<DateTime>(order, "Orderdate");
+        return order.OrderDate;
     }
 
-    // Helper method to get TotalAmount from order
     public decimal GetTotalAmount(Order order)
     {
         if (order == null) return 0;
-        return GetPrivatePropertyValue<decimal>(order, "Totalamount");
+        return order.TotalAmount;
     }
 
-    // Helper method to get OrderStatus from order
     public OrderStatus GetOrderStatusFromOrder(Order order)
     {
         if (order == null) return OrderStatus.PENDING;
-        return GetPrivatePropertyValue<OrderStatus>(order, "OrderStatus");
+        return order.CurrentStatus ?? OrderStatus.PENDING;
     }
 
     public List<Refund> GetCustomerRefunds(int customerId)
@@ -176,7 +145,17 @@ public class CustomerDashboardControl
 
     public List<Returnrequest> GetCustomerReturns(int customerId)
     {
-        return new List<Returnrequest>();
+        if (_refundService == null)
+            return new List<Returnrequest>();
+
+        try
+        {
+            return _refundService.GetCustomerReturns(customerId);
+        }
+        catch
+        {
+            return new List<Returnrequest>();
+        }
     }
 
     public List<Notification> GetCustomerNotifications(int customerId, bool unreadOnly = false)

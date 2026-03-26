@@ -31,6 +31,7 @@ public class OrderMapper : IOrderMapper
         return _db.Orders
             .Include(o => o.Orderitems)
             .Include(o => o.Orderstatushistories)
+            .Include(o => o.Deposits)
             .AsEnumerable()
             .FirstOrDefault(o => o.OrderId == orderId);
     }

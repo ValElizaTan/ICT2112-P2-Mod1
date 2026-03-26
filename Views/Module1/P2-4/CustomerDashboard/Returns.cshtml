@@ -1,8 +1,12 @@
 @using System.Reflection
+@using ProRental.Domain.Enums
 @{
     ViewData["Title"] = "My Returns";
     var returns = ViewData["Returns"] as List<ProRental.Domain.Entities.Returnrequest>;
+    var orderLookup = ViewData["OrderLookup"] as Dictionary<int, ProRental.Domain.Entities.Order>
+                      ?? new Dictionary<int, ProRental.Domain.Entities.Order>();
     var customerId = ViewData["CustomerId"] as int? ?? 0;
+    var control = ViewData["Control"] as ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl;
 
     // Helper function to get private field value
     T? GetFieldValue<T>(object obj, string fieldName)
@@ -30,10 +34,11 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3">Return ID</th>
-                            <th>Order ID</th>
-                            <th>Request Date</th>
-                            <th>Status</th>
+                            <th class="ps-3">Order ID</th>
+                            <th>Order Date</th>
+                            <th>Total Amount</th>
+                            <th>Return Date</th>
+                            <th>Return Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -42,18 +47,35 @@
                         {
                             foreach (var returnReq in returns)
                             {
-                                var returnId = GetFieldValue<int>(returnReq, "_returnrequestid");
                                 var orderId = GetFieldValue<int>(returnReq, "_orderid");
                                 var requestDate = GetFieldValue<DateTime>(returnReq, "_requestdate");
+                                var returnStatusObj = GetFieldValue<object>(returnReq, "_status");
+                                var returnStatus = returnStatusObj?.ToString() ?? "Processing";
+
+                                // Get order details from lookup
+                                orderLookup.TryGetValue(orderId, out var order);
+                                var orderDate = order != null && control != null ? control.GetOrderDate(order) : DateTime.MinValue;
+                                var totalAmount = order != null && control != null ? control.GetTotalAmount(order) : 0m;
+
+                                var statusBadge = returnStatus.ToLower() switch
+                                {
+                                    "completed" => "bg-success",
+                                    "approved" => "bg-success",
+                                    "rejected" => "bg-danger",
+                                    _ => "bg-info"
+                                };
+
                                 <tr>
-                                    <td class="ps-3">#@returnId</td>
-                                    <td>#@orderId</td>
-                                    <td>@requestDate.ToString("dd MMM yyyy")</td>
-                                    <td><span class="badge bg-info">Processing</span></td>
+                                    <td class="ps-3 fw-semibold small">#@orderId</td>
+                                    <td class="small">@(orderDate != DateTime.MinValue ? orderDate.ToString("dd MMM yyyy") : "—")</td>
+                                    <td class="small fw-semibold">$@totalAmount.ToString("0.00")</td>
+                                    <td class="small">@requestDate.ToString("dd MMM yyyy")</td>
+                                    <td><span class="badge @statusBadge rounded-pill">@returnStatus</span></td>
                                     <td>
-                                        <a asp-action="ReturnDetails" asp-route-returnRequestId="@returnId"
+                                        <a asp-action="OrderDetails" asp-route-orderId="@orderId"
+                                               asp-route-customerId="@customerId"
                                                class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> View
+                                            <i class="bi bi-eye me-1"></i>View Order
                                         </a>
                                     </td>
                                 </tr>
@@ -62,7 +84,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="6" class="text-center text-muted py-4">
                                     <i class="bi bi-inbox fs-1 d-block mb-2"></i>
                                     No return requests found.
                                 </td>

@@ -80,19 +80,20 @@ public class RefundReturnController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult ConfirmReturn(int orderId, int customerId, decimal refundAmount, string returnMethod)
+    public IActionResult ConfirmReturn(int orderId, int customerId, string returnMethod)
     {
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
 
         try
         {
-            _refundControl.InitiateReturn(orderId, customerId, refundAmount, returnMethod);
-            TempData["SuccessMessage"] = $"Return initiated for Order #{orderId}. Module 2 return process triggered.";
+            _refundControl.InitiateReturn(orderId, customerId, returnMethod);
+            TempData["SuccessMessage"] = $"Return initiated for Order #{orderId}. Inspection triggered — deposit refund will be processed upon completion.";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            TempData["ErrorMessage"] = $"Failed to initiate return: {ex.Message}";
+            var innerMsg = ex.InnerException?.Message ?? ex.Message;
+            TempData["ErrorMessage"] = $"Failed to initiate return: {innerMsg}";
             return RedirectToAction(nameof(InitiateReturn), new { orderId });
         }
     }

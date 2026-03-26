@@ -41,6 +41,14 @@ public class RefundGateway : IRefundGateway
             .FirstOrDefault();
     }
 
+    public List<Returnrequest> GetReturnRequestsByCustomerId(int customerId)
+    {
+        return _context.Returnrequests
+            .Where(r => EF.Property<int>(r, "Customerid") == customerId)
+            .Include(r => r.Order)
+            .ToList();
+    }
+
     public void InsertReturnRequest(Returnrequest returnRequest)
     {
         _context.Returnrequests.Add(returnRequest);

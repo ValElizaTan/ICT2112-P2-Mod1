@@ -41,7 +41,14 @@ public class FakeInventoryService : IInventoryService
         => GetAllProducts();
 
     public bool TriggerReturnProcess(int orderId)
-        => true;
+    {
+        // Simulate Module 2 return pipeline:
+        // Inspection → done, Cleaning → done, Restocking → done
+        // In production, Module 2 would process these stages asynchronously.
+        // For now, we immediately return true (inspection passed, item ready for restocking).
+        Console.WriteLine($"[FakeInventoryService] Return process triggered for Order #{orderId}: Inspection PASSED, item restocked.");
+        return true;
+    }
 
     // ── Helper ────────────────────────────────────────
 
