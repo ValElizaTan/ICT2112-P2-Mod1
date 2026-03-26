@@ -100,7 +100,6 @@ public class CheckoutPaymentControl
         );
 
         var transaction = _paymentGateway.MakePayment(
-            paymentReferenceId,
             amount,
             TransactionPurpose.ORDER,
             details
@@ -111,12 +110,12 @@ public class CheckoutPaymentControl
             throw new InvalidOperationException("Payment transaction was not created.");
         }
 
-        if (transaction.Status != TransactionStatus.COMPLETED)
+        if (transaction.status != TransactionStatus.COMPLETED)
         {
             throw new InvalidOperationException(
-                string.IsNullOrWhiteSpace(transaction.Message)
+                string.IsNullOrWhiteSpace(transaction.message)
                     ? "Payment failed."
-                    : transaction.Message
+                    : transaction.message
             );
         }
 

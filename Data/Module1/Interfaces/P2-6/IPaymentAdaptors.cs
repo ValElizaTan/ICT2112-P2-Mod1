@@ -5,7 +5,7 @@ using ProRental.Domain.Enums;
 
 public interface IPaymentAdaptors
 {
-    int Priority { get; }
+    public int priority { get; }
     bool CanHandle(decimal amount, TransactionPurpose purpose, PaymentMethodDetails? paymentMethodDetails);
     public TransactionResponse ProcessPayment(int transactionId, decimal amount, PaymentMethodDetails? paymentMethodDetails);
     public void UpdatePaymentStatus(int transactionId, TransactionStatus status);

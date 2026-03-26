@@ -94,7 +94,7 @@ public class CostCalculationControl : ICostCalculation
     // ===========================
     public decimal CalculateDepositAmount(decimal rentalCost)
     {
-        decimal deposit = rentalCost * 0.1m;
-        return deposit > 10 ? deposit : 10m;
+            decimal deposit = rentalCost * 0.1m;
+            return deposit > 10 ? deposit : 10m;
     }
 }

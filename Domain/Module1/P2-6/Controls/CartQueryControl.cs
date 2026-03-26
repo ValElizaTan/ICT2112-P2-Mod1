@@ -68,7 +68,7 @@ public class CartQueryControl
         };
     }
 
-    public List<CartDisplayItem> GetCartDisplayItems(int cartId)
+public List<CartDisplayItem> GetCartDisplayItems(int cartId)
 {
     var cart = _cartMapper.FindById(cartId);
 
@@ -85,7 +85,6 @@ public class CartQueryControl
         {
             var product = ci.GetProduct() ?? _catalogueService.GetProductById(ci.GetProductId());
 
-
             if (product != null)
             {
                 ci.SetProduct(product);
@@ -98,8 +97,6 @@ public class CartQueryControl
             decimal subtotal = unitPrice * qty;
 
             return new CartDisplayItem
-
-
             {
                 ProductId = ci.GetProductId(),
                 ProductName = product?.GetProductName() ?? $"Product {ci.GetProductId()}",

@@ -9,14 +9,13 @@ namespace ProRental.Controllers.Module1;
 public class CatalogueController : Controller
 {
     private readonly CatalogueControl _catalogueControl;
-    private readonly ICartService _cartService;
+    private readonly ICartService     _cartService;
     private readonly ICustomerValidationService _customerValidationService;
-
 
     public CatalogueController(CatalogueControl catalogueControl, ICartService cartService, ICustomerValidationService customerValidationService)
     {
         _catalogueControl = catalogueControl;
-        _cartService = cartService;
+        _cartService      = cartService;
         _customerValidationService = customerValidationService;
     }
 
@@ -64,6 +63,7 @@ public class CatalogueController : Controller
     private int ResolveCartId()
     {
         var customerId = GetResolvedCustomerId();
+
         if (!customerId.HasValue)
         {
             throw new InvalidOperationException("Please log in before adding items to your cart.");
@@ -105,6 +105,7 @@ public class CatalogueController : Controller
             {
                 return RedirectToAction("Login", "Module1");
             }
+
             TempData["Error"] = ex.Message;
             return RedirectToAction(nameof(Index));
         }
