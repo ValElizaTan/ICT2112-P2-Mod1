@@ -41,38 +41,17 @@ public class CustomerDashboardControl
 
     public List<Order> GetCustomerOrders(int customerId)
     {
-        try
-        {
-            return _orderService.GetOrdersByCustomer(customerId);
-        }
-        catch
-        {
-            return new List<Order>();
-        }
+        return _orderService.GetOrdersByCustomer(customerId);
     }
 
     public Order? GetOrderDetails(int orderId, int customerId)
     {
-        try
-        {
-            return _orderService.GetOrder(orderId);
-        }
-        catch
-        {
-            return null;
-        }
+        return _orderService.GetOrder(orderId);
     }
 
     public OrderStatus? GetOrderStatus(int orderId, int customerId)
     {
-        try
-        {
-            return _orderService.GetOrderStatus(orderId);
-        }
-        catch
-        {
-            return null;
-        }
+        return _orderService.GetOrderStatus(orderId);
     }
 
     public bool IsOrderCancellable(int orderId, int customerId)
@@ -86,14 +65,7 @@ public class CustomerDashboardControl
         if (!IsOrderCancellable(orderId, customerId))
             return false;
 
-        try
-        {
-            return _orderService.CancelOrder(orderId);
-        }
-        catch
-        {
-            return false;
-        }
+        return _orderService.CancelOrder(orderId);
     }
 
     public Customer? GetCustomerInformation(int customerId)
@@ -101,14 +73,7 @@ public class CustomerDashboardControl
         if (_customerService == null)
             return null;
 
-        try
-        {
-            return _customerService.GetCustomerInformation(customerId);
-        }
-        catch
-        {
-            return null;
-        }
+        return _customerService.GetCustomerInformation(customerId);
     }
 
     public int GetOrderId(Order order)
