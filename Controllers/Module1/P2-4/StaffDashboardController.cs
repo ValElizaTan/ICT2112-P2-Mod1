@@ -66,7 +66,7 @@ public class StaffDashboardController : Controller
             };
         }).ToList();
 
-        ViewBag.Orders = orderViewModels;
+        // ViewBag.Orders = orderViewModels;
 
         ViewBag.PendingOrders = orderViewModels.Where(o => o.Status == "Pending").ToList();
         ViewBag.DispatchedOrders = orderViewModels.Where(o => o.Status == "Dispatched").ToList();
