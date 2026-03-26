@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-user-id="@(HttpContextAccessor.HttpContext!.Session.GetInt32("UserId") ?? 0)">
 
     @await Html.PartialAsync("_Navbar")
 

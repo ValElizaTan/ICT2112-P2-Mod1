@@ -53,6 +53,7 @@ public class Module1Controller : Controller
         }
 
         HttpContext.Session.SetInt32("SessionId", result.Session!.SessionId);
+        HttpContext.Session.SetInt32("UserId", result.Session.UserId);
         HttpContext.Session.SetString("UserName", result.UserName ?? email);
         HttpContext.Session.SetString("UserRole", result.Session.RoleString);
 
@@ -153,6 +154,7 @@ public class Module1Controller : Controller
         }
 
         HttpContext.Session.SetInt32("SessionId", result.Session.SessionId);
+        HttpContext.Session.SetInt32("UserId", result.Session.UserId);
         HttpContext.Session.SetString("UserName", result.UserName ?? StaffEmail);
         HttpContext.Session.SetString("UserEmail", StaffEmail);
         HttpContext.Session.SetString("UserRole", roleString);
