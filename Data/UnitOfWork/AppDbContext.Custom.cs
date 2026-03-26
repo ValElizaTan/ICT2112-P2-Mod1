@@ -171,6 +171,12 @@ public partial class AppDbContext
                   .HasColumnName("deliverytype").HasColumnType("delivery_duration_enum");
         });
 
+        modelBuilder.Entity<Orderstatushistory>(entity =>
+        {
+            entity.Property<OrderHistoryStatus?>("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("status").HasColumnType("order_history_status_enum");
+        });
+
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.Property("Purpose").HasField("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)
@@ -284,13 +290,13 @@ public partial class AppDbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.Property("Type").HasField("_type").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionType>("_type").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("type").HasColumnType("transaction_type_enum");
 
-            entity.Property("Purpose").HasField("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionPurpose>("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("purpose").HasColumnType("transaction_purpose_enum");
 
-            entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionStatus>("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("status").HasColumnType("transaction_status_enum");
         });
 

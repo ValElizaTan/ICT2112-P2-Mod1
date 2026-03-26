@@ -16,8 +16,18 @@ public class OrderMapper : IOrderMapper
 
     public void Insert(Order order)
     {
+        
         _db.Orders.Add(order);
-        _db.SaveChanges();
+        try
+        {
+            _db.SaveChanges();
+        }
+        catch (DbUpdateException ex)
+        {
+            // Log the exception (you can use a logging framework here)
+            Console.WriteLine($"Error inserting order: {ex.Message}");
+            throw; // Re-throw the exception after logging
+        }
     }
 
     public void InsertHistory(Orderstatushistory history)

@@ -7,7 +7,7 @@ using ProRental.Domain.Enums;
 
 public interface IPaymentGatewayService
 {
-    TransactionResponse MakePayment(int orderId, decimal totalAmount, TransactionPurpose purpose, PaymentMethodDetails paymentMethodDetails);
+    TransactionResponse MakePayment(decimal totalAmount, TransactionPurpose purpose, PaymentMethodDetails paymentMethodDetails);
     TransactionResponse GetRefundDeposit(int refundId);
     TransactionResponse MakePenaltyPayment(int orderId, decimal penaltyAmount, TransactionPurpose purpose, PaymentMethodDetails paymentMethodDetails);
 }

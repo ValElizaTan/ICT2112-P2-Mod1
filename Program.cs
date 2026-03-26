@@ -1,9 +1,7 @@
 using ProRental.Data.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
 using ProRental.Domain.Enums;
-using ProRental.Domain.Entities;
 using ProRental.Controllers.Module1;
 using ProRental.Data.Services;
 using ProRental.Domain.Services;
@@ -13,7 +11,6 @@ using ProRental.Data;
 using ProRental.Domain.Controls;
 using ProRental.Interfaces.Domain;
 using ProRental.Interfaces.Data;
-using ProRental.Controllers;
 using ProRental.Domain.Module6.Controls;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -185,6 +182,7 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotification
 // Data source
 builder.Services.AddScoped<ICatalogueService, CatalogueService>();
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
+builder.Services.AddScoped<ITransactionMapper, TransactionMapper>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();

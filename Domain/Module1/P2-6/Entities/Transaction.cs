@@ -1,16 +1,62 @@
 using ProRental.Domain.Enums;
+
 namespace ProRental.Domain.Entities;
+
 public partial class Transaction
 {
-    private TransactionType? _type;
-    private TransactionType? Type { get => _type; set => _type = value; }
-    public void UpdateType(TransactionType newValue) => _type = newValue;
+    private TransactionType _type;
+    private TransactionPurpose _purpose;
+    private TransactionStatus _status;
 
-    private TransactionPurpose? _purpose;
-    private TransactionPurpose? Purpose { get => _purpose; set => _purpose = value; }
-    public void UpdatePurpose(TransactionPurpose newValue) => _purpose = newValue;
+    public int TransactionId => Transactionid;
 
-    private TransactionStatus? _status;
-    private TransactionStatus? Status { get => _status; set => _status = value; }
-    public void UpdateStatus(TransactionStatus newValue) => _status = newValue;
+    public static Transaction Create(
+        decimal amount,
+        TransactionType type,
+        TransactionPurpose purpose,
+        string? providerTransactionId,
+        TransactionStatus status)
+    {
+        var transaction = new Transaction
+        {
+            _type = type,
+            _purpose = purpose,
+            _status = status,
+            Amount = amount,
+            Providertransactionid = providerTransactionId,
+            Createdat = DateTime.UtcNow
+        };
+
+        return transaction;
+    }
+
+    public void ApplyProviderResult(string? providerTransactionId, TransactionStatus status)
+    {
+        Providertransactionid = providerTransactionId;
+        _status = status;
+    }
+
+    public void Initiate()
+    {
+        _status = TransactionStatus.PENDING;
+        // Logic to initiate the transaction, e.g., call payment gateway API
+    }
+
+    public void MarkSuccessful()
+    {
+        _status = TransactionStatus.COMPLETED;
+        // Additional logic for successful transaction
+    }
+
+    public void MarkFailed()
+    {
+        _status = TransactionStatus.FAILED;
+        // Additional logic for failed transaction
+    }
+
+    public void Cancel()
+    {
+        _status = TransactionStatus.CANCELLED;
+        // Additional logic for cancelled transaction
+    }
 }

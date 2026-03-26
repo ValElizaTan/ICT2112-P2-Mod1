@@ -5,7 +5,7 @@ namespace ProRental.Interfaces.Domain;
 
 public interface IOrderService
 {
-    Order CreateOrder(int customerId, int checkoutId,
+    Order CreateOrder(int customerId, int checkoutId, int transactionId,
                       List<(int productId, int quantity, decimal unitPrice, DateTime rentalStart, DateTime rentalEnd)> itemData,
                       DeliveryDuration deliveryType, decimal totalAmount,
                       Dictionary<int, int> productQuantities);

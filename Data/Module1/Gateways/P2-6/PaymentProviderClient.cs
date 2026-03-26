@@ -14,7 +14,7 @@ public class MockPaymentProviderClient : IPaymentProviderClient
 {
     public PaymentProviderResult Charge(decimal amount)
     {
-        return new PaymentProviderResult(NewId("CHG"), true, $"Mock charge approved for {amount:C}.");
+        return new PaymentProviderResult(NewId("CHG"), true, $"Charge approved for {amount:C}.");
     }
 
     public PaymentProviderResult Refund(decimal amount)
