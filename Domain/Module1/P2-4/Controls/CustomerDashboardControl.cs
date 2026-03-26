@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using ProRental.Data.Module1.Interfaces;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Interfaces;
@@ -11,13 +13,19 @@ public class CustomerDashboardControl
     private readonly Team6.IOrderService _orderService;
     private readonly ICustomerService? _customerService;
     private readonly IRefundService? _refundService;
+    private readonly INotificationGateway _notificationGateway;
+    private readonly INotificationPreferenceGateway _preferenceGateway;
 
     public CustomerDashboardControl(
         Team6.IOrderService orderService,
+        INotificationGateway notificationGateway,
+        INotificationPreferenceGateway preferenceGateway,
         ICustomerService? customerService = null,
         IRefundService? refundService = null)
     {
         _orderService = orderService;
+        _notificationGateway = notificationGateway;
+        _preferenceGateway = preferenceGateway;
         _customerService = customerService;
         _refundService = refundService;
     }
@@ -37,6 +45,15 @@ public class CustomerDashboardControl
             BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
         if (property == null) return default;
         return (T?)property.GetValue(obj);
+    }
+
+    // Helper method to set private property value using reflection
+    private void SetPrivateProperty(object obj, string propertyName, object value)
+    {
+        var property = obj.GetType().GetProperty(propertyName,
+            BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+        if (property == null) throw new InvalidOperationException($"Property '{propertyName}' not found on '{obj.GetType().Name}'");
+        property.SetValue(obj, value);
     }
 
     public List<Order> GetCustomerOrders(int customerId)
@@ -160,17 +177,54 @@ public class CustomerDashboardControl
 
     public List<Notification> GetCustomerNotifications(int customerId, bool unreadOnly = false)
     {
-        return new List<Notification>();
+        var notifications = _notificationGateway.FindByUser(customerId);
+        if (unreadOnly)
+        {
+            return notifications.Where(n => !EF.Property<bool>(n, "Isread")).ToList();
+        }
+        return notifications;
     }
 
     public Notificationpreference? GetNotificationPreferences(int customerId)
     {
-        return null;
+        var preference = _preferenceGateway.FindByUser(customerId);
+        if (preference != null)
+            return preference;
+
+        preference = new Notificationpreference();
+        SetPrivateProperty(preference, "Userid", customerId);
+        SetPrivateProperty(preference, "Emailenabled", true);
+        SetPrivateProperty(preference, "Smsenabled", false);
+        SetPrivateProperty(preference, "Notificationfrequency", NotificationFrequency.DAILY);
+        SetPrivateProperty(preference, "NotificationGranularity", NotificationGranularity.ALL);
+
+        return preference;
     }
 
-    public void UpdateNotificationPreferences(int customerId, bool emailEnabled, bool smsEnabled)
+    public void UpdateNotificationPreferences(int customerId, bool emailEnabled, bool smsEnabled, NotificationFrequency frequency, NotificationGranularity granularity)
     {
-        // TODO: Implement when notification service is available
+        var preference = _preferenceGateway.FindByUser(customerId);
+
+        if (preference == null)
+        {
+            preference = new Notificationpreference();
+            SetPrivateProperty(preference, "Userid", customerId);
+        }
+
+        SetPrivateProperty(preference, "Emailenabled", emailEnabled);
+        SetPrivateProperty(preference, "Smsenabled", smsEnabled);
+        SetPrivateProperty(preference, "Notificationfrequency", frequency);
+        SetPrivateProperty(preference, "NotificationGranularity", granularity);
+
+        var preferenceId = GetPrivatePropertyValue<int>(preference, "Preferenceid");
+        if (preferenceId == 0)
+        {
+            _preferenceGateway.InsertPreference(preference);
+        }
+        else
+        {
+            _preferenceGateway.UpdatePreference(preference);
+        }
     }
 
     // Helper methods for refund properties

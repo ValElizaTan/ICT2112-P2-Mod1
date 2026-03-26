@@ -211,11 +211,11 @@ public class CustomerDashboardController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult UpdatePreferences(int customerId, bool emailEnabled, bool smsEnabled)
+    public IActionResult UpdatePreferences(int customerId, bool emailEnabled, bool smsEnabled, NotificationFrequency notificationFrequency, NotificationGranularity notificationGranularity)
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        _control.UpdateNotificationPreferences(customerId, emailEnabled, smsEnabled);
+        _control.UpdateNotificationPreferences(customerId, emailEnabled, smsEnabled, notificationFrequency, notificationGranularity);
         TempData["SuccessMessage"] = "Notification preferences updated.";
         return RedirectToAction(nameof(Notifications), new { customerId });
     }

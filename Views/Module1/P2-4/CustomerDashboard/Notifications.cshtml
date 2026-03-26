@@ -23,10 +23,17 @@
 
     var emailEnabled = false;
     var smsEnabled = false;
+    var selectedFrequency = ProRental.Domain.Enums.NotificationFrequency.DAILY;
+    var selectedGranularity = ProRental.Domain.Enums.NotificationGranularity.ALL;
+
     if (preferences != null)
     {
         emailEnabled = GetPropertyValue<bool>(preferences, "Emailenabled");
         smsEnabled = GetPropertyValue<bool>(preferences, "Smsenabled");
+
+        var prefInfo = preferences.GetNotificationPreferenceInfo();
+        selectedFrequency = prefInfo.NotificationFrequency;
+        selectedGranularity = prefInfo.NotificationGranularity;
     }
 }
 
@@ -67,6 +74,40 @@
                             </label>
                             <div class="small text-muted mt-1">Receive order updates via text message</div>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="notificationFrequency">Frequency</label>
+                            <select class="form-select" id="notificationFrequency" name="notificationFrequency" required>
+                                @foreach (var value in Enum.GetValues(typeof(ProRental.Domain.Enums.NotificationFrequency)).Cast<ProRental.Domain.Enums.NotificationFrequency>())
+                            {
+                                if (value == selectedFrequency)
+                                {
+                                    <option value="@value" selected>@value</option>
+                                }
+                                else
+                                {
+                                    <option value="@value">@value</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="notificationGranularity">Granularity</label>
+                            <select class="form-select" id="notificationGranularity" name="notificationGranularity" required>
+                                @foreach (var value in Enum.GetValues(typeof(ProRental.Domain.Enums.NotificationGranularity)).Cast<ProRental.Domain.Enums.NotificationGranularity>())
+                            {
+                                if (value == selectedGranularity)
+                                {
+                                    <option value="@value" selected>@value</option>
+                                }
+                                else
+                                {
+                                    <option value="@value">@value</option>
+                                }
+                            }
+                        </select>
+                    </div>
 
                         <button type="submit" class="btn btn-primary mt-3">
                             <i class="bi bi-save me-1"></i>Save Preferences
