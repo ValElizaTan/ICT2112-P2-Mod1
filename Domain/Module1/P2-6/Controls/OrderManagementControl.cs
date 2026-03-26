@@ -33,7 +33,7 @@ public class OrderManagementControl : IOrderService
 
         // 3a. Write PENDING history entry
         _orderMapper.InsertHistory(
-            Orderstatushistory.Create(order.OrderId, OrderStatus.PENDING,
+            Orderstatushistory.Create(order.OrderId, (OrderHistoryStatus)OrderStatus.PENDING,
                                       "System", "Order created — awaiting inventory confirmation"));
 
         // 4. Call inventory to process the loan
@@ -53,7 +53,7 @@ public class OrderManagementControl : IOrderService
         // 5a. Write CONFIRMED or CANCELLED history entry
         var remark = loanSuccess ? "Inventory confirmed" : "Inventory unavailable — order cancelled";
         _orderMapper.InsertHistory(
-            Orderstatushistory.Create(order.OrderId, finalStatus, "System", remark));
+            Orderstatushistory.Create(order.OrderId, (OrderHistoryStatus)finalStatus, "System", remark));
 
         return order;
     }
@@ -86,7 +86,7 @@ public class OrderManagementControl : IOrderService
         order.UpdateStatus(status);
         _orderMapper.Update(order);
         _orderMapper.InsertHistory(
-            Orderstatushistory.Create(orderId, status, "System", null));
+            Orderstatushistory.Create(orderId, (OrderHistoryStatus)status, "System", null));
     }
 
     public bool CancelOrder(int orderId)
@@ -101,7 +101,7 @@ public class OrderManagementControl : IOrderService
         order.UpdateStatus(OrderStatus.CANCELLED);
         _orderMapper.Update(order);
         _orderMapper.InsertHistory(
-            Orderstatushistory.Create(orderId, OrderStatus.CANCELLED,
+            Orderstatushistory.Create(orderId, (OrderHistoryStatus)OrderStatus.CANCELLED,
                                       "Customer", "Cancelled by customer"));
         return true;
     }

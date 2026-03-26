@@ -6,19 +6,19 @@ namespace ProRental.Domain.Entities;
 public partial class Orderstatushistory
 {
     // ── Enum-typed field (mapped via AppDbContext.Custom.cs) ─────────────
-    private OrderStatus? _status;
-    private OrderStatus? Status { get => _status; set => _status = value; }
+    private OrderHistoryStatus? _status;
+    private OrderHistoryStatus? Status { get => _status; set => _status = value; }
 
     // ── Public accessors ─────────────────────────────────────────────────
     public int HistoryId            => Historyid;
     public int OrderId              => Orderid;
-    public OrderStatus? CurrentStatus => _status;
+    public OrderHistoryStatus? CurrentStatus => _status;
     public DateTime OccurredAt      => _timestamp;
     public string UpdatedBy         => Updatedby;
     public string? StatusRemark     => _remark;
 
     // ── Factory method ───────────────────────────────────────────────────
-    public static Orderstatushistory Create(int orderId, OrderStatus status,
+    public static Orderstatushistory Create(int orderId, OrderHistoryStatus status,
                                             string updatedBy, string? remark = null)
     {
         var history = new Orderstatushistory();
