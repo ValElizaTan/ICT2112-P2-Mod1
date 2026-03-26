@@ -16,13 +16,13 @@ public class OrderManagementControl : IOrderService
         _inventoryService = inventoryService;
     }
 
-    public Order CreateOrder(int customerId, int checkoutId,
+    public Order CreateOrder(int customerId, int checkoutId, int transactionId,
                              List<(int productId, int quantity, decimal unitPrice, DateTime rentalStart, DateTime rentalEnd)> itemData,
                              DeliveryDuration deliveryType, decimal totalAmount,
                              Dictionary<int, int> productQuantities)
     {
         // 1. Build the order entity — starts as PENDING
-        var order = Order.Create(customerId, checkoutId, totalAmount, deliveryType);
+        var order = Order.Create(customerId, checkoutId, transactionId, totalAmount, deliveryType);
 
         // 2. Build and attach each item — checkout passes raw data, we own entity construction
         foreach (var i in itemData)
@@ -34,6 +34,11 @@ public class OrderManagementControl : IOrderService
             order.OrderId, OrderHistoryStatus.PENDING, "system",
             "Order created — awaiting inventory confirmation"));
 
+        // 3a. Write PENDING history entry
+        _orderMapper.InsertHistory(
+            Orderstatushistory.Create(order.OrderId, (OrderHistoryStatus)OrderStatus.PENDING,
+                                      "System", "Order created — awaiting inventory confirmation"));
+
         // 4. Call inventory to process the loan
         var loanSuccess = _inventoryService.ProcessLoan(
             order.OrderId,
@@ -44,13 +49,19 @@ public class OrderManagementControl : IOrderService
         );
 
         // 5. Status transition based on inventory result
-        order.UpdateStatus(loanSuccess ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED);
+        var finalStatus = loanSuccess ? OrderStatus.CONFIRMED : OrderStatus.CANCELLED;
+        order.UpdateStatus(finalStatus);
         _orderMapper.Update(order);
         _orderMapper.InsertHistory(Orderstatushistory.Create(
             order.OrderId,
             loanSuccess ? OrderHistoryStatus.CONFIRMED : OrderHistoryStatus.CANCELLED,
             "system",
             loanSuccess ? "Inventory confirmed" : "Inventory unavailable — order cancelled"));
+
+        // 5a. Write CONFIRMED or CANCELLED history entry
+        var remark = loanSuccess ? "Inventory confirmed" : "Inventory unavailable — order cancelled";
+        _orderMapper.InsertHistory(
+            Orderstatushistory.Create(order.OrderId, (OrderHistoryStatus)finalStatus, "System", remark));
 
         return order;
     }
@@ -82,8 +93,8 @@ public class OrderManagementControl : IOrderService
         var order = GetOrder(orderId);
         order.UpdateStatus(status);
         _orderMapper.Update(order);
-        _orderMapper.InsertHistory(Orderstatushistory.Create(
-            orderId, (OrderHistoryStatus)(int)status, "system", null));
+        _orderMapper.InsertHistory(
+            Orderstatushistory.Create(orderId, (OrderHistoryStatus)status, "System", null));
     }
 
     public bool CancelOrder(int orderId)
@@ -97,8 +108,9 @@ public class OrderManagementControl : IOrderService
 
         order.UpdateStatus(OrderStatus.CANCELLED);
         _orderMapper.Update(order);
-        _orderMapper.InsertHistory(Orderstatushistory.Create(
-            orderId, OrderHistoryStatus.CANCELLED, "customer", "Cancelled by customer"));
+        _orderMapper.InsertHistory(
+            Orderstatushistory.Create(orderId, (OrderHistoryStatus)OrderStatus.CANCELLED,
+                                      "Customer", "Cancelled by customer"));
         return true;
     }
 
