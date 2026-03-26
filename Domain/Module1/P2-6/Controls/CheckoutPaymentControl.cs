@@ -100,7 +100,6 @@ public class CheckoutPaymentControl
         );
 
         var transaction = _paymentGateway.MakePayment(
-            paymentReferenceId,
             amount,
             TransactionPurpose.ORDER,
             details

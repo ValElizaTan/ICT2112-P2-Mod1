@@ -8,25 +8,32 @@ public partial class Transaction
     private TransactionPurpose _purpose;
     private TransactionStatus _status;
 
+    public int TransactionId => Transactionid;
+
     public static Transaction Create(
-        int transactionId,
         decimal amount,
         TransactionType type,
         TransactionPurpose purpose,
-        string? providerTransactionId)
+        string? providerTransactionId,
+        TransactionStatus status)
     {
         var transaction = new Transaction
         {
             _type = type,
             _purpose = purpose,
-            _status = TransactionStatus.PENDING,
-            Transactionid = transactionId,
+            _status = status,
             Amount = amount,
             Providertransactionid = providerTransactionId,
             Createdat = DateTime.UtcNow
         };
 
         return transaction;
+    }
+
+    public void ApplyProviderResult(string? providerTransactionId, TransactionStatus status)
+    {
+        Providertransactionid = providerTransactionId;
+        _status = status;
     }
 
     public void Initiate()

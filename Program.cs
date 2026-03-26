@@ -182,6 +182,7 @@ builder.Services.AddScoped<ProRental.Domain.Module1.P24.Interfaces.INotification
 // Data source
 builder.Services.AddScoped<ICatalogueService, CatalogueService>();
 builder.Services.AddScoped<IOrderMapper, OrderMapper>();
+builder.Services.AddScoped<ITransactionMapper, TransactionMapper>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<IShippingOptionService, FakeShippingService>();
 builder.Services.AddScoped<ISessionMapper, SessionMapper>();

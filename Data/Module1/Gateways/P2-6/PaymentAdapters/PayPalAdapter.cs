@@ -23,14 +23,16 @@ public class PayPalAdapter : IPaymentAdaptors
     {
         var result = _paymentProviderClient.Charge(amount);
         var status = result.Success ? TransactionStatus.COMPLETED : TransactionStatus.FAILED;
-        return new TransactionResponse(transactionId, result.ProviderTransactionId, status, result.Message);
+        var providerTransactionId = BuildProviderTransactionId("paypal", transactionId);
+        return new TransactionResponse(transactionId, providerTransactionId, status, result.Message);
     }
 
     public TransactionResponse ProcessRefund(int transactionId, decimal amount, PaymentMethodDetails? paymentMethodDetails)
     {
         var result = _paymentProviderClient.Refund(amount);
         var status = result.Success ? TransactionStatus.COMPLETED : TransactionStatus.FAILED;
-        return new TransactionResponse(transactionId, result.ProviderTransactionId, status, result.Message);
+        var providerTransactionId = BuildProviderTransactionId("paypal", transactionId);
+        return new TransactionResponse(transactionId, providerTransactionId, status, result.Message);
     }
 
     public void UpdatePaymentStatus(int transactionId, TransactionStatus status)
@@ -41,5 +43,16 @@ public class PayPalAdapter : IPaymentAdaptors
     public void UpdateRefundStatus(int transactionId, TransactionStatus status)
     {
         // Mock adapter: no-op
+    }
+
+    private static string BuildProviderTransactionId(string prefix, int transactionId)
+    {
+        if (transactionId > 0)
+        {
+            return $"{prefix}_txn_{transactionId:D3}";
+        }
+
+        var fallback = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+        return $"{prefix}_txn_{fallback}";
     }
 }

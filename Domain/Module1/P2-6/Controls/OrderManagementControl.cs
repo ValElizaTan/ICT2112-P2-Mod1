@@ -16,13 +16,13 @@ public class OrderManagementControl : IOrderService
         _inventoryService = inventoryService;
     }
 
-    public Order CreateOrder(int customerId, int checkoutId,
+    public Order CreateOrder(int customerId, int checkoutId, int transactionId,
                              List<(int productId, int quantity, decimal unitPrice, DateTime rentalStart, DateTime rentalEnd)> itemData,
                              DeliveryDuration deliveryType, decimal totalAmount,
                              Dictionary<int, int> productQuantities)
     {
         // 1. Build the order entity — starts as PENDING
-        var order = Order.Create(customerId, checkoutId, totalAmount, deliveryType);
+        var order = Order.Create(customerId, checkoutId, transactionId, totalAmount, deliveryType);
 
         // 2. Build and attach each item — checkout passes raw data, we own entity construction
         foreach (var i in itemData)

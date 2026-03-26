@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
 using ProRental.Interfaces.Domain;
 
@@ -140,9 +141,10 @@ public class CheckoutControl : ICheckoutService
         var itemData = _orderBuilderCtrl.BuildOrderItems(cart);
         var productQuantities = _orderBuilderCtrl.BuildProductQuantities(cart);
 
-        var order = _orderService.CreateOrder( // to add in transactionId here
+        var order = _orderService.CreateOrder(
             checkout.GetCustomerId(),
             checkoutId,
+            transactionResponse.transactionId ?? 0,
             itemData,
             deliveryType,
             amountToCharge,
@@ -160,7 +162,7 @@ public class CheckoutControl : ICheckoutService
         return JsonSerializer.Serialize(new
         {
             OrderId = order.OrderId.ToString(),
-            TransactionAmount = amountToCharge,
+            TransactionAmount = Math.Round(amountToCharge, 2),
             TransactionProviderName = transactionResponse.providerName,
             TransactionProviderTransactionId = transactionResponse.providerTransactionId,
             TransactionStatus = transactionResponse.status.ToString()
