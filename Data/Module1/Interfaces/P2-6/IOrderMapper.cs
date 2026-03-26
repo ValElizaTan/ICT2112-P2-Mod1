@@ -11,5 +11,4 @@ public interface IOrderMapper
     List<Order> FindAll();
     List<Order> FindByCustomer(int customerId);
     void Delete(int orderId);
-    void InsertHistory(Orderstatushistory history);
 }

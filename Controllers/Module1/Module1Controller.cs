@@ -314,7 +314,7 @@ public class Module1Controller : Controller
 
         var delivery = Enum.Parse<DeliveryDuration>(deliveryType);
 
-        var order = _orderService.CreateOrder(customerId, checkoutId, itemData,
+        var order = _orderService.CreateOrder(customerId, checkoutId, 0, itemData,
                                                delivery, totalAmount, productQuantities);
 
         TempData["CreatedOrderId"]     = order.OrderId;

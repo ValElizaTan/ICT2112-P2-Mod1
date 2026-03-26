@@ -5,14 +5,11 @@ namespace ProRental.Domain.Entities;
 
 public partial class Orderstatushistory
 {
-    // ── Enum-typed field (mapped via AppDbContext.Custom.cs) ─────────────
-    private OrderHistoryStatus? _status;
-    private OrderHistoryStatus? Status { get => _status; set => _status = value; }
+    // _status and Status property are defined in P2-4 partial (as OrderStatus)
 
     // ── Public accessors ─────────────────────────────────────────────────
     public int HistoryId            => Historyid;
     public int OrderId              => Orderid;
-    public OrderHistoryStatus? CurrentStatus => _status;
     public DateTime OccurredAt      => _timestamp;
     public string UpdatedBy         => Updatedby;
     public string? StatusRemark     => _remark;
@@ -34,7 +31,7 @@ public partial class Orderstatushistory
         typeof(Orderstatushistory).GetProperty("Remark",
             BindingFlags.NonPublic | BindingFlags.Instance)!
             .SetValue(history, remark);
-        history._status = status;
+        history._status = (OrderStatus)status;
         return history;
     }
 }
