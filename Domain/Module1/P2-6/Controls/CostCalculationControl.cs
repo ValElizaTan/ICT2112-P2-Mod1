@@ -94,6 +94,7 @@ public List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items)
     // ===========================
     public decimal CalculateDepositAmount(decimal rentalCost)
     {
-        return rentalCost * 0.2m;
+            decimal deposit = rentalCost * 0.1m;
+            return deposit > 10 ? deposit : 10m;
     }
 }
