@@ -152,16 +152,7 @@ public class CustomerDashboardController : Controller
     public IActionResult TrackOrder(int orderId, int customerId)
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
-
-        var order = _control.GetOrderDetails(orderId, customerId);
-        var status = order != null ? _control.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
-
-        ViewData["Order"] = order;
-        ViewData["OrderStatus"] = status;
-        ViewData["CustomerId"] = customerId;
-        ViewData["Control"] = _control;
-
-        return View();
+        return RedirectToAction("CustomerOrderTracking", "OrderTracking", new { customerId, timelineOrderId = orderId });
     }
 
     [HttpGet]

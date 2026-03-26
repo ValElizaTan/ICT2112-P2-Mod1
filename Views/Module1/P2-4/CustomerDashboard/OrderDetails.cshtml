@@ -154,11 +154,17 @@
                             <p class="mt-2 text-danger">Order has been cancelled.</p>
                         </div>
                     }
+            
+                    <div class="text-center mt-3">
+                        <a asp-controller="OrderTracking" asp-action="CustomerOrderTracking"
+                               asp-route-customerId="@customerId" asp-route-timelineOrderId="@orderId"
+                               class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-clock-history me-1"></i>View Full Timeline
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
 <style>
     .badge.PENDING, .badge-pending { background: #fff3cd; color: #856404; }
