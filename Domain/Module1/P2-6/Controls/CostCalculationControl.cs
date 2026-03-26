@@ -41,59 +41,60 @@ public class CostCalculationControl : ICostCalculation
     // ============================
     // 2. CalculateFinalOrderCost
     // ============================
-public CostSummary CalculateFinalOrderCost(
-    List<SelectedItem> items,
-    int rentalPeriod,
-    int shippingOptionId)
-{
-    var rentalSummary = CalculateRentalCost(items, rentalPeriod);
-
-    decimal deliveryFee = 0;
-
-    var options = _shippingOptionService.GetShippingOptions("");
-    var selected = options.FirstOrDefault(
-    o => o.GetOptionId() == shippingOptionId
-);
-
-    if (selected != null)
+    public CostSummary CalculateFinalOrderCost(
+        List<SelectedItem> items,
+        int rentalPeriod,
+        int shippingOptionId)
     {
-        deliveryFee = selected.GetCost();
+        var rentalSummary = CalculateRentalCost(items, rentalPeriod);
+
+        decimal deliveryFee = 0;
+
+        var options = _shippingOptionService.GetShippingOptions("");
+        var selected = options.FirstOrDefault(
+        o => o.GetOptionId() == shippingOptionId
+    );
+
+        if (selected != null)
+        {
+            deliveryFee = selected.GetCost();
+        }
+
+        return new CostSummary
+        {
+            RentalCost = rentalSummary.RentalCost,
+            DepositAmount = rentalSummary.DepositAmount,
+            DeliveryFee = deliveryFee,
+            TotalCost = rentalSummary.RentalCost + rentalSummary.DepositAmount + deliveryFee
+        };
     }
-
-    return new CostSummary
-    {
-        RentalCost = rentalSummary.RentalCost,
-        DepositAmount = rentalSummary.DepositAmount,
-        DeliveryFee = deliveryFee,
-        TotalCost = rentalSummary.RentalCost + rentalSummary.DepositAmount + deliveryFee
-    };
-}
     // ===========================
     // 3. CalculateCartItemCosts
     // ===========================
-public List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items)
-{
-    var result = new List<CartItemCost>();
-
-    if (items == null || !items.Any())
-        return result;
-
-    foreach (var item in items)
+    public List<CartItemCost> CalculateCartItemCosts(List<Cartitem> items)
     {
-        var price = item.GetProduct()?.GetPrice() ?? 0m;
-        var quantity = item.GetQuantity();
+        var result = new List<CartItemCost>();
 
-        result.Add(new CartItemCost(item, price * quantity));
+        if (items == null || !items.Any())
+            return result;
+
+        foreach (var item in items)
+        {
+            var price = item.GetProduct()?.GetPrice() ?? 0m;
+            var quantity = item.GetQuantity();
+
+            result.Add(new CartItemCost(item, price * quantity));
+        }
+
+        return result;
     }
-
-    return result;
-}
 
     // ===========================
     // 4. CalculateDepositAmount
     // ===========================
     public decimal CalculateDepositAmount(decimal rentalCost)
     {
-        return rentalCost * 0.2m;
+        decimal deposit = rentalCost * 0.1m;
+        return deposit > 10 ? deposit : 10m;
     }
 }
