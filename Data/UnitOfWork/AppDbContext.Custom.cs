@@ -162,7 +162,7 @@ public partial class AppDbContext
                   .HasField("_status")
                   .UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("status")
-                  .HasColumnType("order_history_status_enum");
+                  .HasColumnType("order_status_enum");
         });
 
         modelBuilder.Entity<Payment>(entity =>

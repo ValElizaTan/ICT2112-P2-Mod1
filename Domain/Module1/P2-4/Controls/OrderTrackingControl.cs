@@ -24,7 +24,7 @@ namespace ProRental.Domain.Module1.P24.Controls
                 return OrderStatus.PENDING;
             }
 
-            return (OrderStatus)(int)latest.GetStatus();
+            return latest.GetStatus();
         }
 
         public List<Orderstatushistory> GetOrderTimeline(int orderId)
@@ -67,7 +67,7 @@ namespace ProRental.Domain.Module1.P24.Controls
             var history = new Orderstatushistory(
                 historyId: 0,
                 orderId: orderId,
-                status: (OrderHistoryStatus)(int)newStatus,
+                status: newStatus,
                 timestamp: DateTime.UtcNow,
                 updatedBy: staffId.ToString(),
                 remark: string.IsNullOrWhiteSpace(remark) ? null : remark

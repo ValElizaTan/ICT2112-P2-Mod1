@@ -39,7 +39,7 @@ namespace ProRental.Data.Module1.Gateways
             _context.SaveChanges();
         }
 
-        public List<Orderstatushistory> GetHistoryByStatus(OrderHistoryStatus status)
+        public List<Orderstatushistory> GetHistoryByStatus(OrderStatus status)
         {
             return _context.Orderstatushistories
                 .AsEnumerable()
