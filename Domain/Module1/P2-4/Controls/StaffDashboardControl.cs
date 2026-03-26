@@ -52,7 +52,7 @@ public class StaffDashboardControl
 
     public void NotifyReadyForDispatch(int orderId)
     {
-        _orderService.UpdateOrderStatus(orderId, OrderStatus.CONFIRMED);
+        _orderService.UpdateOrderStatus(orderId, OrderStatus.DISPATCHED);
     }
 
     public List<Order> DisplayOrderList()
