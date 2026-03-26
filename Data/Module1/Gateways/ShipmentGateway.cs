@@ -55,4 +55,9 @@ public class ShipmentGateway : IShipmentGateway
         _context.Shipments.Remove(existing);
         SaveChanges();
     }
+
+    public List<Shipment> GetShipments()
+    {
+      return _context.Shipments.ToList();
+    }
 }

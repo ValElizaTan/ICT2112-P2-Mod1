@@ -21,24 +21,17 @@ public class ShippingController : Controller
             || role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
     }
 
-    public IActionResult DisplayShipmentList()
+public IActionResult DisplayShipmentList(int? trackingId = null)
+{
+    if (trackingId.HasValue)
     {
-        if (!IsStaff()) return RedirectToAction("Login", "Module1");
-        var shipment = _control.GetShipment();
-        return View("ShippingDashboard", shipment);
+        _control.LoadShipment(trackingId.Value);
+        var single = _control.GetShipment();
+        var list = single != null ? new List<Shipment> { single } : new List<Shipment>();
+        ViewBag.FilteredId = trackingId.Value;
+        return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", list);
     }
 
-    public IActionResult ShowCarrierPerformance()
-    {
-        if (!IsStaff()) return RedirectToAction("Login", "Module1");
-        return View("CarrierPerformance");
-    }
-
-    [HttpPost]
-    public IActionResult UpdateManualStatus()
-    {
-        if (!IsStaff()) return RedirectToAction("Login", "Module1");
-        _control.ProcessShippingOrder();
-        return RedirectToAction("DisplayShipmentList");
-    }
+    return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", _control.GetAllShipments());
+}
 }

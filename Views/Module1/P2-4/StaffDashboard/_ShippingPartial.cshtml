@@ -53,7 +53,7 @@
                         <th>Route</th>
                         <th>Status</th>
                         <th>Priority</th>
-                        <th>Reassign</th>
+                        <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,21 +73,12 @@
                                 <td><span class="badge badge-dispatched rounded-pill badge-xs">@ship.Status</span></td>
                                 <td><span class="badge @priClass rounded-pill badge-xs">@ship.Priority</span></td>
                                 <td>
-                                    <form asp-controller="StaffDashboard" asp-action="ReassignAgent" method="post" class="d-flex gap-1 align-items-center">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="orderId" value="@ship.OrderId" />
-                                        <select name="agentId" class="form-select form-select-sm" style="width:120px;font-size:.75rem;">
-                                            @if (ViewBag.ShippingAgents != null)
-                                            {
-                                                foreach (var a in ViewBag.ShippingAgents)
-                                                {
-                                                    <option value="@a.AgentId" selected="@(a.AgentId == ship.AgentId)">@a.AgentName</option>
-                                                }
-                                            }
-                                        </select>
-                                        <button type="submit" class="btn btn-outline-primary btn-sm py-0" title="Reassign"><i class="bi bi-arrow-repeat"></i></button>
-                                    </form>
-                                </td>
+    <a asp-controller="Shipping" asp-action="DisplayShipmentList"
+       asp-route-trackingId="@ship.OrderId"
+       class="btn btn-outline-secondary btn-sm py-0">
+        <i class="bi bi-eye"></i>
+    </a>
+</td>
                             </tr>
                         }
                     }

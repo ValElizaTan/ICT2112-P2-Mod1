@@ -72,20 +72,20 @@ public partial class Shipment
     // Public methods exposed at the bottom of the class
     public ShipmentData GetShipmentInfo() => new()
     {
-        TrackingId = GetTrackingId(),
+        TrackingId = Trackingid,
         Weight = Weight,
-        DestinationAddress = GetDestinationAddress(),
-        DispatchStatus = GetDispatchStatus(),
-        BatchId = GetBatchId(),
+        DestinationAddress = Destination,
+        DispatchStatus = _dispatchStatus,
+        BatchId = Batchid,
     };
 
     public void SetShipmentInfo(ShipmentData info)
     {
-        SetTrackingId(info.TrackingId);
+        Trackingid = info.TrackingId;
         Weight = info.Weight;
-        SetDestinationAddress(info.DestinationAddress);
+        Destination = info.DestinationAddress;
         SetDispatchStatus(info.DispatchStatus);
-        SetBatchId(info.BatchId);
+        Batchid = info.BatchId;
         SetOrders(info.TrackingId);
     }
 }

@@ -10,11 +10,13 @@ public class StaffDashboardController : Controller
 {
     private readonly StaffDashboardControl _control;
     private readonly IOrderTrackingService _orderTrackingService;
+    private readonly ShipmentControl _shipmentControl;
 
-    public StaffDashboardController(StaffDashboardControl control, IOrderTrackingService orderTrackingService)
+    public StaffDashboardController(StaffDashboardControl control, IOrderTrackingService orderTrackingService, ShipmentControl shipmentControl)
     {
         _control = control;
         _orderTrackingService = orderTrackingService;
+        _shipmentControl = shipmentControl;
     }
 
     private bool IsStaff()
@@ -116,9 +118,23 @@ public class StaffDashboardController : Controller
             { "Restocked", 0 }
         };
 
-        // ── Shipping (no public accessors on Shipment entity) ───────
+
+
+        var shipments = _shipmentControl.GetAllShipments();
         ViewBag.ShippingAgents = Enumerable.Empty<dynamic>();
-        ViewBag.ActiveShipments = Enumerable.Empty<dynamic>();
+        ViewBag.ActiveShipments = shipments.Select(s =>
+{
+    var info = s.GetShipmentInfo();
+    return new
+    {
+        OrderId = info.TrackingId,
+        AgentName = "—",
+        Route = string.IsNullOrEmpty(info.DestinationAddress) ? "—" : info.DestinationAddress,
+        Status = info.DispatchStatus ? "Dispatched" : "Pending",
+        Priority = "Medium",
+        AgentId = 0
+    };
+}).Cast<object>().ToList(); 
         ViewBag.ShipDateFrom = "";
         ViewBag.ShipDateTo = "";
         ViewBag.ShipRoute = "";

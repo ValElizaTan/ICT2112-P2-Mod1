@@ -787,3 +787,17 @@ VALUES
 ('Standard', 10.00, 5.0, 7, 'CHEAP', NULL, 'TRUCK', NULL),
 ('Express', 20.00, 10.0, 3, 'FAST', NULL, 'TRUCK', NULL),
 ('Same Day', 35.00, 15.0, 1, 'FAST', NULL, 'TRUCK', NULL);
+
+-- ================================================================
+-- SHIPMENT SEED DATA
+-- Requires "Order" and delivery_batch to be populated first
+-- ================================================================
+INSERT INTO Shipment (orderId, batchId, status, weight, destination) VALUES
+-- Order 1 is DELIVERED, linking to Batch 2 (SHIPPEDOUT)
+(1, 2, 'DELIVERED', 2.50, '123 Orchard Rd, Singapore 238123'),
+
+-- Order 4 is DISPATCHED, linking to Batch 2 (SHIPPEDOUT)
+(4, 2, 'IN_TRANSIT', 1.80, '5 Jurong East St, Singapore 609000'),
+
+-- Order 12 is PENDING, linking to Batch 1 (PENDING)
+(12, 1, 'PENDING', 0.80, '456 Marina Bay, Singapore 018972');

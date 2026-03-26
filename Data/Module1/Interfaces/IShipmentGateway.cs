@@ -8,4 +8,5 @@ public interface IShipmentGateway
     void InsertShipment(Shipment shipment);
     void Update(int shipmentId, ShipmentData data);
     void Delete(int shipmentId);
+    List<Shipment> GetShipments();
 }
