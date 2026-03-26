@@ -5,14 +5,14 @@ namespace ProRental.Domain.Entities
 {
     public partial class Orderstatushistory
     {
-        private OrderHistoryStatus _status;
-        private OrderHistoryStatus Status
+        private OrderStatus _status;
+        private OrderStatus Status
         {
             get => _status;
             set => _status = value;
         }
 
-        public Orderstatushistory(int historyId, int orderId, OrderHistoryStatus status, DateTime timestamp, string updatedBy, string? remark)
+        public Orderstatushistory(int historyId, int orderId, OrderStatus status, DateTime timestamp, string updatedBy, string? remark)
         {
             _historyid = historyId;
             _orderid = orderId;
@@ -30,8 +30,8 @@ namespace ProRental.Domain.Entities
         public int GetOrderId() => _orderid;
         public void SetOrderId(int orderId) => _orderid = orderId;
 
-        public OrderHistoryStatus GetStatus() => _status;
-        public void SetStatus(OrderHistoryStatus status) => _status = status;
+        public OrderStatus GetStatus() => _status;
+        public void SetStatus(OrderStatus status) => _status = status;
 
         public DateTime GetTimestamp() => _timestamp;
         public void SetTimestamp(DateTime timestamp) => _timestamp = timestamp;

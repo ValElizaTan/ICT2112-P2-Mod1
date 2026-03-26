@@ -8,6 +8,6 @@ namespace ProRental.Data.Module1.Interfaces
         List<Orderstatushistory> GetTimelineByOrderId(int orderId);
         Orderstatushistory? GetLatestByOrderId(int orderId);
         void InsertHistory(Orderstatushistory history);
-        List<Orderstatushistory> GetHistoryByStatus(OrderHistoryStatus status);
+        List<Orderstatushistory> GetHistoryByStatus(OrderStatus status);
     }
 }

@@ -27,7 +27,7 @@ public partial class Orderstatushistory
         typeof(Orderstatushistory).GetProperty("Remark",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
             .SetValue(history, remark);
-        history._status = status;
+        history._status = (OrderStatus)status;
         return history;
     }
 }

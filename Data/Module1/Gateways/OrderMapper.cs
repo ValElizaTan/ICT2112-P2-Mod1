@@ -37,7 +37,7 @@ namespace ProRental.Data.Module1.Gateways
                 .AsEnumerable()
                 .GroupBy(h => h.GetOrderId())
                 .Select(g => g.OrderByDescending(x => x.GetTimestamp()).FirstOrDefault())
-                .Where(h => h != null && h.GetStatus() == (OrderHistoryStatus)(int)status)
+                .Where(h => h != null && h.GetStatus() == status)
                 .Select(h => h!.GetOrderId())
                 .ToList();
 
