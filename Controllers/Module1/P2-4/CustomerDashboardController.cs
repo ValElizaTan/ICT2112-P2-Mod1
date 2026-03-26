@@ -219,6 +219,16 @@ public class CustomerDashboardController : Controller
         TempData["SuccessMessage"] = "Notification preferences updated.";
         return RedirectToAction(nameof(Notifications), new { customerId });
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult MarkAsRead(int id, int customerId)
+    {
+        if (!IsCustomer()) return RedirectToAction("Login", "Module1");
+
+        _control.MarkNotificationAsRead(id, customerId);
+        return RedirectToAction(nameof(Notifications), new { customerId });
+    }
     public IActionResult OnNavigateToCustomerProfile(int customerId)
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
