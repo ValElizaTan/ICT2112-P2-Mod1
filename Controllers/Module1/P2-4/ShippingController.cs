@@ -34,4 +34,41 @@ public IActionResult DisplayShipmentList(int? trackingId = null)
 
     return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", _control.GetAllShipments());
 }
+
+public IActionResult ShowCarrierPerformance()
+{
+    if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
+    var shipments = _control.GetAllShipments();
+    var dispatched = shipments.Count(s => s.GetShipmentInfo().DispatchStatus);
+    var pending    = shipments.Count - dispatched;
+
+    ViewBag.TotalShipments  = shipments.Count;
+    ViewBag.DispatchedCount = dispatched;
+    ViewBag.PendingCount    = pending;
+    ViewBag.DispatchRate    = shipments.Count > 0
+        ? Math.Round((double)dispatched / shipments.Count * 100, 1)
+        : 0.0;
+
+    return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", shipments);
+}
+
+[HttpPost]
+[ValidateAntiForgeryToken]
+public IActionResult UpdateManualStatus(int trackingId, bool dispatchStatus)
+{
+    if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
+    var existing = _control.GetAllShipments()
+        .FirstOrDefault(s => s.GetShipmentInfo().TrackingId == trackingId);
+
+    if (existing != null)
+    {
+        var info = existing.GetShipmentInfo();
+        info.DispatchStatus = dispatchStatus;
+        existing.SetShipmentInfo(info);
+    }
+
+    return RedirectToAction(nameof(DisplayShipmentList));
+}
 }
