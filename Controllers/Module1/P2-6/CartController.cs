@@ -56,7 +56,7 @@ public class CartController : Controller
                 ? ""
                 : cart.GetRentalEnd().ToString("yyyy-MM-dd");
 
-            return View("~/Views/Module1/P2-6/Cart.cshtml");
+            return View("~/Views/Module1/P2-6/Cart/Cart.cshtml");
         }
         catch (Exception ex)
         {

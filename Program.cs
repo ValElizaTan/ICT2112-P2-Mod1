@@ -19,6 +19,7 @@ builder.Services.AddSession(options =>
 {
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
 });
 
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.Razor.RazorViewEngineOptions>(options =>
@@ -216,11 +217,9 @@ builder.Services.AddScoped<IPaymentAdaptors, StripeAdapter>();
 builder.Services.AddScoped<IPaymentAdaptors, PayPalAdapter>();
 builder.Services.AddScoped<IPaymentAdaptors, AdyenAdapter>();
 
-// Domain (controls — pure business logic, no DB dependency)
+// Domain
 builder.Services.AddScoped<IPaymentAdaptorSelector, PaymentAdaptorSelector>();
 builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayControl>();
-
-// Domain
 builder.Services.AddScoped<CatalogueControl>();
 builder.Services.AddScoped<IOrderService, OrderManagementControl>();
 builder.Services.AddScoped<ISessionService, SessionControl>();
@@ -247,11 +246,6 @@ builder.Services.AddScoped<Module1Controller>();
 
 
 builder.Services.AddDistributedMemoryCache();
-
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-});
 
 builder.Services.AddHttpContextAccessor();
 var app = builder.Build();

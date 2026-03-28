@@ -32,7 +32,7 @@ public class CheckoutController : Controller
             ViewBag.NotifyOptIn = checkout.GetNotifyOptIn();
             ViewBag.SelectedShippingOptionId = checkout.GetShippingOptionId();
 
-            return View("~/Views/Module1/P2-6/Checkout.cshtml");
+            return View("~/Views/Module1/P2-6/Checkout/Checkout.cshtml");
         }
         catch (Exception ex)
         {
@@ -122,7 +122,7 @@ public class CheckoutController : Controller
         ViewBag.TxnProviderName = TempData["TxnProviderName"];
         ViewBag.TxnProviderTransactionId = TempData["TxnProviderTransactionId"];
         ViewBag.TxnStatus = TempData["TxnStatus"];
-        return View("~/Views/Module1/P2-6/CheckoutSuccess.cshtml");
+        return View("~/Views/Module1/P2-6/Checkout/CheckoutSuccess.cshtml");
     }
 
     [HttpPost]

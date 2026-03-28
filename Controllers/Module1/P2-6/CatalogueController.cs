@@ -31,7 +31,7 @@ public class CatalogueController : Controller
             MinPrice = minPrice,
             MaxPrice = maxPrice,
             SortBy = sortBy ?? "name_asc",
-            CurrentPage = page           // ✅ was "Page", correct property is "CurrentPage"
+            CurrentPage = page         
         };
 
         var pagedProducts = _catalogueControl.SearchProducts(filter);
@@ -40,7 +40,7 @@ public class CatalogueController : Controller
         {
             PagedProducts = pagedProducts,
             Filter = filter,
-            Categories = _catalogueControl.GetCategories(), // ✅ added below
+            Categories = _catalogueControl.GetCategories(), 
             Availability = new Dictionary<int, AvailabilityStatus>(),
             CarbonData = new Dictionary<int, CarbonFootprint?>()
         };
@@ -51,7 +51,7 @@ public class CatalogueController : Controller
             vm.CarbonData[p.GetProductId()] = _catalogueControl.GetCarbonFootprint(p.GetProductId());
         }
 
-        return View("~/Views/Module1/P2-6/CatalogBrowsing.cshtml", vm);
+        return View("~/Views/Module1/P2-6/Catalogue/CatalogBrowsing.cshtml", vm);
     }
 
     private int? GetResolvedCustomerId()
@@ -124,6 +124,6 @@ public class CatalogueController : Controller
             Carbon = _catalogueControl.GetCarbonFootprint(id)
         };
 
-        return View("~/Views/Module1/P2-6/ProductDetail.cshtml", vm);
+        return View("~/Views/Module1/P2-6/Catalogue/ProductDetail.cshtml", vm);
     }
 }
