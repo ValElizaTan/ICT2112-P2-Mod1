@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using ProRental.Domain.Enums;
 using ProRental.Domain.Entities;
 using ProRental.Domain.Module1.P24.Controls;
@@ -166,6 +167,143 @@ public class StaffDashboardController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    public IActionResult FilterShipments(string? dateFrom, string? dateTo, string? route)
+    {
+        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
+
+        // ── Staff info ──────────────────────────────────────────────
+        ViewBag.StaffName = HttpContext.Session.GetString("UserName") ?? "Staff";
+        ViewBag.StaffRole = HttpContext.Session.GetString("UserRole") ?? "Staff";
+        ViewBag.UnreadNotifications = 0;
+        ViewBag.Notifications = Enumerable.Empty<dynamic>();
+
+        // ── Orders (minimal - keep dashboard functional) ────────────
+        var allOrders = _control.GetAllOrders();
+        var orderViewModels = allOrders.Select(o =>
+        {
+            var status = MapStatus(o.CurrentStatus);
+            return new
+            {
+                OrderId = o.OrderId,
+                CustomerName = _control.GetCustomerName(o.CustomerId),
+                ItemCount = o.Orderitems?.Count ?? 0,
+                StartDate = o.OrderDate,
+                EndDate = o.OrderDate.AddDays(GetRentalDays(o.DeliveryDurationType)),
+                Total = o.TotalAmount,
+                Status = status,
+                DispatchedOn = o.OrderDate,
+                DaysOverdue = CalculateDaysOverdue(o.OrderDate, o.DeliveryDurationType),
+                DeliveryAddress = "N/A"
+            };
+        }).ToList();
+
+        ViewBag.Orders = allOrders;
+        ViewBag.PendingOrders = orderViewModels.Where(o => o.Status == "Pending").ToList();
+        ViewBag.DispatchedOrders = orderViewModels.Where(o => o.Status == "Dispatched").ToList();
+        ViewBag.OverdueOrders = orderViewModels.Where(o => o.DaysOverdue > 0 && o.Status != "Cancelled").ToList();
+        ViewBag.PendingCount = orderViewModels.Count(o => o.Status == "Pending");
+        ViewBag.DispatchedCount = orderViewModels.Count(o => o.Status == "Dispatched");
+        ViewBag.ReadyCount = orderViewModels.Count(o => o.Status == "Ready for Dispatch");
+        ViewBag.OverdueCount = ((IEnumerable<dynamic>)ViewBag.OverdueOrders).Count();
+
+        // ── Inventory ───────────────────────────────────────────────
+        var allProducts = _control.GetAllProducts();
+        var inventoryItems = allProducts.Select(p => new
+        {
+            ItemId = p.GetProductId(),
+            ProductName = p.GetProductName(),
+            Sku = p.GetSku(),
+            Category = p.GetCategoryName(),
+            Status = MapProductStatus(p.GetProductStatus()),
+            WarehouseLocation = "Main Warehouse",
+            UpdatedAt = DateTime.UtcNow,
+            IsClearanceCandidate = false
+        }).ToList();
+
+        ViewBag.InventoryItems = inventoryItems;
+        ViewBag.InventoryItemCount = inventoryItems.Count;
+        ViewBag.InventoryFilter = "";
+        ViewBag.DispatchQueue = orderViewModels
+            .Where(o => o.Status == "Ready for Dispatch" || o.Status == "Confirmed")
+            .Select(o => new { o.OrderId, o.CustomerName, DeliveryAddress = o.DeliveryAddress, TargetDate = o.EndDate })
+            .ToList();
+
+        // ── Shipping filter ─────────────────────────────────────────
+        var allShipments = _shipmentControl.GetAllShipments();
+
+        var fromDate = ParseFlexibleDate(dateFrom);
+        var toDate = ParseFlexibleDate(dateTo);
+        var routeFilter = route?.Trim();
+
+        // Filter by route/destination and order date range.
+        // Shipments are linked to orders by TrackingId -> OrderId.
+        var filtered = allShipments
+            .Where(s =>
+            {
+                var info = s.GetShipmentInfo();
+                if (!string.IsNullOrWhiteSpace(routeFilter) &&
+                    !info.DestinationAddress.Contains(routeFilter, StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                if (fromDate.HasValue || toDate.HasValue)
+                {
+                    var relatedOrder = allOrders.FirstOrDefault(o => o.OrderId == info.TrackingId);
+                    if (relatedOrder == null)
+                        return false;
+
+                    var shipDate = relatedOrder.OrderDate.Date;
+
+                    if (fromDate.HasValue && shipDate < fromDate.Value.Date)
+                        return false;
+
+                    if (toDate.HasValue && shipDate > toDate.Value.Date)
+                        return false;
+                }
+
+                return true;
+            })
+            .Select(s =>
+            {
+                var info = s.GetShipmentInfo();
+                return new
+                {
+                    OrderId   = info.TrackingId,
+                    AgentName = "—",
+                    Route     = string.IsNullOrEmpty(info.DestinationAddress) ? "—" : info.DestinationAddress,
+                    Status    = info.DispatchStatus ? "Dispatched" : "Pending",
+                    Priority  = "Medium",
+                    AgentId   = 0
+                };
+            })
+            .Cast<object>()
+            .ToList();
+
+        ViewBag.ShippingAgents  = Enumerable.Empty<dynamic>();
+        ViewBag.ActiveShipments = filtered;
+        ViewBag.ShipDateFrom    = fromDate?.ToString("yyyy-MM-dd") ?? "";
+        ViewBag.ShipDateTo      = toDate?.ToString("yyyy-MM-dd") ?? "";
+        ViewBag.ShipRoute       = route    ?? "";
+
+        // ── Remaining stubs ─────────────────────────────────────────
+        ViewBag.StageCounts = new Dictionary<string, int>
+        {
+            { "Inspection", 0 }, { "Repair", 0 }, { "Servicing", 0 },
+            { "Cleaning", 0 }, { "Restocked", 0 }
+        };
+        ViewBag.LoanBatches = Enumerable.Empty<dynamic>();
+        ViewBag.ActiveClearanceBatchCount = 0;
+        ViewBag.ClearanceCandidateCount   = 0;
+        ViewBag.ClearanceOverrideCount    = 0;
+        ViewBag.ClearanceUpsellCount      = 0;
+        ViewBag.RecentClearanceBatches    = Enumerable.Empty<dynamic>();
+        ViewBag.CarbonKgCo2    = "-";
+        ViewBag.CarbonTrend    = "No data yet";
+        ViewBag.AnalyticsWidgets = Enumerable.Empty<dynamic>();
+
+        return View("Index");
+    }
+
     public IActionResult OnNavigateToWalkIn(string type = "new")
     {
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
@@ -229,5 +367,16 @@ public class StaffDashboardController : Controller
         var endDate = orderDate.AddDays(GetRentalDays(duration));
         var overdue = (DateTime.UtcNow - endDate).Days;
         return overdue > 0 ? overdue : 0;
+    }
+
+    private static DateTime? ParseFlexibleDate(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return null;
+
+        var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy" };
+        if (DateTime.TryParseExact(input, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            return parsed;
+
+        return DateTime.TryParse(input, out parsed) ? parsed : (DateTime?)null;
     }
 }

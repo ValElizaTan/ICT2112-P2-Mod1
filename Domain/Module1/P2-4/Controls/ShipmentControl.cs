@@ -1,6 +1,5 @@
 using ProRental.Data.Module1.Interfaces;
 using ProRental.Domain.Entities;
-using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Interfaces;
 
 namespace ProRental.Domain.Module1.P24.Controls;
