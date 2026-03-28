@@ -122,21 +122,17 @@ public class Module1Controller : Controller
     // ── Customer Login Success ───────────────────────────────────────────
 
     // GET /Module1/CustomerLoginSuccess
-    public IActionResult CustomerLoginSuccess()
+public IActionResult CustomerLoginSuccess()
+{
+    var role = HttpContext.Session.GetString("UserRole");
+    if (string.IsNullOrEmpty(role) ||
+        !role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
     {
-        var role = HttpContext.Session.GetString("UserRole");
-        if (string.IsNullOrEmpty(role) ||
-            !role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase))
-        {
-            return RedirectToAction("Login");
-        }
-
-        var viewPath = "~/Views/Module1/P2-6/Auth/CustomerLoginSuccess.cshtml";
-        return ViewExists(viewPath)
-            ? View(viewPath)
-            : RedirectToAction("Index", "Home");
+        return RedirectToAction("Login");
     }
 
+    return View("~/Views/Module1/P2-6/Auth/CustomerLoginSuccess.cshtml");
+}
     // ── Staff Login ──────────────────────────────────────────────────────
 
     // GET /Module1/StaffLogin
