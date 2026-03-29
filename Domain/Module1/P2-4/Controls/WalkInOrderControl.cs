@@ -83,7 +83,7 @@ public class WalkInOrderControl
         return _orderService.CreateOrder(
             customerId,
             checkout.GetCheckoutId(),
-            0, // transactionId — not available for walk-in orders
+            null, // transactionId — not available for walk-in orders
             itemData,
             deliveryDuration,
             totalAmount,

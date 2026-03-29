@@ -6,6 +6,7 @@ namespace ProRental.Domain.Entities
     public partial class Orderstatushistory
     {
         private OrderStatus _status;
+        private OrderStatus Status { get => _status; set => _status = value; }
 
         public Orderstatushistory(int historyId, int orderId, OrderStatus status, DateTime timestamp, string updatedBy, string? remark)
         {

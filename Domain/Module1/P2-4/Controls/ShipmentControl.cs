@@ -1,6 +1,5 @@
 using ProRental.Data.Module1.Interfaces;
 using ProRental.Domain.Entities;
-using ProRental.Domain.Enums;
 using ProRental.Domain.Module1.P24.Interfaces;
 
 namespace ProRental.Domain.Module1.P24.Controls;
@@ -21,20 +20,26 @@ public class ShipmentControl
     {
         if (_currentShipment == null) return false;
 
-        var info = _currentShipment.GetShipmentInfo();
-        if (!info.DispatchStatus)
+        if (!_currentShipment.GetDispatchStatus())
         {
-            info.DispatchStatus = true;
-            _currentShipment.SetShipmentInfo(info);
+            _currentShipment.SetDispatchStatus(true);
             return true;
         }
 
         return false;
     }
 
-    public Shipment? GetShipment() => _currentShipment;
+    public Shipment GetShipment()
+    {
+        if (_currentShipment == null)
+        {
+            throw new InvalidOperationException("No shipment is currently loaded.");
+        }
 
-    public bool GetDispatchStatus() => _currentShipment?.GetShipmentInfo().DispatchStatus ?? false;
+        return _currentShipment;
+    }
+
+    public bool GetDispatchStatus() => _currentShipment?.GetDispatchStatus() ?? false;
 
     public List<Shipment> GetAllShipments()
     {
@@ -44,7 +49,7 @@ public class ShipmentControl
     public bool LoadShipment(int trackingId)
     {
         var shipment = _shipmentGateway.GetShipments()
-                                       .FirstOrDefault(s => s.GetShipmentInfo().TrackingId == trackingId);
+                                       .FirstOrDefault(s => s.GetTrackingId() == trackingId);
         if (shipment == null) return false;
         _currentShipment = shipment;
         return true;
