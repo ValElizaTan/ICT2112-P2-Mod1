@@ -61,11 +61,6 @@ public class NotificationDisplayController : Controller, INotificationObserver
         if (pending == null)
             return Json(new { show = false });
 
-        if (preference.NotificationGranularity == NotificationGranularity.IMPORTANT_ONLY)
-        {
-            // TODO: apply actual importance filter; currently treat as eligible
-        }
-
         // Keep pending until the user explicitly marks it as read; this lets all active browser tabs receive the same notification.
         return Json(new { show = true, id = pending.NotificationId, message = $"({pending.Type}) {pending.Message}" });
     }
