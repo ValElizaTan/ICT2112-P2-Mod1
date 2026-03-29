@@ -1,35 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
+using ProRental.Domain.Enums;
 
 namespace ProRental.Domain.Entities;
 
+public record UserInfo(
+    int UserId,
+    UserRole UserRole,
+    string Name,
+    string Email,
+    int? PhoneCountry,
+    string? PhoneNumber
+);
+
 public partial class User
 {
-    private int _userid;
-    private int Userid { get => _userid; set => _userid = value; }
+    private UserRole _userRole;
+    private UserRole UserRole { get => _userRole; set => _userRole = value; }
+    protected User() { }
+    public User(int userId, UserRole userRole, string name, string email, string passwordHash, int phoneCountry, string phoneNumber)
+    {
+        _userid = userId;
+        _userRole = userRole;
+        Name = name;
+        Email = email;
+        Passwordhash = passwordHash;
+        Phonecountry = phoneCountry;
+        Phonenumber = phoneNumber;
+    }
 
-    private string _name = null!;
-    private string Name { get => _name; set => _name = value; }
+    private int GetUserId() => _userid;
+    private string GetName() => Name;
+    private string GetEmail() => Email;
+    private int? GetPhoneCountry() => Phonecountry;
+    private string? GetPhoneNumber() => Phonenumber;
 
-    private string _email = null!;
-    private string Email { get => _email; set => _email = value; }
+    private void SetName(string name) => Name = name;
+    private void SetEmail(string email) => Email = email;
+    private void SetPasswordHash(string passwordHash) => Passwordhash = passwordHash;
+    private void SetPhoneCountry(int phoneCountry) => Phonecountry = phoneCountry;
+    private void SetPhoneNumber(string phoneNumber) => Phonenumber = phoneNumber;
 
-    private string _passwordhash = null!;
-    private string Passwordhash { get => _passwordhash; set => _passwordhash = value; }
+    public UserInfo GetUserInfo() => new(
+        GetUserId(),
+        _userRole,
+        GetName(),
+        GetEmail(),
+        GetPhoneCountry(),
+        GetPhoneNumber()
+    );
 
-    private int? _phonecountry;
-    private int? Phonecountry { get => _phonecountry; set => _phonecountry = value; }
-
-    private string? _phonenumber;
-    private string? Phonenumber { get => _phonenumber; set => _phonenumber = value; }
-
-    public virtual Customer? Customer { get; private set; }
-
-    public virtual ICollection<Notificationpreference> Notificationpreferences { get; private set; } = new List<Notificationpreference>();
-
-    public virtual ICollection<Notification> Notifications { get; private set; } = new List<Notification>();
-
-    public virtual ICollection<Session> Sessions { get; private set; } = new List<Session>();
-
-    public virtual Staff? Staff { get; private set; }
+    public void SetUserInfo(UserInfo info)
+    {
+        _userRole = info.UserRole;
+        SetName(info.Name);
+        SetEmail(info.Email);
+        SetPhoneCountry(info.PhoneCountry ?? 0);
+        SetPhoneNumber(info.PhoneNumber ?? "");
+    }
 }

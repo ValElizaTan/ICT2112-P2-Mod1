@@ -1,35 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace ProRental.Domain.Entities;
+
+public record CustomerInfo(
+    int CustomerId,
+    string Address,
+    int CustomerType,
+    UserInfo User
+);
 
 public partial class Customer
 {
-    private int _customerid;
-    private int Customerid { get => _customerid; set => _customerid = value; }
+    public Customer(int customerId, string address, int customerType, User user)
+    {
+        _customerid = customerId;
+        Address = address;
+        Customertype = customerType;
+        _userid = user.GetUserInfo().UserId;
+        User = user;
+    }
 
-    private int _userid;
-    private int Userid { get => _userid; set => _userid = value; }
+    protected Customer() { }
 
-    private string _address = null!;
-    private string Address { get => _address; set => _address = value; }
+    private int GetCustomerId() => _customerid;
+    private string GetAddress() => _address;
+    private int GetCustomerType() => _customertype;
 
-    private int _customertype;
-    private int Customertype { get => _customertype; set => _customertype = value; }
+    private void SetAddress(string address) => Address = address;
+    private void SetCustomerType(int customerType) => Customertype = customerType;
 
-    public virtual ICollection<Cart> Carts { get; private set; } = new List<Cart>();
+    public CustomerInfo GetCustomerInfo() => new(
+        GetCustomerId(),
+        GetAddress(),
+        GetCustomerType(),
+        User != null ? User.GetUserInfo() : null!
+    );
 
-    public virtual ICollection<Checkout> Checkouts { get; private set; } = new List<Checkout>();
-
-    public virtual ICollection<Customerreward> Customerrewards { get; private set; } = new List<Customerreward>();
-
-    public virtual ICollection<Loanlist> Loanlists { get; private set; } = new List<Loanlist>();
-
-    public virtual ICollection<Order> Orders { get; private set; } = new List<Order>();
-
-    public virtual ICollection<Refund> Refunds { get; private set; } = new List<Refund>();
-
-    public virtual ICollection<Returnrequest> Returnrequests { get; private set; } = new List<Returnrequest>();
-
-    public virtual User User { get; private set; } = null!;
+    public void SetCustomerInfo(CustomerInfo info)
+    {
+        SetAddress(info.Address);
+        SetCustomerType(info.CustomerType);
+        User.SetUserInfo(info.User);
+    }
 }

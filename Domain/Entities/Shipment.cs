@@ -1,26 +1,83 @@
-﻿using System;
 using System.Collections.Generic;
 
 namespace ProRental.Domain.Entities;
 
+public record ShipmentData
+{
+    public int TrackingId { get; set; }
+    public double Weight { get; set; }
+    public string DestinationAddress { get; set; } = string.Empty;
+    public bool DispatchStatus { get; set; }
+    public int BatchId { get; set; }
+}
+
 public partial class Shipment
 {
-    private int _trackingid;
-    private int Trackingid { get => _trackingid; set => _trackingid = value; }
+    private int _trackingId;
+    private List<Order> _orders = new List<Order>();
+    private string _destinationAddress = string.Empty;
+    private bool _dispatchStatus;
+    private int _batchId;
 
-    private int _orderid;
-    private int Orderid { get => _orderid; set => _orderid = value; }
+    protected Shipment() { }
 
-    private int _batchid;
-    private int Batchid { get => _batchid; set => _batchid = value; }
+    public Shipment(int trackingId, double weight, string destinationAddress, bool dispatchStatus, int batchId)
+    {
+        _trackingId = trackingId;
+        SetWeight(weight);
+        _destinationAddress = destinationAddress;
+        _dispatchStatus = dispatchStatus;
+        _batchId = batchId;
+        SetOrders(trackingId);
+    }
 
-    private double _weight;
-    private double Weight { get => _weight; set => _weight = value; }
+    public int GetTrackingId() => _trackingId;
 
-    private string _destination = null!;
-    private string Destination { get => _destination; set => _destination = value; }
+    public void SetTrackingId(int trackingId)
+    {
+        _trackingId = trackingId;
+    }
 
-    public virtual DeliveryBatch Batch { get; private set; } = null!;
+    public List<Order> GetOrders() => _orders;
 
-    public virtual Order Order { get; private set; } = null!;
+    public void SetOrders(int trackingId)
+    {
+        _orders = new List<Order>();
+    }
+
+    public string GetDestinationAddress() => _destinationAddress;
+
+    public void SetDestinationAddress(string destinationAddress)
+    {
+        _destinationAddress = destinationAddress;
+    }
+
+    public bool GetDispatchStatus() => _dispatchStatus;
+
+    public void SetDispatchStatus(bool dispatchStatus)
+    {
+        _dispatchStatus = dispatchStatus;
+    }
+
+    public int GetBatchId() => _batchId;
+
+    public void SetBatchId(int batchId)
+    {
+        _batchId = batchId;
+    }
+
+    public double GetWeight() => Weight;
+
+    public void SetWeight(double weight)
+    {
+        Weight = weight;
+    }
+
+    public Shipment GetShipmentInfo() => this;
+
+    public void SetShipmentInfo(int trackingId)
+    {
+        SetTrackingId(trackingId);
+        SetOrders(trackingId);
+    }
 }

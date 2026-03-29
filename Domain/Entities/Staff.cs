@@ -1,22 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-
 namespace ProRental.Domain.Entities;
+
+public record StaffInfo(
+    int StaffId,
+    string Department,
+    UserInfo User
+);
 
 public partial class Staff
 {
-    private int _staffid;
-    private int Staffid { get => _staffid; set => _staffid = value; }
+    public Staff(int staffId, string department)
+    {
+        _staffid = staffId;
+        Department = department;
+    }
 
-    private int _userid;
-    private int Userid { get => _userid; set => _userid = value; }
+    protected Staff() { }
 
-    private string _department = null!;
-    private string Department { get => _department; set => _department = value; }
+    private int GetStaffId() => _staffid;
+    private string GetDepartment() => _department;
 
-    public virtual ICollection<Staffaccesslog> Staffaccesslogs { get; private set; } = new List<Staffaccesslog>();
+    private void SetDepartment(string department) => Department = department;
 
-    public virtual ICollection<Stafffootprint> Stafffootprints { get; private set; } = new List<Stafffootprint>();
+    public StaffInfo GetStaffInfo() => new(
+        GetStaffId(),
+        GetDepartment(),
+        User.GetUserInfo()
+    );
 
-    public virtual User User { get; private set; } = null!;
+    public void SetStaffInfo(StaffInfo info)
+    {
+        SetDepartment(info.Department);
+        User.SetUserInfo(info.User);
+    }
 }
