@@ -37,6 +37,8 @@ public class StaffProfileController : Controller
                (role.Equals("STAFF", StringComparison.OrdinalIgnoreCase) ||
                 role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
     }
+
+    // View a staff profile and the list of all staff for management
     public IActionResult ViewProfile(int staffId)
     {
         // ── Viewed staff ─────────────────────────────────────────────────

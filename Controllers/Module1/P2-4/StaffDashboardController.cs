@@ -18,6 +18,7 @@ public class StaffDashboardController : Controller
         _shipmentControl = shipmentControl;
     }
 
+    //Check if current user is staff for access control
     private bool IsStaff()
     {
         var role = HttpContext.Session.GetString("UserRole");
@@ -33,6 +34,7 @@ public class StaffDashboardController : Controller
         var orders = _staffDashboardControl.GetAllOrders() ?? new List<Order>();
         var readyItems = _staffDashboardControl.GetInventoryItemsByStatus(InventoryStatus.AVAILABLE);
 
+        // set viewbag data for dashboard, this is for the order numbers and order status view
         ViewBag.Orders = orders;
         ViewBag.InventoryItems = readyItems;
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
@@ -43,6 +45,7 @@ public class StaffDashboardController : Controller
         ViewBag.UnreadNotifications = 0;
         ViewBag.Notifications = Enumerable.Empty<dynamic>();
 
+        // second call to get orders for the orderViewModels, 
         // ── Orders ──────────────────────────────────────────────────
         var allOrders = _staffDashboardControl.GetAllOrders();
 
@@ -302,6 +305,7 @@ public class StaffDashboardController : Controller
         return RedirectToAction("EnterCustomerDetails", "WalkInOrder");
     }
 
+    //Navigate to Shipment  page
     public IActionResult OnNavigateToShipping()
     {
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
@@ -309,13 +313,14 @@ public class StaffDashboardController : Controller
         return RedirectToAction("DisplayShipmentList", "Shipping");
     }
 
+    //Navigate to Staff Profile page
     public IActionResult OnNavigateToStaffProfile()
     {
         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
 
         return RedirectToAction("Index", "StaffProfile");
     }
-
+    
     public IActionResult OnLogout()
     {
         HttpContext.Session.Clear();

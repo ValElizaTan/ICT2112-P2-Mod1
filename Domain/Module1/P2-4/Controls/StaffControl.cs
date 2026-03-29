@@ -13,7 +13,8 @@ public class StaffControl : IStaffService
     {
         _staffGateway = staffGateway;
     }
-
+    
+    // Create a new Staff with the details
     public bool CreateStaff(string name, string email, int phoneCountry,
         int phoneNumber, string passwordHash)
     {
@@ -29,12 +30,12 @@ public class StaffControl : IStaffService
         _staffGateway.InsertStaffWithUser(user, staff);
         return true;
     }
-
+    //Delete a staff by ID 
     public void DeleteStaff(int staffId)
     {
         _staffGateway.DeleteStaffAndUser(staffId);
     }
-
+    //Update staff details by ID
     public void UpdateStaff(int staffId, string name, string email, int phoneCountry,
     string phoneNumber, string? passwordHash)
     {
@@ -66,7 +67,7 @@ public class StaffControl : IStaffService
         staff.SetStaffInfo(updatedStaffInfo);
         _staffGateway.UpdateStaff(staff);
     }
-
+    //Get staff info by ID
     public Staff GetStaffInformation(int staffId)
     {
         var staff = _staffGateway.FindById(staffId);
@@ -74,12 +75,12 @@ public class StaffControl : IStaffService
             throw new InvalidOperationException($"Staff with ID {staffId} not found.");
         return staff;
     }
-
+    // Get staff info by email
     public Staff? GetStaffByEmail(string email)
     {
         return _staffGateway.FindByEmail(email);
     }
-
+    //Get all staff records
     public List<Staff> GetStaff()
     {
         return _staffGateway.FindAll();

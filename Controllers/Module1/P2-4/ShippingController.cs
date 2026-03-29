@@ -14,6 +14,7 @@ public class ShippingController : Controller
         _control = control;
     }
 
+    // Check if current user is staff for access control
     private bool IsStaff()
     {
         var role = HttpContext.Session.GetString("UserRole") ?? "";
