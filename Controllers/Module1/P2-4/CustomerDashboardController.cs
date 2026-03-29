@@ -179,9 +179,17 @@ public class CustomerDashboardController : Controller
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
         var refunds = _control.GetCustomerRefunds(customerId);
-        ViewData["Refunds"] = refunds;
+        var refundDisplayList = refunds.Select(r => new
+        {
+            RefundId = _control.GetRefundId(r),
+            OrderId = _control.GetRefundOrderId(r),
+            RefundDate = _control.GetRefundDate(r),
+            Amount = _control.GetRefundAmount(r),
+            Method = _control.GetRefundMethod(r)
+        }).ToList<dynamic>();
+
+        ViewData["Refunds"] = refundDisplayList;
         ViewData["CustomerId"] = customerId;
-        ViewData["Control"] = _control;
         return View();
     }
 
