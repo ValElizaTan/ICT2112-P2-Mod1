@@ -56,6 +56,15 @@ public class NotificationManager : INotificationSubject
             var pref = _preferenceService.GetPreference(userId)?.GetNotificationPreferenceInfo();
             if (pref != null && pref.NotificationGranularity != Enums.NotificationGranularity.NONE)
             {
+                // Handle granularity filter (e.g. IMPORTANT_ONLY) here if needed before frequency check
+                if (pref.NotificationGranularity == Enums.NotificationGranularity.IMPORTANT_ONLY)
+                {
+                    // If it's not order update or system alert, skip it for important-only users
+                    if (type != Enums.NotificationType.ORDER_UPDATE && type != Enums.NotificationType.SYSTEM) {
+                        return true; // Created but won't show as popup
+                    }
+                }
+                // Check frequency rules
                 bool allowedByFreq = pref.NotificationFrequency switch
                 {
                     Enums.NotificationFrequency.INSTANT => true,
