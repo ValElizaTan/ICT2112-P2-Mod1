@@ -7,23 +7,22 @@ namespace ProRental.Domain.Module1.P24.Controls;
 
 public class StaffDashboardControl
 {
-    private readonly Team6.IOrderService _orderService;
     private readonly Team6.IInventoryService _inventoryService;
     private readonly ICustomerService _customerService;
-
+    private readonly IOrderTrackingService _orderTrackingService;
     public StaffDashboardControl(
-        Team6.IOrderService orderService,
         Team6.IInventoryService inventoryService,
-        ICustomerService customerService)
-    {
-        _orderService = orderService;
+        ICustomerService customerService,
+        IOrderTrackingService orderTrackingService)
+    {        
+        _orderTrackingService = orderTrackingService;
         _inventoryService = inventoryService;
         _customerService = customerService;
     }
 
     public List<Order> GetAllOrders()
     {
-        return _orderService.GetOrders() ?? new List<Order>();
+        return _orderTrackingService.GetAllOrders() ?? new List<Order>();
     }
 
     public List<Product> GetAllProducts()
@@ -50,14 +49,8 @@ public class StaffDashboardControl
         }
     }
 
-    public void NotifyReadyForDispatch(int orderId)
+    public void NotifyReadyForDispatch(int orderId,int staffId)
     {
-        _orderService.UpdateOrderStatus(orderId, OrderStatus.DISPATCHED);
-    }
-
-    public List<Order> DisplayOrderList()
-    {
-        // return _orderService?.GetOrders();
-        return new List<Order>();
+        _orderTrackingService.UpdateStatus(orderId, OrderStatus.READY_FOR_DISPATCH, "Order is ready for dispatch", staffId);
     }
 }

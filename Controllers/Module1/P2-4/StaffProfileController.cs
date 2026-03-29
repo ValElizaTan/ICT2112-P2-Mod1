@@ -7,11 +7,11 @@ namespace ProRental.Controllers.Module1.P24;
 
 public class StaffProfileController : Controller
 {
-    private readonly StaffControl _control;
+    private readonly StaffControl _staffControl;
 
-    public StaffProfileController(StaffControl control)
+    public StaffProfileController(StaffControl staffControl)
     {
-        _control = control;
+        _staffControl = staffControl;
     }
 
     // ── Index / View Profile ─────────────────────────────────────────────
@@ -19,21 +19,28 @@ public class StaffProfileController : Controller
     [HttpGet]
     public IActionResult Index()
     {
+         if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
         var email = HttpContext.Session.GetString("UserEmail");
         if (string.IsNullOrEmpty(email))
             return RedirectToAction("StaffLogin", "Module1");
 
-        var staff = _control.GetStaffByEmail(email);
+        var staff = _staffControl.GetStaffByEmail(email);
         if (staff == null)
             return RedirectToAction("StaffLogin", "Module1");
 
         return ViewProfile(staff.GetStaffInfo().StaffId);
     }
-
+    private bool IsStaff()
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        return !string.IsNullOrEmpty(role) &&
+               (role.Equals("STAFF", StringComparison.OrdinalIgnoreCase) ||
+                role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
+    }
     public IActionResult ViewProfile(int staffId)
     {
         // ── Viewed staff ─────────────────────────────────────────────────
-        Staff staff = _control.GetStaffInformation(staffId);
+        Staff staff = _staffControl.GetStaffInformation(staffId);
         var info = staff.GetStaffInfo();
         ViewBag.StaffInfo = new
         {
@@ -49,7 +56,7 @@ public class StaffProfileController : Controller
         // FindAll() SELECT has no JOIN on User, so Staff.User is null for those rows.
         // Guard with s.User != null before touching GetStaffInfo() at all.
         var allStaff = new List<dynamic>();
-        foreach (var s in _control.GetStaff())
+        foreach (var s in _staffControl.GetStaff())
         {
             if (s.User == null) continue;
             var i = s.GetStaffInfo();
@@ -89,7 +96,7 @@ public class StaffProfileController : Controller
         {
             try
             {
-                _control.UpdateStaff(staffId, name, email, phoneCountry, phoneNumber, passwordHash);
+                _staffControl.UpdateStaff(staffId, name, email, phoneCountry, phoneNumber, passwordHash);
                 TempData["SuccessMessage"] = "Profile updated successfully.";
             }
             catch (Exception ex)
@@ -127,7 +134,7 @@ public class StaffProfileController : Controller
                 if (!int.TryParse(phoneNumber.Replace(" ", ""), out int phoneInt))
                     phoneInt = 0;
 
-                bool created = _control.CreateStaff(name, email, phoneCountry,
+                bool created = _staffControl.CreateStaff(name, email, phoneCountry,
                                                      phoneInt, passwordHash);
                 TempData[created ? "CrudSuccess" : "CrudError"] = created
                     ? $"Staff member '{name}' created successfully."
@@ -151,7 +158,7 @@ public class StaffProfileController : Controller
     {
         try
         {
-            _control.DeleteStaff(staffId);
+            _staffControl.DeleteStaff(staffId);
             TempData["CrudSuccess"] = $"Staff member #{staffId} has been deleted.";
         }
         catch (Exception ex)

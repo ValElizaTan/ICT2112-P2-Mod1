@@ -17,13 +17,20 @@ namespace ProRental.Controllers.Module1.P24
         {
             _orderTrackingService = orderTrackingService;
         }
-
+        private bool IsStaff()
+        {
+            var role = HttpContext.Session.GetString("UserRole");
+            return !string.IsNullOrEmpty(role) &&
+                (role.Equals("STAFF", StringComparison.OrdinalIgnoreCase) ||
+                    role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase));
+        }
         // =========================================================
         // CUSTOMER VIEW
         // =========================================================
         [HttpGet]
         public IActionResult CustomerOrderTracking(int? timelineOrderId = null)
         {
+            if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
             int customerId = ResolveCurrentCustomerId();
 
             var orders = _orderTrackingService.GetOrdersByCustomerId(customerId) ?? new List<Order>();
@@ -60,6 +67,7 @@ namespace ProRental.Controllers.Module1.P24
         [HttpGet]
         public IActionResult StaffOrderTracking(int? orderId = null, OrderStatus? status = null, int? timelineOrderId = null)
         {
+            if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
             int staffId = ResolveCurrentStaffId();
 
             if (!_orderTrackingService.HasUpdatePermission(staffId))

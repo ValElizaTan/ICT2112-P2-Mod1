@@ -6,18 +6,11 @@ namespace ProRental.Controllers.Module1.P24;
 
 public class CustomerProfileController : Controller
 {
-    private readonly CustomerControl _control;
+    private readonly CustomerControl _customerControl;
 
-    public CustomerProfileController(CustomerControl control)
+    public CustomerProfileController(CustomerControl customerControl)
     {
-        _control = control;
-    }
-
-    private bool IsCustomer()
-    {
-        var role = HttpContext.Session.GetString("UserRole");
-        return !string.IsNullOrEmpty(role) &&
-               role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase);
+        _customerControl = customerControl;
     }
 
     [HttpGet]
@@ -27,7 +20,7 @@ public class CustomerProfileController : Controller
 
         // Debug output to console
         Console.WriteLine($"CustomerProfileController.Index called with customerId: {customerId}");
-        Console.WriteLine($"_control is null? {_control == null}");
+        Console.WriteLine($"_customerControl is null? {_customerControl == null}");
 
         try
         {
@@ -35,7 +28,7 @@ public class CustomerProfileController : Controller
             Customer? customer = null;
             try
             {
-                customer = _control?.GetCustomerInformation(customerId);
+                customer = _customerControl?.GetCustomerInformation(customerId);
                 Console.WriteLine($"Customer found: {customer != null}");
             }
             catch (Exception ex)
@@ -97,7 +90,12 @@ public class CustomerProfileController : Controller
             return View();
         }
     }
-
+    private bool IsCustomer()
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        return !string.IsNullOrEmpty(role) &&
+               role.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase);
+    }
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult UpdateCustomerDetails(int customerId, string name, string email, int phoneCountry, int phoneNumber, string passwordHash, string address, int customerType)
@@ -108,7 +106,7 @@ public class CustomerProfileController : Controller
         {
             var finalPasswordHash = string.IsNullOrEmpty(passwordHash) ? "" : passwordHash;
 
-            _control.UpdateCustomerDetails(
+            _customerControl.UpdateCustomerDetails(
                 customerId, name, email, phoneCountry, phoneNumber, finalPasswordHash, address, customerType);
 
             TempData["SuccessMessage"] = "Profile updated successfully!";

@@ -7,12 +7,12 @@ namespace ProRental.Controllers.Module1.P24;
 
 public class CustomerDashboardController : Controller
 {
-    private readonly CustomerDashboardControl _control;
+    private readonly CustomerDashboardControl _customerDashboardControl;
     private readonly RefundControl _refundControl;
 
-    public CustomerDashboardController(CustomerDashboardControl control, RefundControl refundControl)
+    public CustomerDashboardController(CustomerDashboardControl customerDashboardControl, RefundControl refundControl)
     {
-        _control = control;
+        _customerDashboardControl = customerDashboardControl;
         _refundControl = refundControl;
     }
 
@@ -28,11 +28,11 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var allOrders = _control.GetCustomerOrders(customerId);
-        var customer = _control.GetCustomerInformation(customerId);
+        var allOrders = _customerDashboardControl.GetCustomerOrders(customerId);
+        var customer = _customerDashboardControl.GetCustomerInformation(customerId);
 
         // Get return request order IDs to filter them out
-        var returns = _control.GetCustomerReturns(customerId);
+        var returns = _customerDashboardControl.GetCustomerReturns(customerId);
         var returnOrderIds = new HashSet<int>(returns.Select(r =>
         {
             var field = r.GetType().GetField("_orderid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -50,8 +50,8 @@ public class CustomerDashboardController : Controller
         {
             foreach (var order in orders)
             {
-                var status = _control.GetOrderStatusFromOrder(order);
-                var amount = _control.GetTotalAmount(order);
+                var status = _customerDashboardControl.GetOrderStatusFromOrder(order);
+                var amount = _customerDashboardControl.GetTotalAmount(order);
 
                 if (status == OrderStatus.DELIVERED)
                     completedOrders++;
@@ -67,7 +67,7 @@ public class CustomerDashboardController : Controller
         ViewData["ActiveOrdersCount"] = activeOrders;
         ViewData["CompletedOrdersCount"] = completedOrders;
         ViewData["TotalSpent"] = totalSpent;
-        ViewData["Control"] = _control; // Pass control to view for helper methods
+        ViewData["Control"] = _customerDashboardControl; // Pass control to view for helper methods
 
         return View();
     }
@@ -77,13 +77,13 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var order = _control.GetOrderDetails(orderId, customerId);
-        var status = order != null ? _control.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
-        var canCancel = order != null && _control.IsOrderCancellable(orderId, customerId);
+        var order = _customerDashboardControl.GetOrderDetails(orderId, customerId);
+        var status = order != null ? _customerDashboardControl.GetOrderStatusFromOrder(order) : (OrderStatus?)null;
+        var canCancel = order != null && _customerDashboardControl.IsOrderCancellable(orderId, customerId);
 
         // Check if a return has already been initiated for this order
         var hasReturn = _refundControl.GetRefundByOrderId(orderId) != null
-                        || _control.GetCustomerReturns(customerId)
+                        || _customerDashboardControl.GetCustomerReturns(customerId)
                             .Any(r =>
                             {
                                 var f = r.GetType().GetField("_orderid", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -95,7 +95,7 @@ public class CustomerDashboardController : Controller
         ViewData["CanCancel"] = canCancel;
         ViewData["HasReturn"] = hasReturn;
         ViewData["CustomerId"] = customerId;
-        ViewData["Control"] = _control;
+        ViewData["Control"] = _customerDashboardControl;
 
         return View();
     }
@@ -106,7 +106,7 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var success = _control.CancelOrder(orderId, customerId);
+        var success = _customerDashboardControl.CancelOrder(orderId, customerId);
 
         if (success)
         {
@@ -128,7 +128,7 @@ public class CustomerDashboardController : Controller
 
         try
         {
-            var order = _control.GetOrderDetails(orderId, customerId);
+            var order = _customerDashboardControl.GetOrderDetails(orderId, customerId);
             if (order == null)
             {
                 TempData["ErrorMessage"] = "Order not found.";
@@ -160,8 +160,8 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var customerReturns = _control.GetCustomerReturns(customerId);
-        var allOrders = _control.GetCustomerOrders(customerId);
+        var customerReturns = _customerDashboardControl.GetCustomerReturns(customerId);
+        var allOrders = _customerDashboardControl.GetCustomerOrders(customerId);
 
         // Build a lookup of orders by ID for showing order details alongside returns
         var orderLookup = allOrders?.ToDictionary(o => o.OrderId) ?? new Dictionary<int, ProRental.Domain.Entities.Order>();
@@ -169,7 +169,7 @@ public class CustomerDashboardController : Controller
         ViewData["Returns"] = customerReturns;
         ViewData["OrderLookup"] = orderLookup;
         ViewData["CustomerId"] = customerId;
-        ViewData["Control"] = _control;
+        ViewData["Control"] = _customerDashboardControl;
         return View();
     }
 
@@ -178,10 +178,10 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var refunds = _control.GetCustomerRefunds(customerId);
+        var refunds = _customerDashboardControl.GetCustomerRefunds(customerId);
         ViewData["Refunds"] = refunds;
         ViewData["CustomerId"] = customerId;
-        ViewData["Control"] = _control;
+        ViewData["Control"] = _customerDashboardControl;
         return View();
     }
 
@@ -190,8 +190,8 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        var notifications = _control.GetCustomerNotifications(customerId);
-        var preferences = _control.GetNotificationPreferences(customerId);
+        var notifications = _customerDashboardControl.GetCustomerNotifications(customerId);
+        var preferences = _customerDashboardControl.GetNotificationPreferences(customerId);
 
         ViewData["Notifications"] = notifications;
         ViewData["Preferences"] = preferences;
@@ -206,7 +206,7 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        _control.UpdateNotificationPreferences(customerId, emailEnabled, smsEnabled, notificationFrequency, notificationGranularity);
+        _customerDashboardControl.UpdateNotificationPreferences(customerId, emailEnabled, smsEnabled, notificationFrequency, notificationGranularity);
         TempData["SuccessMessage"] = "Notification preferences updated.";
         return RedirectToAction(nameof(Notifications), new { customerId });
     }
@@ -217,7 +217,7 @@ public class CustomerDashboardController : Controller
     {
         if (!IsCustomer()) return RedirectToAction("Login", "Module1");
 
-        _control.MarkNotificationAsRead(id, customerId);
+        _customerDashboardControl.MarkNotificationAsRead(id, customerId);
         return RedirectToAction(nameof(Notifications), new { customerId });
     }
     public IActionResult OnNavigateToCustomerProfile(int customerId)

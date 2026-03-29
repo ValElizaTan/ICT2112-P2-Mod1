@@ -100,6 +100,5 @@ public class WalkInOrderControl
         DeliveryDuration.NextDay   => 1,
         DeliveryDuration.ThreeDays => 3,
         DeliveryDuration.OneWeek   => 7,
-        _                          => 7
     };
 }

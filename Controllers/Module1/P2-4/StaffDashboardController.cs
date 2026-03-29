@@ -8,14 +8,12 @@ namespace ProRental.Controllers.Module1.P24;
 
 public class StaffDashboardController : Controller
 {
-    private readonly StaffDashboardControl _control;
-    private readonly IOrderTrackingService _orderTrackingService;
+    private readonly StaffDashboardControl _staffDashboardControl;
     private readonly ShipmentControl _shipmentControl;
 
-    public StaffDashboardController(StaffDashboardControl control, IOrderTrackingService orderTrackingService, ShipmentControl shipmentControl)
+    public StaffDashboardController(StaffDashboardControl staffDashboardControl, IOrderTrackingService orderTrackingService, ShipmentControl shipmentControl)
     {
-        _control = control;
-        _orderTrackingService = orderTrackingService;
+        _staffDashboardControl = staffDashboardControl;
         _shipmentControl = shipmentControl;
     }
 
@@ -30,9 +28,9 @@ public class StaffDashboardController : Controller
     [HttpGet]
     public IActionResult Index()
     {
-        var orders = _orderTrackingService.GetAllOrders() ?? new List<Order>();
-        // var orders = _control.DisplayOrderList();
-        var readyItems = _control.GetInventoryItemsByStatus(InventoryStatus.AVAILABLE);
+        // Get orders, inventory items, and staff info for dashboard display
+        var orders = _staffDashboardControl.GetAllOrders() ?? new List<Order>();
+        var readyItems = _staffDashboardControl.GetInventoryItemsByStatus(InventoryStatus.AVAILABLE);
 
         ViewBag.Orders = orders;
         ViewBag.InventoryItems = readyItems;
@@ -45,11 +43,11 @@ public class StaffDashboardController : Controller
         ViewBag.Notifications = Enumerable.Empty<dynamic>();
 
         // ── Orders ──────────────────────────────────────────────────
-        var allOrders = _control.GetAllOrders();
+        var allOrders = _staffDashboardControl.GetAllOrders();
 
         var orderViewModels = allOrders.Select(o =>
         {
-            var customerName = _control.GetCustomerName(o.CustomerId);
+            var customerName = _staffDashboardControl.GetCustomerName(o.CustomerId);
             var status = MapStatus(o.CurrentStatus);
             var itemCount = o.Orderitems?.Count ?? 0;
 
@@ -80,7 +78,7 @@ public class StaffDashboardController : Controller
         ViewBag.OverdueCount = ((IEnumerable<dynamic>)ViewBag.OverdueOrders).Count();
 
         // ── Inventory ───────────────────────────────────────────────
-        var allProducts = _control.GetAllProducts();
+        var allProducts = _staffDashboardControl.GetAllProducts();
         var inventoryItems = allProducts.Select(p => new
         {
             ItemId = p.GetProductId(),
@@ -118,8 +116,6 @@ public class StaffDashboardController : Controller
             { "Restocked", 0 }
         };
 
-
-
         var shipments = _shipmentControl.GetAllShipments();
         ViewBag.ShippingAgents = Enumerable.Empty<dynamic>();
         ViewBag.ActiveShipments = shipments.Select(s =>
@@ -134,7 +130,7 @@ public class StaffDashboardController : Controller
         Priority = "Medium",
         AgentId = 0
     };
-}).Cast<object>().ToList(); 
+}).Cast<object>().ToList();
         ViewBag.ShipDateFrom = "";
         ViewBag.ShipDateTo = "";
         ViewBag.ShipRoute = "";
@@ -157,14 +153,6 @@ public class StaffDashboardController : Controller
         return View();
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult NotifyReadyForDispatch(int orderId)
-    {
-        if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
-        _control.NotifyReadyForDispatch(orderId);
-        return RedirectToAction(nameof(Index));
-    }
 
     public IActionResult OnNavigateToWalkIn(string type = "new")
     {
