@@ -1,10 +1,7 @@
-@using ProRental.Domain.Module1.P24.Controls;
-@inject CustomerDashboardControl control;
-
 @{
     ViewData["Title"] = "Deposit Refunds";
     var customerId = ViewData["CustomerId"] as int? ?? 0;
-    var refunds = ViewData["Refunds"] as List<ProRental.Domain.Entities.Refund> ?? new List<ProRental.Domain.Entities.Refund>();
+    var refunds = ViewData["Refunds"] as List<dynamic> ?? new List<dynamic>();
 }
 
 <div class="container py-4">
@@ -37,15 +34,15 @@
                             @foreach (var refund in refunds)
                             {
                                 <tr>
-                                    <td class="ps-3">@control.GetRefundId(refund)</td>
-                                    <td>@control.GetRefundOrderId(refund)</td>
-                                    <td>@control.GetRefundDate(refund).ToString("MMM dd, yyyy")</td>
+                                    <td class="ps-3">@refund.RefundId</td>
+                                    <td>@refund.OrderId</td>
+                                    <td>@((refund.RefundDate as DateTime?)?.ToString("MMM dd, yyyy"))</td>
                                     <td>
                                         <span class="badge bg-success">
-                                            $@control.GetRefundAmount(refund).ToString("0.00")
+                                            $@((refund.Amount as decimal?)?.ToString("0.00"))
                                         </span>
                                     </td>
-                                    <td>@control.GetRefundMethod(refund)</td>
+                                    <td>@refund.Method</td>
                                 </tr>
                             }
                         }
