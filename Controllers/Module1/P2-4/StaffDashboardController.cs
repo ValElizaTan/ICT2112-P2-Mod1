@@ -167,14 +167,14 @@ public class StaffDashboardController : Controller
         ViewBag.Notifications = Enumerable.Empty<dynamic>();
 
         // ── Orders (minimal - keep dashboard functional) ────────────
-        var allOrders = _control.GetAllOrders();
+        var allOrders = _staffDashboardControl.GetAllOrders();
         var orderViewModels = allOrders.Select(o =>
         {
             var status = MapStatus(o.CurrentStatus);
             return new
             {
                 OrderId = o.OrderId,
-                CustomerName = _control.GetCustomerName(o.CustomerId),
+                CustomerName = _staffDashboardControl.GetCustomerName(o.CustomerId),
                 ItemCount = o.Orderitems?.Count ?? 0,
                 StartDate = o.OrderDate,
                 EndDate = o.OrderDate.AddDays(GetRentalDays(o.DeliveryDurationType)),
@@ -196,7 +196,7 @@ public class StaffDashboardController : Controller
         ViewBag.OverdueCount = ((IEnumerable<dynamic>)ViewBag.OverdueOrders).Count();
 
         // ── Inventory ───────────────────────────────────────────────
-        var allProducts = _control.GetAllProducts();
+        var allProducts = _staffDashboardControl.GetAllProducts();
         var inventoryItems = allProducts.Select(p => new
         {
             ItemId = p.GetProductId(),
