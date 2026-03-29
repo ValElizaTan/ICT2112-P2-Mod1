@@ -1,7 +1,7 @@
 using ProRental.Domain.Entities;
 using ProRental.Domain.Module1.P24.Interfaces;
 
-namespace ProRental.Domain.Module1.P24.Controls;
+namespace ProRental.Domain.Controls.Module1.P2_4;
 
 public class ShipmentBuilder : IShipmentBuilder
 {
