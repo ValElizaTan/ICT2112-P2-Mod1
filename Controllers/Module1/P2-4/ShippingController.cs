@@ -14,6 +14,7 @@ public class ShippingController : Controller
         _control = control;
     }
 
+    // Check if current user is staff for access control
     private bool IsStaff()
     {
         var role = HttpContext.Session.GetString("UserRole") ?? "";
@@ -21,17 +22,18 @@ public class ShippingController : Controller
             || role.Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
     }
 
-public IActionResult DisplayShipmentList(int? trackingId = null)
-{
-    if (trackingId.HasValue)
+    // Display the shipment list, with optional filtering by tracking ID
+    public IActionResult DisplayShipmentList(int? trackingId = null)
     {
-        _control.LoadShipment(trackingId.Value);
-        var single = _control.GetShipment();
-        var list = single != null ? new List<Shipment> { single } : new List<Shipment>();
-        ViewBag.FilteredId = trackingId.Value;
-        return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", list);
-    }
+        if (trackingId.HasValue)
+        {
+            _control.LoadShipment(trackingId.Value);
+            var single = _control.GetShipment();
+            var list = single != null ? new List<Shipment> { single } : new List<Shipment>();
+            ViewBag.FilteredId = trackingId.Value;
+            return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", list);
+        }
 
-    return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", _control.GetAllShipments());
-}
-}
+        return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", _control.GetAllShipments());
+    }
+    }

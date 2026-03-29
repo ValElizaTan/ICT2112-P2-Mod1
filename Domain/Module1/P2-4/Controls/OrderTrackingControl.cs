@@ -18,6 +18,7 @@ namespace ProRental.Domain.Module1.P24.Controls
             _notificationSubject = notificationSubject;
         }
 
+        // GET latest status of an order by order ID
         public OrderStatus GetCurrentOrderStatus(int orderId)
         {
             var latest = _orderStatusHistoryGateway.GetLatestByOrderId(orderId);
@@ -28,12 +29,12 @@ namespace ProRental.Domain.Module1.P24.Controls
 
             return latest.GetStatus();
         }
-
+        // GET order timeline (status history) by order ID
         public List<Orderstatushistory> GetOrderTimeline(int orderId)
         {
             return _orderStatusHistoryGateway.GetTimelineByOrderId(orderId);
         }
-
+        // Update order status with validation and notification
         public void UpdateStatus(int orderId, OrderStatus newStatus, string? remark, int staffId)
         {
             var order = _orderMapper.FindOrderById(orderId);
@@ -41,7 +42,7 @@ namespace ProRental.Domain.Module1.P24.Controls
             {
                 throw new InvalidOperationException("Order not found.");
             }
-
+            //Check for perms
             if (!HasUpdatePermission(staffId))
             {
                 throw new InvalidOperationException("Staff does not have permission to update order status.");
@@ -64,6 +65,7 @@ namespace ProRental.Domain.Module1.P24.Controls
                 throw new InvalidOperationException($"Remark is required for status {newStatus}.");
             }
 
+            // Update the order status in the database
             _orderMapper.UpdateOrderStatus(orderId, newStatus);
 
             var history = new Orderstatushistory(
@@ -74,7 +76,7 @@ namespace ProRental.Domain.Module1.P24.Controls
                 updatedBy: staffId.ToString(),
                 remark: string.IsNullOrWhiteSpace(remark) ? null : remark
             );
-
+            // Insert a new record into order status history
             _orderStatusHistoryGateway.InsertHistory(history);
 
             // Notify customer about order status change
@@ -82,7 +84,7 @@ namespace ProRental.Domain.Module1.P24.Controls
             var notificationMessage = $"Your order #{orderId} status has been updated to {newStatus}.";
             _notificationSubject.CreateNotification(customerId, notificationMessage, NotificationType.ORDER_UPDATE);
         }
-
+        // Bulk update order status with individual validation and result messages
         public List<string> BulkUpdateStatus(List<int> orderIds, OrderStatus newStatus, string? remark, int staffId)
         {
             var messages = new List<string>();
@@ -102,22 +104,22 @@ namespace ProRental.Domain.Module1.P24.Controls
 
             return messages;
         }
-
+        //Filter orders by status
         public List<Order> FilterOrdersByStatus(OrderStatus status)
         {
             return _orderMapper.FindOrdersByStatus(status);
         }
-
+        //Search order by ID
         public Order? SearchOrderById(int orderId)
         {
             return _orderMapper.FindOrderById(orderId);
         }
-
+        // Get orders by customer ID
         public List<Order> GetOrdersByCustomerId(int customerId)
         {
             return _orderMapper.FindOrdersByCustomerId(customerId);
         }
-
+        //Ensures status transitions follow a defined flow wtih no skips or reversals, and prevents updates if already in a final state
         public bool ValidateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus)
         {
             if (currentStatus == newStatus)

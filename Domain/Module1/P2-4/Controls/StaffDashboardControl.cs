@@ -20,21 +20,25 @@ public class StaffDashboardControl
         _customerService = customerService;
     }
 
+    // GET all orders for staff dashboard 
     public List<Order> GetAllOrders()
     {
         return _orderTrackingService.GetAllOrders() ?? new List<Order>();
     }
 
+    // GET all products for staff dashboard 
     public List<Product> GetAllProducts()
     {
         return _inventoryService.GetAllProducts() ?? new List<Product>();
     }
 
+    // GET all inventory items by status for staff dashboard 
     public List<Inventoryitem> GetInventoryItemsByStatus(InventoryStatus status)
     {
         return _inventoryService.GetInventoryItemByStatus(status) ?? new List<Inventoryitem>();
     }
 
+    // GET customer name by ID for staff dashboard
     public string GetCustomerName(int customerId)
     {
         try
@@ -49,6 +53,7 @@ public class StaffDashboardControl
         }
     }
 
+    // Update status of an order to "Ready for Dispatch"
     public void NotifyReadyForDispatch(int orderId,int staffId)
     {
         _orderTrackingService.UpdateStatus(orderId, OrderStatus.READY_FOR_DISPATCH, "Order is ready for dispatch", staffId);

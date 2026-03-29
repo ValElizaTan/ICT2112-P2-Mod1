@@ -31,17 +31,20 @@ public class WalkInOrderControl
         _customerService = customerService;
     }
 
+    // Start a new walk-in order(Staff do on behalf of walk in customer)
     public void StartWalkInOrder(int staffId, int customerId)
     {
         _staffId = staffId;
         _capturedCustomer = _customerService?.GetCustomerInformation(customerId);
     }
 
+    // Capture customer details for walk-in order
     public void CaptureCustomerDetails(Customer customer)
     {
         _capturedCustomer = customer;
     }
 
+    // Create the order
     public Order CreateOrder(int customerId, List<int> productIds, DeliveryType deliveryType)
     {
         var rentalStart = DateTime.UtcNow;
@@ -87,6 +90,7 @@ public class WalkInOrderControl
             productQuantities);
     }
 
+    // This maps delivery type to delivery duration
     private static DeliveryDuration MapDeliveryDuration(DeliveryType type) => type switch
     {
         DeliveryType.EXPRESS     => DeliveryDuration.NextDay,
@@ -95,6 +99,7 @@ public class WalkInOrderControl
         _                        => DeliveryDuration.OneWeek
     };
 
+    // Days based on delivery duration
     private static int GetRentalDays(DeliveryDuration duration) => duration switch
     {
         DeliveryDuration.NextDay   => 1,
