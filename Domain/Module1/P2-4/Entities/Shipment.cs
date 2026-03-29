@@ -24,68 +24,60 @@ public partial class Shipment
     public Shipment(int trackingId, double weight, string destinationAddress, bool dispatchStatus, int batchId)
     {
         _trackingId = trackingId;
-        // Weight is stored in the scaffolded entity portion as _weight / Weight property.
-        // Set it via setter in scaffold or via alternative method if available.
+        SetWeight(weight);
         _destinationAddress = destinationAddress;
         _dispatchStatus = dispatchStatus;
         _batchId = batchId;
         SetOrders(trackingId);
     }
 
-    private int GetTrackingId() => _trackingId;
+    public int GetTrackingId() => _trackingId;
 
-    private void SetTrackingId(int trackingId)
+    public void SetTrackingId(int trackingId)
     {
         _trackingId = trackingId;
     }
 
-    private List<Order> GetOrders() => _orders;
+    public List<Order> GetOrders() => _orders;
 
-    private void SetOrders(int trackingId)
+    public void SetOrders(int trackingId)
     {
-        // Ambiguous signature from spec; this method sets shipments' order list to empty based on trackingId.
-        // In a real implementation, this should retrieve related orders by trackingId.
         _orders = new List<Order>();
     }
 
-    private string GetDestinationAddress() => _destinationAddress;
+    public string GetDestinationAddress() => _destinationAddress;
 
-    private void SetDestinationAddress(string destinationAddress)
+    public void SetDestinationAddress(string destinationAddress)
     {
         _destinationAddress = destinationAddress;
     }
 
-    private bool GetDispatchStatus() => _dispatchStatus;
+    public bool GetDispatchStatus() => _dispatchStatus;
 
-    private void SetDispatchStatus(bool dispatchStatus)
+    public void SetDispatchStatus(bool dispatchStatus)
     {
         _dispatchStatus = dispatchStatus;
     }
 
-    private int GetBatchId() => _batchId;
+    public int GetBatchId() => _batchId;
 
-    private void SetBatchId(int batchId)
+    public void SetBatchId(int batchId)
     {
         _batchId = batchId;
     }
 
-    // Public methods exposed at the bottom of the class
-    public ShipmentData GetShipmentInfo() => new()
-    {
-        TrackingId = Trackingid,
-        Weight = Weight,
-        DestinationAddress = Destination,
-        DispatchStatus = _dispatchStatus,
-        BatchId = Batchid,
-    };
+    public double GetWeight() => Weight;
 
-    public void SetShipmentInfo(ShipmentData info)
+    public void SetWeight(double weight)
     {
-        Trackingid = info.TrackingId;
-        Weight = info.Weight;
-        Destination = info.DestinationAddress;
-        SetDispatchStatus(info.DispatchStatus);
-        Batchid = info.BatchId;
-        SetOrders(info.TrackingId);
+        Weight = weight;
+    }
+
+    public Shipment GetShipmentInfo() => this;
+
+    public void SetShipmentInfo(int trackingId)
+    {
+        SetTrackingId(trackingId);
+        SetOrders(trackingId);
     }
 }

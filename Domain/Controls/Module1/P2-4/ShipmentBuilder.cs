@@ -10,12 +10,12 @@ public class ShipmentBuilder : IShipmentBuilder
     private string _destinationAddress = string.Empty;
     private bool _dispatchStatus;
     private int _batchId;
-    private double _weight;
+    private double _weight = 1.0;
 
     public IShipmentBuilder BuildTrackingInfo(int id, double weight)
     {
         _trackingId = id;
-        _weight = weight;
+        _weight = weight > 0 ? weight : 1.0;
         return this;
     }
 

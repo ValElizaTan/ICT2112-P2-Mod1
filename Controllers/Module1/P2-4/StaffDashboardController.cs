@@ -128,10 +128,10 @@ public class StaffDashboardController : Controller
     var info = s.GetShipmentInfo();
     return new
     {
-        OrderId = info.TrackingId,
+        OrderId = info.GetTrackingId(),
         AgentName = "—",
-        Route = string.IsNullOrEmpty(info.DestinationAddress) ? "—" : info.DestinationAddress,
-        Status = info.DispatchStatus ? "Dispatched" : "Pending",
+        Route = string.IsNullOrEmpty(info.GetDestinationAddress()) ? "—" : info.GetDestinationAddress(),
+        Status = info.GetDispatchStatus() ? "Dispatched" : "Pending",
         Priority = "Medium",
         AgentId = 0
     };
@@ -243,12 +243,12 @@ public class StaffDashboardController : Controller
             {
                 var info = s.GetShipmentInfo();
                 if (!string.IsNullOrWhiteSpace(routeFilter) &&
-                    !info.DestinationAddress.Contains(routeFilter, StringComparison.OrdinalIgnoreCase))
+                    !info.GetDestinationAddress().Contains(routeFilter, StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 if (fromDate.HasValue || toDate.HasValue)
                 {
-                    var relatedOrder = allOrders.FirstOrDefault(o => o.OrderId == info.TrackingId);
+                    var relatedOrder = allOrders.FirstOrDefault(o => o.OrderId == info.GetTrackingId());
                     if (relatedOrder == null)
                         return false;
 
@@ -268,10 +268,10 @@ public class StaffDashboardController : Controller
                 var info = s.GetShipmentInfo();
                 return new
                 {
-                    OrderId   = info.TrackingId,
+                    OrderId   = info.GetTrackingId(),
                     AgentName = "—",
-                    Route     = string.IsNullOrEmpty(info.DestinationAddress) ? "—" : info.DestinationAddress,
-                    Status    = info.DispatchStatus ? "Dispatched" : "Pending",
+                    Route     = string.IsNullOrEmpty(info.GetDestinationAddress()) ? "—" : info.GetDestinationAddress(),
+                    Status    = info.GetDispatchStatus() ? "Dispatched" : "Pending",
                     Priority  = "Medium",
                     AgentId   = 0
                 };

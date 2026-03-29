@@ -25,9 +25,8 @@ public IActionResult DisplayShipmentList(int? trackingId = null)
 {
     if (trackingId.HasValue)
     {
-        _control.LoadShipment(trackingId.Value);
-        var single = _control.GetShipment();
-        var list = single != null ? new List<Shipment> { single } : new List<Shipment>();
+        var loaded = _control.LoadShipment(trackingId.Value);
+        var list = loaded ? new List<Shipment> { _control.GetShipment() } : new List<Shipment>();
         ViewBag.FilteredId = trackingId.Value;
         return View("~/Views/Module1/P2-4/Shipping/ShippingDashboard.cshtml", list);
     }
@@ -40,7 +39,7 @@ public IActionResult ShowCarrierPerformance()
     if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
 
     var shipments = _control.GetAllShipments();
-    var dispatched = shipments.Count(s => s.GetShipmentInfo().DispatchStatus);
+    var dispatched = shipments.Count(s => s.GetShipmentInfo().GetDispatchStatus());
     var pending    = shipments.Count - dispatched;
 
     ViewBag.TotalShipments  = shipments.Count;
@@ -60,13 +59,11 @@ public IActionResult UpdateManualStatus(int trackingId, bool dispatchStatus)
     if (!IsStaff()) return RedirectToAction("StaffLogin", "Module1");
 
     var existing = _control.GetAllShipments()
-        .FirstOrDefault(s => s.GetShipmentInfo().TrackingId == trackingId);
+        .FirstOrDefault(s => s.GetShipmentInfo().GetTrackingId() == trackingId);
 
     if (existing != null)
     {
-        var info = existing.GetShipmentInfo();
-        info.DispatchStatus = dispatchStatus;
-        existing.SetShipmentInfo(info);
+        existing.SetDispatchStatus(dispatchStatus);
     }
 
     return RedirectToAction(nameof(DisplayShipmentList));
