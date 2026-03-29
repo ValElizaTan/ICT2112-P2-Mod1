@@ -1,0 +1,353 @@
+@using ProRental.Domain.Entities
+@using ProRental.Domain.Enums
+
+@{
+    ViewData["Title"] = "Customer Order Tracking";
+
+    var orders = ViewBag.Orders as List<Order> ?? new List<Order>();
+    var customerId = ViewBag.CustomerId as int? ?? 0;
+
+    var allStatuses = new List<OrderStatus>
+    {
+        OrderStatus.PENDING,
+        OrderStatus.CONFIRMED,
+        OrderStatus.PROCESSING,
+        OrderStatus.READY_FOR_DISPATCH,
+        OrderStatus.DISPATCHED,
+        OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED
+    };
+
+    var activeStatuses = new List<OrderStatus>
+    {
+        OrderStatus.PENDING,
+        OrderStatus.CONFIRMED,
+        OrderStatus.PROCESSING,
+        OrderStatus.READY_FOR_DISPATCH,
+        OrderStatus.DISPATCHED
+    };
+
+    var activeCount = orders.Count(o => o.GetStatus().HasValue && activeStatuses.Contains(o.GetStatus()!.Value));
+    var completedCount = orders.Count(o => o.GetStatus() == OrderStatus.DELIVERED);
+    var cancelledCount = orders.Count(o => o.GetStatus() == OrderStatus.CANCELLED);
+    var totalSpent = orders
+        .Sum(o => o.GetTotalAmount());
+}
+
+@functions {
+    public string GetBadgeClass(OrderStatus? status)
+    {
+        return status switch
+        {
+            OrderStatus.PENDING => "badge-pending",
+            OrderStatus.CONFIRMED => "badge-confirmed",
+            OrderStatus.PROCESSING => "badge-processing",
+            OrderStatus.READY_FOR_DISPATCH => "badge-ready",
+            OrderStatus.DISPATCHED => "badge-dispatched",
+            OrderStatus.DELIVERED => "badge-delivered",
+            OrderStatus.CANCELLED => "badge-cancelled",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    public bool IsStatusReached(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return false;
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED;
+        }
+
+        var sequence = new List<OrderStatus>
+        {
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING,
+            OrderStatus.READY_FOR_DISPATCH,
+            OrderStatus.DISPATCHED,
+            OrderStatus.DELIVERED
+        };
+
+        var stepIndex = sequence.IndexOf(step);
+        var currentIndex = sequence.IndexOf(current.Value);
+
+        if (step == OrderStatus.CANCELLED) return false;
+        if (stepIndex < 0 || currentIndex < 0) return false;
+
+        return stepIndex <= currentIndex;
+    }
+
+    public string GetStepClass(OrderStatus step, OrderStatus? current)
+    {
+        if (!current.HasValue) return "step step-muted";
+
+        if (current.Value == OrderStatus.CANCELLED)
+        {
+            return step == OrderStatus.CANCELLED
+                ? "step step-active step-cancelled"
+                : "step step-muted";
+        }
+
+        return IsStatusReached(step, current) ? "step step-active" : "step step-muted";
+    }
+}
+
+<style>
+    .page-title {
+        font-weight: 400;
+    }
+
+    .section-card,
+    .tracking-card,
+    .stats-card {
+        border: 0;
+        border-radius: 18px;
+        box-shadow: 0 .125rem .5rem rgba(0,0,0,.08);
+    }
+
+    .stats-card .card-body {
+        padding: 1.25rem;
+    }
+
+    .orders-table th,
+    .orders-table td {
+        vertical-align: middle;
+    }
+
+    .badge-pending { background: #fff3cd; color: #856404; }
+    .badge-confirmed { background: #cff4fc; color: #055160; }
+    .badge-processing { background: #ffe5b4; color: #7a4b00; }
+    .badge-ready { background: #d1e7dd; color: #0a3622; }
+    .badge-dispatched { background: #cfe2ff; color: #084298; }
+    .badge-delivered { background: #d1e7dd; color: #0a3622; }
+    .badge-cancelled { background: #f8d7da; color: #842029; }
+
+    .summary-box {
+        background: #f8f9fa;
+        border-radius: 14px;
+        padding: 1rem;
+        height: 100%;
+    }
+
+    .timeline-wrapper {
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .timeline-horizontal {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        min-width: 900px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .step {
+        position: relative;
+        flex: 1 1 0;
+        text-align: center;
+        padding: 0 8px;
+    }
+
+    .step:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 100%;
+        height: 3px;
+        background: #dee2e6;
+        z-index: 1;
+    }
+
+    .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        margin: 0 auto 10px auto;
+        position: relative;
+        z-index: 2;
+        border: 4px solid #fff;
+        box-shadow: 0 0 0 2px #dee2e6;
+        background: #adb5bd;
+    }
+
+    .step-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .step-active .step-dot {
+        background: #0d6efd;
+    }
+
+    .step-cancelled .step-dot {
+        background: #dc3545;
+    }
+
+    .step-active .step-label {
+        color: #212529;
+    }
+
+    .step-muted .step-label {
+        color: #adb5bd;
+    }
+
+    .timeline-history-table th,
+    .timeline-history-table td {
+        vertical-align: middle;
+    }
+</style>
+
+<div class="container py-4">
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.Message as string))
+    {
+        <div class="alert alert-success shadow-sm">@ViewBag.Message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger shadow-sm">@ViewBag.ErrorMessage</div>
+    }
+
+    <!-- Dashboard-style order list page -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Customer Order Tracking</h2>
+            <div class="text-muted">Track your rental orders and view their current status.</div>
+        </div>
+        <div class="text-muted">
+            Customer ID: <strong>@customerId</strong>
+        </div>
+    </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active Orders</h6>
+                            <h3 class="mb-0" style="color: #2d7a4f;">@activeCount</h3>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Delivered Orders</h6>
+                            <h3 class="mb-0">@completedCount</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 text-secondary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Spent</h6>
+                            <h3 class="mb-0">$@totalSpent.ToString("0.00")</h3>
+                        </div>
+                        <i class="bi bi-currency-dollar fs-1 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card section-card mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 fw-bold">Order List</h5>
+        </div>
+
+        <div class="card-body p-0">
+            @if (!orders.Any())
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No orders found.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 orders-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Order ID</th>
+                                <th>Order Date</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th class="pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in orders.OrderByDescending(o => o.GetOrderDate()))
+                            {
+                                var currentStatus = order.GetStatus();
+
+                                <tr>
+                                    <td class="ps-4 fw-semibold">#@order.GetOrderId()</td>
+                                    <td>@order.GetOrderDate().ToString("dd MMM yyyy, hh:mm tt")</td>
+                                    <td class="fw-semibold">$@order.GetTotalAmount().ToString("0.00")</td>
+                                    <td>
+                                        <span class="badge @GetBadgeClass(currentStatus) rounded-pill">
+                                            @currentStatus
+                                        </span>
+                                    </td>
+                                    <td class="pe-4">
+                                        <a asp-action="CustomerOrderTracking"
+                                            asp-route-customerId="@customerId"
+                                            asp-route-timelineOrderId="@order.GetOrderId()"
+                                            class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-truck me-1"></i>Track Order
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row mb-4 g-3">
+        <div class="col-md-4">
+            <div class="card section-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-search fs-1" style="color: #2d7a4f;"></i>
+                    <h6 class="mt-2">Track Order</h6>
+                    <p class="small text-muted">Enter your order ID to track its status</p>
+
+                    <form asp-action="CustomerOrderTracking" method="get">
+                        <input type="hidden" name="customerId" value="@customerId" />
+                        <div class="input-group">
+                            <input type="number"
+                                name="timelineOrderId"
+                                class="form-control form-control-sm"
+                                placeholder="Order ID"
+                                required />
+                            <button type="submit" class="btn btn-primary btn-sm">Track</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

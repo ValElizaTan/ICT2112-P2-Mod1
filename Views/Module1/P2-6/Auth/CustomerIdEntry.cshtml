@@ -1,0 +1,79 @@
+@{
+    ViewData["Title"] = "Enter Customer ID";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+
+        <div class="text-center mb-4">
+            <span class="bi bi-person-badge fs-1 text-primary"></span>
+            <h1 class="h3 mt-2 fw-semibold">Customer ID Verification</h1>
+            <p class="text-muted">Enter your customer ID to continue.</p>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                @if (ViewBag.ValidationMessage != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewBag.ValidationMessage
+                    </div>
+                }
+
+                <form asp-action="CustomerIdEntry" method="post">
+                    @Html.AntiForgeryToken()
+                    @if (ViewBag.ReturnAction != null)
+                    {
+                        <input type="hidden" name="returnAction" value="@ViewBag.ReturnAction" />
+                        <input type="hidden" name="returnController" value="@ViewBag.ReturnController" />
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="customerId">
+                            <i class="bi bi-person me-1 text-primary"></i>Customer ID
+                        </label>
+                        <input type="number"
+                               id="customerId"
+                               name="customerId"
+                               class="form-control"
+                               placeholder="Enter your customer ID"
+                               required />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-right me-2"></i>Continue
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        @*  ── Testing hint — remove before production ── *@
+        <div class="alert alert-warning border-warning mt-4 p-3" role="alert">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="bi bi-cone-striped text-warning fs-5"></i>
+                <strong class="small">Testing Only — Seeded Customer IDs</strong>
+            </div>
+            <p class="small text-muted mb-2">The following Customer IDs exist in the database and can be used to test this flow:</p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>1</code></td><td>Alice Tan</td>
+                        <tr><td><code>2</code></td><td>Benjamin Lee</td>
+                        <tr><td><code>3</code></td><td>Charlotte Ng</td>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

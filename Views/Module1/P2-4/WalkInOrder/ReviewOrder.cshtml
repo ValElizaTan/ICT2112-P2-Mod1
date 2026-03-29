@@ -1,0 +1,149 @@
+@model List<ProRental.Domain.Entities.Product>
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Review Order";
+    var productIds = ViewBag.ProductIds as List<int> ?? new List<int>();
+
+    var deliveryIcons = new Dictionary<DeliveryType, string>
+    {
+        { DeliveryType.STANDARD,    "bi-truck" },
+        { DeliveryType.EXPRESS,     "bi-lightning-charge" },
+        { DeliveryType.SELF_PICKUP, "bi-bag-check" }
+    };
+    var deliveryLabels = new Dictionary<DeliveryType, string>
+    {
+        { DeliveryType.STANDARD,    "Standard Delivery" },
+        { DeliveryType.EXPRESS,     "Express Delivery" },
+        { DeliveryType.SELF_PICKUP, "Self Pick-Up" }
+    };
+}
+
+<style>
+    .wio-step-dot { width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;flex-shrink:0; }
+    .wio-step-dot.done  { background:#2d7a4f;color:#fff; }
+    .wio-step-dot.active{ background:#2d7a4f;color:#fff;box-shadow:0 0 0 4px rgba(45,122,79,.18); }
+    .wio-step-dot.idle  { background:#dee2e6;color:#6c757d; }
+    .wio-step-line      { flex-grow:1;height:2px;margin:0 4px;margin-bottom:18px; }
+    .wio-step-line.done { background:#2d7a4f; }
+    .wio-step-line.idle { background:#dee2e6; }
+    .wio-step-label     { font-size:.7rem;margin-top:4px;white-space:nowrap; }
+
+    .delivery-option input[type="radio"] { display:none; }
+    .delivery-option label { cursor:pointer;border:2px solid #dee2e6;border-radius:.5rem;padding:.75rem 1rem;transition:border-color .15s,background .15s; }
+    .delivery-option input[type="radio"]:checked + label { border-color:#2d7a4f;background:rgba(45,122,79,.06); }
+</style>
+
+<div class="d-flex align-items-center gap-2 mt-4 mb-3">
+    <h4 class="mb-0 fw-bold"><i class="bi bi-person-walking me-2" style="color:#2d7a4f;"></i>Walk-In Order</h4>
+</div>
+
+<div class="d-flex align-items-start mb-4">
+    <div class="text-center"><div class="wio-step-dot done"><i class="bi bi-check-lg"></i></div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Details</div></div>
+    <div class="wio-step-line done"></div>
+    <div class="text-center"><div class="wio-step-dot done"><i class="bi bi-check-lg"></i></div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Products</div></div>
+    <div class="wio-step-line done"></div>
+    <div class="text-center"><div class="wio-step-dot active">3</div><div class="wio-step-label fw-semibold" style="color:#2d7a4f;">Review</div></div>
+    <div class="wio-step-line idle"></div>
+    <div class="text-center"><div class="wio-step-dot idle"><i class="bi bi-check-lg"></i></div><div class="wio-step-label text-muted">Confirmed</div></div>
+</div>
+
+<form asp-action="ConfirmOrder" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="customerId" value="@TempData.Peek("CustomerId")" />
+    @foreach (var pid in productIds)
+    {
+        <input type="hidden" name="productIds" value="@pid" />
+    }
+
+    <div class="row g-4">
+        <!-- Customer card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-person me-2" style="color:#2d7a4f;"></i>Customer</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-4 text-muted fw-normal">Name</dt>
+                        <dd class="col-8 fw-semibold mb-2">@TempData.Peek("CustomerName")</dd>
+                        <dt class="col-4 text-muted fw-normal">Email</dt>
+                        <dd class="col-8 mb-2">@TempData.Peek("CustomerEmail")</dd>
+                        <dt class="col-4 text-muted fw-normal">Address</dt>
+                        <dd class="col-8 mb-0">@TempData.Peek("CustomerAddress")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery method card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-truck me-2" style="color:#2d7a4f;"></i>Delivery Method</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var method in Enum.GetValues<DeliveryType>())
+                        {
+                            <div class="delivery-option">
+                                <input type="radio" id="delivery_@method" name="deliveryMethod" value="@method"
+                                       @(method == DeliveryType.STANDARD ? "checked" : "") />
+                                <label for="delivery_@method" class="d-flex align-items-center gap-3 w-100">
+                                    <i class="bi @deliveryIcons[method] fs-5" style="color:#2d7a4f;width:24px;"></i>
+                                    <span class="fw-semibold small">@deliveryLabels[method]</span>
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Selected products card -->
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-bag-check me-2" style="color:#2d7a4f;"></i>Selected Products (@(Model?.Count ?? 0))</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:50%;">Product</th>
+                                <th>Category</th>
+                                <th class="text-end">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                decimal total = 0;
+                                @foreach (var product in Model)
+                                {
+                                    var price = product.GetPrice();
+                                    total += price;
+                                    <tr>
+                                        <td class="fw-semibold">@product.GetProductName()</td>
+                                        <td><span class="badge bg-light text-dark border">@product.GetCategoryName()</span></td>
+                                        <td class="text-end">$@price.ToString("F2")</td>
+                                    </tr>
+                                }
+                                <tr class="table-light">
+                                    <td colspan="2" class="fw-bold text-end">Total</td>
+                                    <td class="text-end fw-bold" style="color:#2d7a4f;">$@total.ToString("F2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+        <a asp-action="SelectProducts" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+        <button type="submit" class="btn btn-success px-4">
+            <i class="bi bi-check-circle me-1"></i>Confirm Order
+        </button>
+    </div>
+</form>

@@ -1045,7 +1045,7 @@ CREATE TABLE DamageReport (
 CREATE TABLE IF NOT EXISTS OrderStatusHistory (
     historyId  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     orderId    INT          NOT NULL,
-    status     order_history_status_enum NOT NULL,  -- aligned with order_status_enum values
+    status     order_status_enum NOT NULL,
     timestamp  TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updatedBy  VARCHAR(50)  NOT NULL,
     remark     VARCHAR(255),

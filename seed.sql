@@ -438,6 +438,90 @@ INSERT INTO OrderItem (orderId, productId, quantity, unitPrice, rentalStartDate,
 (15, 4, 1, 110.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '9 days'),
 (15, 6, 1,  60.00, NOW() + INTERVAL '2 days', NOW() + INTERVAL '9 days');
 
+INSERT INTO "orderstatushistory" (orderId, status, timestamp, updatedBy, remark) VALUES
+-- Order 1 : DELIVERED
+(1,  'PENDING',             NOW() - INTERVAL '30 days',        1, NULL),
+(1,  'CONFIRMED',           NOW() - INTERVAL '29 days 20 hours', 1, 'Payment verified'),
+(1,  'PROCESSING',          NOW() - INTERVAL '29 days 8 hours',  2, 'Preparing rental items'),
+(1,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '28 days 18 hours', 2, 'Packed and ready'),
+(1,  'DISPATCHED',          NOW() - INTERVAL '28 days 10 hours', 3, 'Handed to courier'),
+(1,  'DELIVERED',           NOW() - INTERVAL '27 days 18 hours', 3, 'Delivered successfully'),
+
+-- Order 2 : DELIVERED
+(2,  'PENDING',             NOW() - INTERVAL '25 days',        1, NULL),
+(2,  'CONFIRMED',           NOW() - INTERVAL '24 days 18 hours', 1, 'Order confirmed'),
+(2,  'PROCESSING',          NOW() - INTERVAL '24 days',        2, 'Processing order'),
+(2,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '23 days 12 hours', 2, 'Ready for courier'),
+(2,  'DISPATCHED',          NOW() - INTERVAL '23 days',        3, 'Out for delivery'),
+(2,  'DELIVERED',           NOW() - INTERVAL '22 days',        3, 'Delivered to customer'),
+
+-- Order 3 : DELIVERED
+(3,  'PENDING',             NOW() - INTERVAL '20 days',        1, NULL),
+(3,  'CONFIRMED',           NOW() - INTERVAL '19 days 18 hours', 1, 'Payment received'),
+(3,  'PROCESSING',          NOW() - INTERVAL '19 days 8 hours',  2, 'Preparing items'),
+(3,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '18 days 20 hours', 2, 'Ready for dispatch'),
+(3,  'DISPATCHED',          NOW() - INTERVAL '18 days 12 hours', 3, 'Courier collected parcel'),
+(3,  'DELIVERED',           NOW() - INTERVAL '17 days 20 hours', 3, 'Customer received parcel'),
+
+-- Order 4 : DISPATCHED
+(4,  'PENDING',             NOW() - INTERVAL '18 days',        1, NULL),
+(4,  'CONFIRMED',           NOW() - INTERVAL '17 days 20 hours', 1, 'Confirmed by staff'),
+(4,  'PROCESSING',          NOW() - INTERVAL '17 days 6 hours',  2, 'Order being packed'),
+(4,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '16 days 18 hours', 2, 'Packed'),
+(4,  'DISPATCHED',          NOW() - INTERVAL '16 days 10 hours', 3, 'In transit'),
+
+-- Order 5 : DISPATCHED
+(5,  'PENDING',             NOW() - INTERVAL '15 days',        1, NULL),
+(5,  'CONFIRMED',           NOW() - INTERVAL '14 days 18 hours', 1, 'Confirmed'),
+(5,  'PROCESSING',          NOW() - INTERVAL '14 days 4 hours',  2, 'Processing rental items'),
+(5,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '13 days 12 hours', 2, 'Ready to ship'),
+(5,  'DISPATCHED',          NOW() - INTERVAL '13 days',        3, 'Sent out'),
+
+-- Order 6 : READY_FOR_DISPATCH
+(6,  'PENDING',             NOW() - INTERVAL '12 days',        1, NULL),
+(6,  'CONFIRMED',           NOW() - INTERVAL '11 days 16 hours', 1, 'Order approved'),
+(6,  'PROCESSING',          NOW() - INTERVAL '11 days',        2, 'Preparing order'),
+(6,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '10 days 10 hours', 2, 'Awaiting courier pickup'),
+
+-- Order 7 : READY_FOR_DISPATCH
+(7,  'PENDING',             NOW() - INTERVAL '6 days',         1, NULL),
+(7,  'CONFIRMED',           NOW() - INTERVAL '5 days 18 hours', 1, 'Confirmed'),
+(7,  'PROCESSING',          NOW() - INTERVAL '5 days',         2, 'Processing'),
+(7,  'READY_FOR_DISPATCH',  NOW() - INTERVAL '4 days 12 hours', 2, 'Packed and labelled'),
+
+-- Order 8 : PROCESSING
+(8,  'PENDING',             NOW() - INTERVAL '10 days',        1, NULL),
+(8,  'CONFIRMED',           NOW() - INTERVAL '9 days 18 hours',  1, 'Payment verified'),
+(8,  'PROCESSING',          NOW() - INTERVAL '9 days',         2, 'Items being prepared'),
+
+-- Order 9 : PROCESSING
+(9,  'PENDING',             NOW() - INTERVAL '7 days',         1, NULL),
+(9,  'CONFIRMED',           NOW() - INTERVAL '6 days 18 hours',  1, 'Confirmed'),
+(9,  'PROCESSING',          NOW() - INTERVAL '6 days 6 hours',   2, 'Warehouse processing'),
+
+-- Order 10 : CONFIRMED
+(10, 'PENDING',             NOW() - INTERVAL '5 days',         1, NULL),
+(10, 'CONFIRMED',           NOW() - INTERVAL '4 days 16 hours',  1, 'Order confirmed'),
+
+-- Order 11 : CONFIRMED
+(11, 'PENDING',             NOW() - INTERVAL '3 days',         1, NULL),
+(11, 'CONFIRMED',           NOW() - INTERVAL '2 days 18 hours',  1, 'Confirmed and queued'),
+
+-- Order 12 : PENDING
+(12, 'PENDING',             NOW() - INTERVAL '1 day',          1, 'Awaiting payment confirmation'),
+
+-- Order 13 : PENDING
+(13, 'PENDING',             NOW() - INTERVAL '2 hours',        1, 'Newly placed order'),
+
+-- Order 14 : CANCELLED
+(14, 'PENDING',             NOW() - INTERVAL '4 days',         1, NULL),
+(14, 'CONFIRMED',           NOW() - INTERVAL '3 days 18 hours',  1, 'Order initially confirmed'),
+(14, 'CANCELLED',           NOW() - INTERVAL '3 days',         2, 'Customer requested cancellation'),
+
+-- Order 15 : CANCELLED
+(15, 'PENDING',             NOW() - INTERVAL '8 days',         1, NULL),
+(15, 'CANCELLED',           NOW() - INTERVAL '7 days 12 hours',  2, 'Payment timeout, order cancelled');
+
 -- ================================================================
 -- 8. PAYMENT (one per order, using Transaction ids 1–15)
 -- payment_purpose_enum: RENTAL_FEE_DEPOSIT | PENALTY_FEE
@@ -696,3 +780,24 @@ SELECT u.userid, u.email, u.userrole, s.staffid, s.department
 FROM "User" u
 JOIN staff s ON s.userid = u.userid
 WHERE u.email = 'carol@test.com';
+
+INSERT INTO shipping_option
+(display_name, cost, carbonfootprintkg, delivery_days, preference_type, order_id, transport_mode, route_id)
+VALUES
+('Standard', 10.00, 5.0, 7, 'CHEAP', NULL, 'TRUCK', NULL),
+('Express', 20.00, 10.0, 3, 'FAST', NULL, 'TRUCK', NULL),
+('Same Day', 35.00, 15.0, 1, 'FAST', NULL, 'TRUCK', NULL);
+
+-- ================================================================
+-- SHIPMENT SEED DATA
+-- Requires "Order" and delivery_batch to be populated first
+-- ================================================================
+INSERT INTO Shipment (orderId, batchId, status, weight, destination) VALUES
+-- Order 1 is DELIVERED, linking to Batch 2 (SHIPPEDOUT)
+(1, 2, 'DELIVERED', 2.50, '123 Orchard Rd, Singapore 238123'),
+
+-- Order 4 is DISPATCHED, linking to Batch 2 (SHIPPEDOUT)
+(4, 2, 'IN_TRANSIT', 1.80, '5 Jurong East St, Singapore 609000'),
+
+-- Order 12 is PENDING, linking to Batch 1 (PENDING)
+(12, 1, 'PENDING', 0.80, '456 Marina Bay, Singapore 018972');

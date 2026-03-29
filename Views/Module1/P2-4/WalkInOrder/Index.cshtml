@@ -1,0 +1,36 @@
+@{
+    ViewData["Title"] = "Walk-in Order";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-md-8 col-lg-6">
+
+        <div class="text-center mb-4">
+            <span class="bi bi-person-walking fs-1 text-primary"></span>
+            <h1 class="h3 mt-2 fw-semibold">Walk-in Order</h1>
+            <p class="text-muted">Is this customer already registered in the system?</p>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-6">
+                <a asp-action="SelectExistingCustomer" class="card text-center border-primary h-100 text-decoration-none">
+                    <div class="card-body py-4">
+                        <i class="bi bi-person-check fs-1 text-primary mb-2 d-block"></i>
+                        <h5 class="fw-semibold mb-1">Existing Customer</h5>
+                        <p class="text-muted small mb-0">Search and select a registered customer</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6">
+                <a asp-action="EnterCustomerDetails" class="card text-center border-secondary h-100 text-decoration-none">
+                    <div class="card-body py-4">
+                        <i class="bi bi-person-plus fs-1 text-secondary mb-2 d-block"></i>
+                        <h5 class="fw-semibold mb-1">New Customer</h5>
+                        <p class="text-muted small mb-0">Enter details for a new walk-in customer</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>

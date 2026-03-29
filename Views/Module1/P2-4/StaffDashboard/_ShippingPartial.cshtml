@@ -1,0 +1,94 @@
+@{
+    bool hasAgents    = ViewBag.ShippingAgents  != null && ((IEnumerable<dynamic>)ViewBag.ShippingAgents).Any();
+    bool hasShipments = ViewBag.ActiveShipments != null && ((IEnumerable<dynamic>)ViewBag.ActiveShipments).Any();
+}
+
+<div id="shipping" class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h6 class="fw-bold mb-0"><i class="bi bi-truck me-2 text-primary"></i>Shipping &amp; Logistics</h6>
+        <form asp-controller="StaffDashboard" asp-action="FilterShipments" method="get" class="d-flex gap-2 align-items-center flex-wrap">
+            <input type="date" name="dateFrom" class="form-control form-control-sm" style="width:130px;" value="@ViewBag.ShipDateFrom" />
+            <input type="date" name="dateTo"   class="form-control form-control-sm" style="width:130px;" value="@ViewBag.ShipDateTo" />
+            <input type="text" name="route"    class="form-control form-control-sm" style="width:130px;" value="@ViewBag.ShipRoute" placeholder="Route / Zone" />
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-funnel me-1"></i>Filter</button>
+        </form>
+    </div>
+    <div class="card-body">
+
+        <p class="fw-semibold small text-muted text-uppercase mb-2" style="font-size:.7rem;">Shipping Agents</p>
+        @if (hasAgents)
+        {
+            <div class="row g-2 mb-4">
+                @foreach (var agent in ViewBag.ShippingAgents)
+                {
+                    int pct = (agent.Capacity > 0) ? (int)((double)agent.UsedCapacity / agent.Capacity * 100) : 0;
+                    <div class="col-md-6 col-xl-4">
+                        <div class="border rounded p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <span class="fw-semibold small">@agent.AgentName</span>
+                                <span class="badge @(agent.IsActive ? "badge-active" : "badge-inactive") rounded-pill" style="font-size:.68rem;">@(agent.IsActive ? "Active" : "Inactive")</span>
+                            </div>
+                            <p class="small text-muted mb-1">@agent.Services</p>
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>Capacity</span><span>@agent.UsedCapacity / @agent.Capacity</span>
+                            </div>
+                            <div class="agent-cap-bar"><div class="agent-cap-fill" style="width:@pct%;"></div></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted small mb-3">No shipping agents configured.</p>
+        }
+
+        <p class="fw-semibold small text-muted text-uppercase mb-2" style="font-size:.7rem;">Active Shipments</p>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tbl">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Order</th>
+                        <th>Agent</th>
+                        <th>Route</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (hasShipments)
+                    {
+                        foreach (var ship in ViewBag.ActiveShipments)
+                        {
+                            var priClass = ship.Priority switch {
+                                "High"   => "bg-danger",
+                                "Medium" => "bg-warning text-dark",
+                                _        => "bg-secondary"
+                            };
+                            <tr>
+                                <td class="ps-3 fw-semibold small">#@ship.OrderId</td>
+                                <td class="small">@ship.AgentName</td>
+                                <td class="small text-muted">@ship.Route</td>
+                                <td><span class="badge badge-dispatched rounded-pill badge-xs">@ship.Status</span></td>
+                                <td><span class="badge @priClass rounded-pill badge-xs">@ship.Priority</span></td>
+                                <td>
+    <a asp-controller="Shipping" asp-action="DisplayShipmentList"
+       asp-route-trackingId="@ship.OrderId"
+       class="btn btn-outline-secondary btn-sm py-0">
+        <i class="bi bi-eye"></i>
+    </a>
+</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="6" class="text-center text-muted py-3 small"><i class="bi bi-inbox fs-4 d-block mb-1"></i>No active shipments.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>

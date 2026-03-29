@@ -1,0 +1,248 @@
+@{
+    var staffList = ViewBag.AllStaff as IEnumerable<dynamic>;
+    bool hasStaff = staffList != null && staffList.Any();
+}
+
+@if (TempData["CrudSuccess"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>@TempData["CrudSuccess"]</span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+@if (TempData["CrudError"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>@TempData["CrudError"]</span>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card shadow-sm border-0 section-divider">
+
+    @* ── Header ─────────────────────────────────────────────────────── *@
+    <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+        <h6 class="fw-bold mb-0">
+            <i class="bi bi-people me-2 text-primary"></i>Staff Management
+            @if (hasStaff)
+            {
+                <span class="badge rounded-pill ms-1"
+                      style="background:#cfe2ff;color:#084298;font-size:.68rem;font-weight:600;">
+                    @staffList!.Count()
+                </span>
+            }
+        </h6>
+        <button class="btn btn-sm btn-primary" type="button"
+                data-bs-toggle="collapse" data-bs-target="#addStaffCollapse"
+                aria-expanded="false">
+            <i class="bi bi-plus-lg me-1"></i>Add Staff
+        </button>
+    </div>
+
+    @* ── Add Staff Form (collapsible) ─────────────────────────────── *@
+    <div class="collapse" id="addStaffCollapse">
+        <div class="card-body border-bottom bg-light p-4">
+            <p class="info-label mb-3" style="font-size:.7rem;">NEW STAFF MEMBER</p>
+            <form asp-action="CreateStaff" method="post">
+                @Html.AntiForgeryToken()
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="info-label mb-1">Full Name</label>
+                        <input type="text" name="name" class="form-control form-control-sm"
+                               placeholder="Jane Smith" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="info-label mb-1">Email</label>
+                        <input type="email" name="email" class="form-control form-control-sm"
+                               placeholder="jane@example.com" required />
+                    </div>
+                    <div class="col-md-1">
+                        <label class="info-label mb-1">Code</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text px-1">+</span>
+                            <input type="number" name="phoneCountry" class="form-control form-control-sm"
+                                   placeholder="65" min="1" />
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-1">Phone</label>
+                        <input type="text" name="phoneNumber" class="form-control form-control-sm"
+                               placeholder="8123 4567" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label mb-1">Password</label>
+                        <input type="password" name="passwordHash" class="form-control form-control-sm"
+                               placeholder="••••••••" required autocomplete="new-password" />
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-3">
+                    <button type="reset" class="btn btn-outline-secondary btn-sm">Clear</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">
+                        <i class="bi bi-person-plus me-1"></i>Create
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* ── Staff Table ─────────────────────────────────────────────── *@
+    @if (!hasStaff)
+    {
+        <div class="card-body text-center text-muted py-5 small">
+            <i class="bi bi-people fs-3 d-block mb-1"></i>No staff records found.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0" style="font-size:.85rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="info-label ps-3" style="width:5%;">ID</th>
+                        <th class="info-label" style="width:22%;">Name</th>
+                        <th class="info-label" style="width:28%;">Email</th>
+                        <th class="info-label" style="width:18%;">Phone</th>
+                        <th class="info-label" style="width:12%;">Role</th>
+                        <th class="info-label text-end pe-3" style="width:15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in staffList!)
+                    {
+                        <tr>
+                            <td class="ps-3 text-muted">#@s.StaffId</td>
+                            <td class="fw-semibold">@s.Name</td>
+                            <td class="text-muted">@s.Email</td>
+                            <td class="text-muted">
+                                @if (s.PhoneCountry != null && s.PhoneNumber != null)
+                                { <span>+@s.PhoneCountry&nbsp;@s.PhoneNumber</span> }
+                                else { <span>—</span> }
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill"
+                                      style="background:#cfe2ff;color:#084298;font-size:.68rem;">
+                                    @(s.Role ?? "STAFF")
+                                </span>
+                            </td>
+                            <td class="text-end pe-3">
+                                @* View Profile *@
+                                <a asp-action="ViewProfile" asp-route-staffId="@s.StaffId"
+                                   class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                   title="View Profile">
+                                    <i class="bi bi-eye" style="font-size:.8rem;"></i>
+                                </a>
+
+                                @* Edit — triggers shared modal, passes data via data-attrs *@
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary py-0 px-2 ms-1"
+                                        title="Edit"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editStaffModal"
+                                        data-staff-id="@s.StaffId"
+                                        data-staff-name="@s.Name"
+                                        data-staff-email="@s.Email"
+                                        data-staff-phone-country="@s.PhoneCountry"
+                                        data-staff-phone="@s.PhoneNumber">
+                                    <i class="bi bi-pencil" style="font-size:.8rem;"></i>
+                                </button>
+
+                                @* Delete — inline form with confirm *@
+                                <form asp-action="DeleteStaff" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete @Html.Raw(s.Name)? This cannot be undone.')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="staffId" value="@s.StaffId" />
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger py-0 px-2 ms-1"
+                                            title="Delete">
+                                        <i class="bi bi-trash" style="font-size:.8rem;"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@* ── Edit Staff Modal ───────────────────────────────────────────────── *@
+<div class="modal fade" id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header py-3 border-bottom">
+                <h6 class="modal-title fw-bold mb-0" id="editStaffModalLabel">
+                    <i class="bi bi-pencil me-2 text-primary"></i>Edit Staff Member
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="UpdateStaffDetails" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="staffId" id="editStaffId" />
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="info-label mb-1">Full Name</label>
+                            <input type="text" id="editStaffName" name="name"
+                                   class="form-control form-control-sm" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="info-label mb-1">Email Address</label>
+                            <input type="email" id="editStaffEmail" name="email"
+                                   class="form-control form-control-sm" required />
+                        </div>
+                        <div class="col-4">
+                            <label class="info-label mb-1">Country Code</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text">+</span>
+                                <input type="number" id="editStaffPhoneCountry" name="phoneCountry"
+                                       class="form-control form-control-sm" placeholder="65" />
+                            </div>
+                        </div>
+                        <div class="col-8">
+                            <label class="info-label mb-1">Phone Number</label>
+                            <input type="text" id="editStaffPhone" name="phoneNumber"
+                                   class="form-control form-control-sm" placeholder="8123 4567" />
+                        </div>
+                        <div class="col-12">
+                            <label class="info-label mb-1">
+                                New Password
+                                <span class="text-muted fw-normal" style="text-transform:none;">
+                                    (leave blank to keep current)
+                                </span>
+                            </label>
+                            <input type="password" name="passwordHash"
+                                   class="form-control form-control-sm"
+                                   placeholder="••••••••" autocomplete="new-password" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-3 border-top">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-semibold">
+                        <i class="bi bi-check2 me-1"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Populate the shared edit modal from the clicked row's data attributes
+    (function () {
+        var modal = document.getElementById('editStaffModal');
+        if (!modal) return;
+        modal.addEventListener('show.bs.modal', function (e) {
+            var btn = e.relatedTarget;
+            document.getElementById('editStaffId').value           = btn.dataset.staffId          ?? '';
+            document.getElementById('editStaffName').value         = btn.dataset.staffName        ?? '';
+            document.getElementById('editStaffEmail').value        = btn.dataset.staffEmail       ?? '';
+            document.getElementById('editStaffPhoneCountry').value = btn.dataset.staffPhoneCountry ?? '';
+            document.getElementById('editStaffPhone').value        = btn.dataset.staffPhone       ?? '';
+        });
+    })();
+</script>

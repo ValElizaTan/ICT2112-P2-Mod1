@@ -1,0 +1,177 @@
+@using ProRental.Domain.Enums
+@{
+    ViewData["Title"] = "Order Details";
+    var order = ViewData["Order"] as ProRental.Domain.Entities.Order;
+    var status = ViewData["OrderStatus"] as OrderStatus?;
+    var canCancel = ViewData["CanCancel"] as bool? ?? false;
+    var hasReturn = ViewData["HasReturn"] as bool? ?? false;
+    var customerId = ViewData["CustomerId"] as int? ?? 0;
+    var control = ViewData["Control"] as ProRental.Domain.Module1.P24.Controls.CustomerDashboardControl;
+
+    var orderId = order != null && control != null ? control.GetOrderId(order) : 0;
+    var orderDate = order != null && control != null ? control.GetOrderDate(order) : DateTime.MinValue;
+    var totalAmount = order != null && control != null ? control.GetTotalAmount(order) : 0;
+    var orderStatus = order != null && control != null ? control.GetOrderStatusFromOrder(order) : OrderStatus.PENDING;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Order #@orderId</h2>
+        <a asp-action="Index" asp-route-customerId="@customerId" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Order Info Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Order Date:</th>
+                            <td>@orderDate.ToString("dd MMM yyyy, HH:mm")</td>
+                        </tr>
+                        <tr>
+                            <th>Order Status:</th>
+                            <td>
+                                <span class="badge @(orderStatus.ToString().ToLower()) rounded-pill">@orderStatus</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Total Amount:</th>
+                            <td class="fw-bold fs-5" style="color: #2d7a4f;">$@totalAmount.ToString("0.00")</td>
+                        </tr>
+                    </table>
+
+                    <div class="d-flex gap-2 mt-3">
+                        @if (canCancel)
+                        {
+                            <form asp-action="CancelOrder" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderId" value="@orderId" />
+                                <input type="hidden" name="customerId" value="@customerId" />
+                                <button type="submit" class="btn btn-danger"
+                                        onclick="return confirm('Are you sure you want to cancel this order?')">
+                                    <i class="bi bi-x-circle me-1"></i>Cancel Order
+                                </button>
+                            </form>
+                        }
+                        @if (!hasReturn && (orderStatus == OrderStatus.DELIVERED || orderStatus == OrderStatus.DISPATCHED))
+                        {
+                            <form asp-action="ReturnOrder" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="orderId" value="@orderId" />
+                                <input type="hidden" name="customerId" value="@customerId" />
+                                <button type="submit" class="btn btn-warning"
+                                        onclick="return confirm('Are you sure you want to return this order?')">
+                                    <i class="bi bi-arrow-return-left me-1"></i>Return Order
+                                </button>
+                            </form>
+                        }
+                        else if (hasReturn)
+                        {
+                            <span class="badge bg-info rounded-pill py-2 px-3">
+                                <i class="bi bi-arrow-return-left me-1"></i>Return Initiated
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking Info Card -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold">Order Tracking</h5>
+                </div>
+                <div class="card-body">
+                    @if (orderStatus == OrderStatus.PENDING)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-hourglass-split fs-1 text-muted"></i>
+                            <p class="mt-2 text-muted">Your order is pending confirmation.</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.CONFIRMED)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-check-circle fs-1 text-success"></i>
+                            <p class="mt-2 text-success">Order confirmed. We're processing your order.</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.PROCESSING)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-arrow-repeat fs-1 text-primary"></i>
+                            <p class="mt-2">Your order is being processed.</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.READY_FOR_DISPATCH)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-box-seam fs-1 text-warning"></i>
+                            <p class="mt-2">Your order is ready for dispatch.</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.DISPATCHED)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-truck fs-1 text-info"></i>
+                            <p class="mt-2">Your order is on the way!</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.DELIVERED)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-check2-all fs-1 text-success"></i>
+                            <p class="mt-2 text-success">Order delivered successfully!</p>
+                        </div>
+                    }
+                    else if (orderStatus == OrderStatus.CANCELLED)
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-x-circle fs-1 text-danger"></i>
+                            <p class="mt-2 text-danger">Order has been cancelled.</p>
+                        </div>
+                    }
+            
+                    <div class="text-center mt-3">
+                        <a asp-controller="OrderTracking" asp-action="CustomerOrderTracking"
+                               asp-route-customerId="@customerId" asp-route-timelineOrderId="@orderId"
+                               class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-clock-history me-1"></i>View Full Timeline
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<style>
+    .badge.PENDING, .badge-pending { background: #fff3cd; color: #856404; }
+    .badge.CONFIRMED, .badge-ready { background: #d1e7dd; color: #0a3622; }
+    .badge.PROCESSING, .badge-cleaning { background: #cfe2ff; color: #084298; }
+    .badge.READY_FOR_DISPATCH, .badge-ready { background: #d1e7dd; color: #0a3622; }
+    .badge.DISPATCHED, .badge-dispatched { background: #cfe2ff; color: #084298; }
+    .badge.DELIVERED, .badge-returned { background: #d1e7dd; color: #0a3622; }
+    .badge.CANCELLED, .badge-overdue { background: #f8d7da; color: #842029; }
+</style>

@@ -73,10 +73,10 @@ public partial class AppDbContext
         });
 
         modelBuilder.Entity<Cart>(entity =>
-        {
-            entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("status").HasColumnType("cart_status_enum");
-        });
+      {
+            entity.Property<CartStatus>("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasColumnName("status").HasColumnType("cart_status_enum");
+      });
 
         modelBuilder.Entity<Checkout>(entity =>
         {
@@ -135,16 +135,16 @@ public partial class AppDbContext
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.Property("NotificationType").HasField("_notificationType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationtype").HasColumnType("notification_type_enum");
+                  .HasColumnName("type").HasColumnType("notification_type_enum");
         });
 
         modelBuilder.Entity<Notificationpreference>(entity =>
         {
             entity.Property("Notificationfrequency").HasField("_notificationfrequency").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationfrequency").HasColumnType("notification_frequency_enum");
+                  .HasColumnName("frequency").HasColumnType("notification_frequency_enum");
 
             entity.Property("NotificationGranularity").HasField("_notificationGranularity").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("notificationgranularity").HasColumnType("notification_granularity_enum");
+                  .HasColumnName("granularity").HasColumnType("notification_granularity_enum");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -154,6 +154,15 @@ public partial class AppDbContext
 
             entity.Property("DeliveryType").HasField("_deliveryType").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("deliverytype").HasColumnType("delivery_duration_enum");
+        });
+
+        modelBuilder.Entity<Orderstatushistory>(entity =>
+        {
+            entity.Property("Status")
+                  .HasField("_status")
+                  .UsePropertyAccessMode(PropertyAccessMode.Field)
+                  .HasColumnName("status")
+                  .HasColumnType("order_status_enum");
         });
 
         modelBuilder.Entity<Payment>(entity =>
@@ -230,8 +239,8 @@ public partial class AppDbContext
 
         modelBuilder.Entity<RouteLeg>(entity =>
         {
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         // ==========================================
@@ -239,11 +248,11 @@ public partial class AppDbContext
         // ==========================================
         modelBuilder.Entity<ShippingOption>(entity =>
         {
-            entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("preferencetype").HasColumnType("preference_type");
+            //entity.Property("PreferenceType").HasField("_preferenceType").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("preferencetype").HasColumnType("preference_type");
 
-            entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
-                  .HasColumnName("transportmode").HasColumnType("transport_mode");
+            //entity.Property("TransportMode").HasField("_transportMode").UsePropertyAccessMode(PropertyAccessMode.Field)
+                  //.HasColumnName("transportmode").HasColumnType("transport_mode");
         });
 
         modelBuilder.Entity<Staffaccesslog>(entity =>
@@ -269,13 +278,13 @@ public partial class AppDbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.Property("Type").HasField("_type").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionType>("_type").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("type").HasColumnType("transaction_type_enum");
 
-            entity.Property("Purpose").HasField("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionPurpose>("_purpose").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("purpose").HasColumnType("transaction_purpose_enum");
 
-            entity.Property("Status").HasField("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
+            entity.Property<TransactionStatus>("_status").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("status").HasColumnType("transaction_status_enum");
         });
 
@@ -292,10 +301,10 @@ public partial class AppDbContext
         });
 
         modelBuilder.Entity<User>(entity =>
-      {
+        {
             entity.Property<UserRole>("UserRole").HasField("_userRole").UsePropertyAccessMode(PropertyAccessMode.Field)
                   .HasColumnName("userrole").HasColumnType("user_role_enum");
-      });
+        });
 
         modelBuilder.Entity<Vettingrecord>(entity =>
         {
